@@ -26,7 +26,8 @@ function renderOpt() {
   </div>
   ${modoBandas
     ? `<div class="note"><b>Corte por bandas (guillotina).</b> Las piezas se agrupan en franjas horizontales, igual que lo hace una sierra escuadradora: primero cortes de lado a lado y luego cortes dentro de cada franja. Se descuenta ${S.cfg.kerf} mm de sierra entre piezas.</div>`
-    : `<div class="note"><b>Máximo aprovechamiento (guillotina libre).</b> Sin franjas fijas: cada corte atraviesa de lado a lado el trozo que se está cortando, y las piezas aprovechan los espacios sobrantes. ${S.cfg.rotar ? 'Las piezas marcadas con ↻ van giradas.' : 'Las piezas no se giran; activa «Permitir girar piezas» si el material no tiene veta.'} Se descuenta ${S.cfg.kerf} mm de sierra entre piezas.</div>`}`;
+    : `<div class="note"><b>Máximo aprovechamiento (guillotina libre).</b> Sin franjas fijas: cada corte atraviesa de lado a lado el trozo que se está cortando, y las piezas aprovechan los espacios sobrantes. ${S.cfg.rotar ? 'Las piezas marcadas con ↻ van giradas.' : 'Las piezas no se giran; activa «Permitir girar piezas» si el material no tiene veta.'} Se descuenta ${S.cfg.kerf} mm de sierra entre piezas.</div>`}
+  <div class="note"><b>Tapacanto:</b> la línea roja discontinua marca los lados de cada pieza que llevan tapacanto.</div>`;
 
   grupos.forEach(g => {
     if (g.grandes.length) {
@@ -74,6 +75,7 @@ function drawBoard(id, b, g) {
     ctx.fillStyle = shade(g.mat.color, .82);
     ctx.fillRect(x, y, w, h);
     ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
+    dibujarCantos(ctx, p, x, y, w, h);
     // etiqueta
     const lbl = `${p.L}×${p.A}`;
     const nmz = p.nom;
@@ -126,6 +128,29 @@ function drawBoard(id, b, g) {
     }
   }
 }
+/* Marca con línea discontinua los lados de la pieza que llevan tapacanto */
+function dibujarCantos(ctx, p, x, y, w, h) {
+  const m = 4; // separación respecto al borde de la pieza
+  if (Math.min(w, h) < m * 3) return;
+  // El largo va en horizontal salvo que la pieza esté girada. Con un solo canto se marca abajo o a la derecha.
+  const [nHoriz, nVert] = p.rot ? [p.cA, p.cL] : [p.cL, p.cA];
+  const lados = [];
+  if (nHoriz >= 1) lados.push([x + m, y + h - m, x + w - m, y + h - m]);
+  if (nHoriz >= 2) lados.push([x + m, y + m, x + w - m, y + m]);
+  if (nVert >= 1) lados.push([x + w - m, y + m, x + w - m, y + h - m]);
+  if (nVert >= 2) lados.push([x + m, y + m, x + m, y + h - m]);
+
+  const trazar = (color, grosor, guiones) => {
+    ctx.strokeStyle = color; ctx.lineWidth = grosor; ctx.setLineDash(guiones);
+    ctx.beginPath();
+    lados.forEach(([x1, y1, x2, y2]) => { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); });
+    ctx.stroke();
+  };
+  trazar('rgba(255,255,255,.8)', 3.5, []); // base clara: mantiene la línea visible sobre cualquier color
+  trazar('#d81e1e', 1.8, [7, 4]);
+  ctx.setLineDash([]);
+}
+
 function trunc(ctx, t, max) {
   if (ctx.measureText(t).width <= max) return t;
   let s = t;
