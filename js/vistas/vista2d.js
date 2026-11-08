@@ -4,6 +4,24 @@
    ============================================================ */
 const V2 = { vista: 'frontal', cotas: true };
 
+/* Escribe sobre cada zona su nombre y su alto */
+function rotularZonas(ctx, m, e, X, Y) {
+  let x0 = 0;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `600 ${imprimiendo ? 8.5 : 10}px Inter, sans-serif`;
+  m.columnas.forEach(c => {
+    const W = +c.ancho || 0;
+    zonasColumna(m, c, e).forEach(({ z, a, b }) => {
+      if (Y(a) - Y(b) < 11) return;
+      // Una zona abierta sin fondo deja ver el lienzo oscuro de la pantalla
+      ctx.fillStyle = z.tipo === 'abierta' && m.fondo === 'ninguno' && !imprimiendo ? '#9aa3b8' : 'rgba(20,16,10,.88)';
+      ctx.fillText(trunc(ctx, `${z.nom} ${b - a}`, X(W) - X(0) - 6), X(x0 + W / 2), (Y(a) + Y(b)) / 2);
+    });
+    x0 += W;
+  });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+
 function draw2(cv = $('#cv2'), vista = V2.vista) {
   const ctx = cv.getContext('2d');
   const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
@@ -38,7 +56,14 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
   ctx.fillStyle = imprimiendo ? '#fff' : '#0d0f13';
   ctx.fillRect(X(0), Y(oh), ow * sc, oh * sc);
 
-  if (front) {
+  if (m.tipo === 'columnas') {
+    // De atrás hacia adelante, para que los frentes queden encima. En la vista lateral se omiten los laterales para ver el interior.
+    geo(m).B.filter(b => front || b.tag !== 'Lateral').sort((a, b) => a.z - b.z).forEach(b => {
+      const frente = b.tag === 'Puerta' || b.tag === 'Frente cajón';
+      rect(front ? b.x : b.z, b.y, front ? b.w : b.d, b.h, shade(b.c, frente ? .97 : .8));
+    });
+    if (front) rotularZonas(ctx, m, e, X, Y);
+  } else if (front) {
     rect(0, 0, e, H, shade(mc.color, .72));
     rect(W - e, 0, e, H, shade(mc.color, .72));
     rect(e, Z, W - 2 * e, e, shade(mc.color, .9));

@@ -25,7 +25,7 @@ function renderParams() {
     <div class="fgroup">
       <h4>Medidas exteriores (mm)</h4>
       <div class="row">
-        <div class="f"><label>Ancho</label><input type="number" data-k="ancho" value="${m.ancho}"></div>
+        <div class="f"><label>Ancho</label><input type="number" data-k="ancho" value="${m.ancho}" ${m.tipo === 'columnas' ? 'disabled title="Es la suma de las columnas"' : ''}></div>
         <div class="f"><label>Alto</label><input type="number" data-k="alto" value="${m.alto}"></div>
         <div class="f"><label>Profundidad</label><input type="number" data-k="prof" value="${m.prof}"></div>
       </div>
@@ -45,6 +45,7 @@ function renderParams() {
         <select data-k="matB">${matOpts(m.matB)}</select></div></div>
     </div>
 
+    ${m.tipo === 'columnas' ? htmlColumnas(m) : `
     <div class="fgroup">
       <h4>Interior</h4>
       <div class="row">
@@ -78,7 +79,7 @@ function renderParams() {
           <button data-seg="tipoP" data-v="embutida" class="${m.tipoP === 'embutida' ? 'on' : ''}">Embutida</button>
         </div>
       </div>
-    </div>`;
+    </div>`}`;
   } else {
     html += `<div style="padding:20px 14px;color:var(--txt3);font-size:12px;text-align:center">
       Crea un módulo para editar sus parámetros.</div>`;
@@ -131,6 +132,7 @@ function renderParams() {
       else mm[k] = inp.value;
       if (k === 'tipo') { Object.assign(mm, { divHasta: 0, puertaDesde: 0, puertaHasta: 0 }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
+      if (mm.tipo === 'columnas' && (k === 'alto' || k === 'zocalo')) actualizarSumas(mm);
       recalc();
     });
   });
@@ -138,6 +140,7 @@ function renderParams() {
     const mm = S.mods.find(x => x.id === S.sel); if (!mm) return;
     mm[b.dataset.seg] = b.dataset.v; renderParams(); recalc();
   });
+  if (m && m.tipo === 'columnas') bindColumnas(m);
   /* bind config */
   $$('#params [data-c]').forEach(inp => {
     const k = inp.dataset.c;

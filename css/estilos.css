@@ -271,6 +271,20 @@ tbody tr.grp:hover td{background:var(--panel2)}
 .hw .rm{background:none;border:0;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 2px}
 .hw .rm:hover{color:var(--red)}
 
+/* ---------- COLUMNAS Y ZONAS ---------- */
+.columna{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px;margin-bottom:8px}
+.col-suma{font-size:11px;font-weight:600;margin-bottom:8px}
+.col-suma .ok{color:var(--green)}
+.col-suma .mal{color:var(--red)}
+.zona{border-top:1px solid var(--line);padding:8px 0 2px}
+.zona:last-of-type{margin-bottom:8px}
+.zona .row{margin-bottom:6px}
+.f input:disabled{opacity:.5;cursor:not-allowed}
+.zacc{display:flex;align-items:flex-end;gap:2px;flex-shrink:0}
+.zacc button{width:22px;height:30px;background:none;border:0;color:var(--txt3);cursor:pointer;font-size:14px}
+.zacc button:hover:not(:disabled){color:var(--acc)}
+.zacc button:disabled{opacity:.3;cursor:not-allowed}
+
 /* ---------- TOAST ---------- */
 #toast{
   position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);

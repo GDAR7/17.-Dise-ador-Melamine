@@ -3,6 +3,7 @@
    GEOMETRÍA 3D  (lista de cajas)
    ============================================================ */
 function geo(m, opts = {}) {
+  if (m.tipo === 'columnas') return geoColumnas(m, opts);
   const mc = S.mats.find(x => x.id === m.matC) || S.mats[0];
   const mf = S.mats.find(x => x.id === m.matF) || mc;
   const mb = S.mats.find(x => x.id === m.matB) || mc;
@@ -116,7 +117,8 @@ function draw3() {
   const cp = Math.cos(V3.pitch), sp = Math.sin(V3.pitch);
   const F = span * 2.6;
   function pr(p) {
-    const x = p[0] - cx0, y = p[1] - cy0, z = p[2] - cz0;
+    // El frente del mueble (z mayor) queda hacia el observador, con la izquierda a la izquierda
+    const x = p[0] - cx0, y = p[1] - cy0, z = cz0 - p[2];
     const x1 = x * cy + z * sy;
     const z1 = -x * sy + z * cy;
     const y2 = y * cp - z1 * sp;

@@ -20,6 +20,8 @@ function piezas(m) {
     P.push({ nom, L: Math.round(L), A: Math.round(A), q: q * (+m.qty || 1), cL: lados.L1 + lados.L2, cA: lados.A1 + lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
   };
 
+  if (m.tipo === 'columnas') { piezasColumnas(m, add, mc, mf, mb); return P; }
+
   const Wi = W - 2 * e;              // ancho interior
   const Hi = H - 2 * e - Z;          // alto interior libre
 
@@ -130,6 +132,11 @@ function herrajesCalc() {
   let bis = 0, cor = 0, tir = 0, tor = 0, sop = 0, reg = 0;
   S.mods.forEach(m => {
     const q = +m.qty || 1;
+    if (m.tipo === 'columnas') {
+      const r = herrajesColumnas(m);
+      bis += q * r.bis; cor += q * r.cor; tir += q * r.tir; tor += q * r.tor; sop += q * r.sop; reg += q * r.reg;
+      return;
+    }
     const np = +m.puertas || 0, nc = +m.cajones || 0, nr = +m.repisas || 0, nd = +m.divs || 0;
     const alto = +m.alto;
     const puerta = (+m.puertaDesde || +m.puertaHasta) ? piezas(m).find(p => p.kind === 'puerta') : null;

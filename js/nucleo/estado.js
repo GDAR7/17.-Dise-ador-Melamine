@@ -7,7 +7,8 @@ const TIPOS = {
   closet:    { ic: '◫', nom: 'Clóset' },
   comoda:    { ic: '▥', nom: 'Cómoda / cajonera' },
   escritorio:{ ic: '⌐', nom: 'Escritorio' },
-  generico:  { ic: '□', nom: 'Módulo genérico' }
+  generico:  { ic: '□', nom: 'Módulo genérico' },
+  columnas:  { ic: '▥', nom: 'Repostero por columnas' }
 };
 
 let S = null;
@@ -56,7 +57,9 @@ const PRESETS = {
   closet:     { nom: 'Clóset', ancho: 1200, alto: 2200, prof: 550, repisas: 3, divs: 1, fondo: 'clavado', zocalo: 80, puertas: 2, cajones: 0 },
   comoda:     { nom: 'Cómoda', ancho: 700, alto: 800, prof: 450, repisas: 0, fondo: 'clavado', zocalo: 60, puertas: 0, cajones: 4, altoCaj: 170 },
   escritorio: { nom: 'Escritorio', ancho: 1200, alto: 750, prof: 600, repisas: 0, fondo: 'ninguno', zocalo: 0, puertas: 0, cajones: 2, altoCaj: 160, encimera: true },
-  generico:   { nom: 'Módulo', ancho: 600, alto: 700, prof: 400, repisas: 2, fondo: 'clavado', zocalo: 0, puertas: 0, cajones: 0 }
+  generico:   { nom: 'Módulo', ancho: 600, alto: 700, prof: 400, repisas: 2, fondo: 'clavado', zocalo: 0, puertas: 0, cajones: 0 },
+  // El getter entrega una copia nueva, para que cada mueble tenga sus propias columnas
+  columnas:   { nom: 'Repostero por columnas', ancho: 1800, alto: 2400, prof: 580, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 100, puertas: 0, cajones: 0, encimera: false, get columnas() { return columnasEjemplo(); } }
 };
 
 /* ---------- PERSISTENCIA ---------- */

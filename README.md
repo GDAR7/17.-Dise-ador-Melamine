@@ -18,6 +18,7 @@ js/
   nucleo/
     estado.js           Datos del proyecto y guardado
     despiece.js         Piezas, herrajes y tapacanto
+    columnas.js         Muebles por columnas y zonas
     corte.js            Optimización de planchas
   vistas/
     vista3d.js          Vista 3D
@@ -25,6 +26,7 @@ js/
   ui/
     lista-modulos.js    Lista de módulos y plantillas
     parametros.js       Panel de parámetros
+    columnas.js         Editor de columnas y zonas
     tabla-despiece.js   Pestaña Despiece
     planchas.js         Pestaña Planchas
     costeo.js           Pestaña Costeo
