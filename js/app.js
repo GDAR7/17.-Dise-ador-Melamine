@@ -46,20 +46,36 @@ $('#bNew').onclick = () => {
   if (innerWidth <= 900) mview('center');
 };
 $('#bSave').onclick = () => {
-  const data = JSON.stringify(S, null, 2);
-  copy(data, 'Proyecto copiado al portapapeles (pégalo en un .json)');
+  const sugerido = S.mods.length === 1 ? S.mods[0].nom : S.proyecto;
+  const nombre = prompt('Nombre del archivo:', sugerido);
+  if (!nombre || !nombre.trim()) return;
+  const archivo = nombre.trim().replace(/[\\/:*?"<>|]/g, '-').replace(/\.json$/i, '') + '.json';
+  const url = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = archivo;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast(`Guardado como ${archivo}`);
 };
-$('#bLoad').onclick = () => $('#fileIn').click();
+let agregarAlAbrir = false;
+$('#bLoad').onclick = () => { agregarAlAbrir = false; $('#fileIn').click(); };
+$('#bAdd').onclick = () => { agregarAlAbrir = true; $('#fileIn').click(); };
 $('#fileIn').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
   r.onload = () => {
     try {
       const p = JSON.parse(r.result);
-      if (!p.mods) throw 0;
-      S = Object.assign(defState(), p);
-      S.sel = S.mods[0] ? S.mods[0].id : null;
-      refresh(); toast('Proyecto cargado');
+      if (!Array.isArray(p.mods)) throw 0;
+      if (agregarAlAbrir) {
+        const nuevos = agregarProyecto(p);
+        if (nuevos.length) S.sel = nuevos[0].id;
+        refresh(); toast(`${nuevos.length} mueble(s) agregado(s)`);
+      } else {
+        S = Object.assign(defState(), p);
+        S.sel = S.mods[0] ? S.mods[0].id : null;
+        refresh(); toast('Proyecto cargado');
+      }
     } catch (x) { toast('Archivo no válido'); }
   };
   r.readAsText(f);

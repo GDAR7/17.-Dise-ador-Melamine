@@ -62,6 +62,25 @@ const PRESETS = {
   columnas:   { nom: 'Repostero por columnas', ancho: 1800, alto: 2400, prof: 580, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 100, puertas: 0, cajones: 0, encimera: false, get columnas() { return columnasEjemplo(); } }
 };
 
+/* Suma al proyecto los muebles de otro archivo. Un material igual (nombre, espesor y plancha)
+   se unifica con el existente para que sus piezas se optimicen en las mismas planchas. */
+function agregarProyecto(p) {
+  const idMat = {};
+  (p.mats || []).forEach(mat => {
+    const igual = S.mats.find(x => x.nom === mat.nom && x.esp === mat.esp && x.fw === mat.fw && x.fh === mat.fh);
+    if (igual) { idMat[mat.id] = igual.id; return; }
+    const nuevo = { ...mat, id: uid() };
+    S.mats.push(nuevo);
+    idMat[mat.id] = nuevo.id;
+  });
+  const nuevos = p.mods.map(m => ({
+    ...m, id: uid(),
+    matC: idMat[m.matC] || m.matC, matF: idMat[m.matF] || m.matF, matB: idMat[m.matB] || m.matB
+  }));
+  S.mods.push(...nuevos);
+  return nuevos;
+}
+
 /* ---------- PERSISTENCIA ---------- */
 function save() {
   try { localStorage.setItem('melamina.v1', JSON.stringify(S)); } catch (e) { }

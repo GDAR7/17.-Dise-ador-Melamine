@@ -6,7 +6,7 @@ Aplicación web para diseñar muebles de melamina: genera el despiece, optimiza 
 
 Abre `index.html` con doble clic. No necesita instalación ni servidor.
 
-Los proyectos se guardan en el navegador. Para llevarlos a otro equipo o navegador, usa **Guardar** y **Abrir**.
+El trabajo se conserva en el navegador. **Guardar** descarga un archivo `.json` con el proyecto, **Abrir** lo recupera reemplazando el proyecto actual y **Agregar archivo** suma sus muebles al proyecto abierto, para calcular juntos las planchas de varios muebles.
 
 ## Estructura
 
