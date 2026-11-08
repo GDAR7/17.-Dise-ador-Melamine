@@ -40,9 +40,9 @@ function nuevoMod(tipo = 'librero', over = {}) {
     id: uid(), nom: TIPOS[tipo].nom, tipo, qty: 1,
     ancho: 800, alto: 2000, prof: 300,
     matC: m18.id, matF: m18.id, matB: m03.id,
-    repisas: 4, divs: 0,
+    repisas: 4, divs: 0, divHasta: 0,
     fondo: 'ranurado', zocalo: 0,
-    puertas: 0, tipoP: 'superpuesta',
+    puertas: 0, tipoP: 'superpuesta', puertaDesde: 0, puertaHasta: 0,
     cajones: 0, altoCaj: 180,
     encimera: false, retr: 20
   };

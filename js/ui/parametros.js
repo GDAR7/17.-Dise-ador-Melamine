@@ -51,6 +51,8 @@ function renderParams() {
         <div class="f"><label>Repisas por vano</label><input type="number" min="0" data-k="repisas" value="${m.repisas}"></div>
         <div class="f"><label>Divisiones verticales</label><input type="number" min="0" data-k="divs" value="${m.divs}"></div>
       </div>
+      <div class="row"><div class="f"><label>Divisiones: del techo hasta la repisa n.º (se cuenta desde arriba · 0 = completas)</label>
+        <input type="number" min="0" data-k="divHasta" value="${m.divHasta || 0}"></div></div>
       <div class="row"><div class="f"><label>Fondo del mueble</label><select data-k="fondo">
         <option value="clavado" ${m.fondo === 'clavado' ? 'selected' : ''}>Clavado / atornillado por detrás</option>
         <option value="ranurado" ${m.fondo === 'ranurado' ? 'selected' : ''}>Ranurado (encajado)</option>
@@ -64,6 +66,10 @@ function renderParams() {
       <div class="row">
         <div class="f"><label>Puertas</label><input type="number" min="0" max="6" data-k="puertas" value="${m.puertas}"></div>
         <div class="f"><label>Cajones</label><input type="number" min="0" max="8" data-k="cajones" value="${m.cajones}"></div>
+      </div>
+      <div class="row">
+        <div class="f"><label>Puertas desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="puertaDesde" value="${m.puertaDesde || 0}"></div>
+        <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="puertaHasta" value="${m.puertaHasta || 0}"></div>
       </div>
       <div class="row"><div class="f"><label>Alto de cada cajón</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
       <div class="f"><label>Montaje de frentes</label>
@@ -123,7 +129,7 @@ function renderParams() {
       if (inp.type === 'checkbox') mm[k] = inp.checked;
       else if (inp.type === 'number') mm[k] = inp.value === '' ? 0 : +inp.value;
       else mm[k] = inp.value;
-      if (k === 'tipo') { Object.assign(mm, PRESETS[inp.value] || {}); renderParams(); }
+      if (k === 'tipo') { Object.assign(mm, { divHasta: 0, puertaDesde: 0, puertaHasta: 0 }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
       recalc();
     });

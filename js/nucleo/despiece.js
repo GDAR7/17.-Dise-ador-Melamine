@@ -30,15 +30,19 @@ function piezas(m) {
 
   // --- Divisiones verticales ---
   const nd = +m.divs || 0;
-  if (nd > 0) add('División vertical', H - 2 * e - Z, D, nd, 1, 0, mc, 'div');
+  const nr = +m.repisas || 0;
+  const j = apoyoDivision(m);
+  if (nd > 0) add('División vertical', j ? H - e - yRepisa(m, e, j) - e : Hi, D, nd, 1, 0, mc, 'div');
 
   // Ancho de cada vano (los interiores pierden espesor de división)
   const vanos = nd + 1;
   const anchoVano = (Wi - nd * e) / vanos;
 
   // --- Repisas ---
-  const nr = +m.repisas || 0;
-  if (nr > 0) add('Repisa', anchoVano, D - (+m.retr || 0), nr * vanos, 1, 0, mc, 'rep');
+  // La repisa donde se apoyan las divisiones y las de debajo van de lado a lado
+  const enteras = j;
+  add('Repisa', anchoVano, D - (+m.retr || 0), (nr - enteras) * vanos, 1, 0, mc, 'rep');
+  add('Repisa entera', Wi, D - (+m.retr || 0), enteras, 1, 0, mc, 'rep');
 
   // --- Zócalo ---
   if (Z > 0) {
@@ -65,6 +69,8 @@ function piezas(m) {
       pa = (Wi - 3 * (np - 1) - 4) / np;
       ph = H - 2 * e - Z - altoFrentes - 4;
     }
+    const arribaP = m.tipoP === 'superpuesta' ? H - 1 - (m.encimera ? ef : 0) : H - e - 2;
+    ph = tramoPuertas(m, e, arribaP - ph, arribaP).alto;
     add('Puerta', ph, pa, np, 2, 2, mf, 'puerta');
   }
 
@@ -85,6 +91,36 @@ function piezas(m) {
   return P;
 }
 
+/* Altura de la cara inferior de la repisa i, contada desde abajo */
+function yRepisa(m, e, i) {
+  const ya = (+m.zocalo || 0) + e, yb = +m.alto - e;
+  return ya + (yb - ya) * i / ((+m.repisas || 0) + 1) - e / 2;
+}
+
+/* En los campos las repisas se cuentan desde arriba: devuelve ese n.º si existe, o 0 */
+function repisaValida(m, v) {
+  const n = Math.round(+v || 0);
+  return n >= 1 && n <= (+m.repisas || 0) ? n : 0;
+}
+
+/* Repisa, contada desde abajo, donde se apoyan las divisiones que bajan del techo. 0 = llegan al piso */
+function apoyoDivision(m) {
+  const k = (+m.divs || 0) > 0 ? repisaValida(m, m.divHasta) : 0;
+  return k ? (+m.repisas || 0) - k + 1 : 0;
+}
+
+/* Tramo vertical de las puertas según las repisas elegidas. abajo y arriba son los límites si cubren todo */
+function tramoPuertas(m, e, abajo, arriba) {
+  const nr = +m.repisas || 0, supe = m.tipoP === 'superpuesta';
+  let d = repisaValida(m, m.puertaDesde), h = repisaValida(m, m.puertaHasta);
+  if (d && h && d >= h) d = h = 0;     // rango imposible: se ignora
+  const y = n => yRepisa(m, e, nr - n + 1);
+  // Superpuesta: tapa el canto de la repisa límite. Embutida: queda entre repisas con 2 mm de holgura.
+  const techo = d ? y(d) + (supe ? e : -2) : arriba;
+  const base = h ? Math.max(abajo, y(h) + (supe ? 0 : e + 2)) : abajo;
+  return { y: base, alto: techo - base };
+}
+
 function todasPiezas() {
   return S.mods.flatMap(m => piezas(m));
 }
@@ -96,10 +132,12 @@ function herrajesCalc() {
     const q = +m.qty || 1;
     const np = +m.puertas || 0, nc = +m.cajones || 0, nr = +m.repisas || 0, nd = +m.divs || 0;
     const alto = +m.alto;
-    bis += q * np * (alto > 1600 ? 3 : 2);
+    const puerta = (+m.puertaDesde || +m.puertaHasta) ? piezas(m).find(p => p.kind === 'puerta') : null;
+    bis += q * np * ((puerta ? puerta.L : alto) > 1600 ? 3 : 2);
     cor += q * nc;
     tir += q * (np + nc);
-    sop += q * nr * (nd + 1) * 4;
+    const j = apoyoDivision(m);
+    sop += q * (j + (nr - j) * (nd + 1)) * 4;
     tor += q * (16 + nr * 4 + nd * 8 + np * 4 + nc * 6);
     reg += q * ((+m.zocalo || 0) > 0 ? 4 : 0);
   });

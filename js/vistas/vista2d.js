@@ -44,10 +44,12 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     rect(e, Z, W - 2 * e, e, shade(mc.color, .9));
     rect(e, H - e, W - 2 * e, e, shade(mc.color, .9));
     const nd = +m.divs || 0, Wi = W - 2 * e, vanos = nd + 1, av = (Wi - nd * e) / vanos;
-    for (let i = 1; i <= nd; i++) rect(e + i * av + (i - 1) * e, Z + e, e, H - 2 * e - Z, shade(mc.color, .78));
-    const nr = +m.repisas || 0, ya = Z + e, yb = H - e;
+    const nr = +m.repisas || 0, ya = Z + e, yb = H - e, j = apoyoDivision(m);
+    const yDiv = j ? yRepisa(m, e, j) + e : ya;
+    for (let i = 1; i <= nd; i++) rect(e + i * av + (i - 1) * e, yDiv, e, yb - yDiv, shade(mc.color, .78));
     for (let i = 1; i <= nr; i++) {
       const y = ya + (yb - ya) * i / (nr + 1) - e / 2;
+      if (i <= j) { rect(e, y, Wi, e, shade(mc.color, .86)); continue; }
       for (let v = 0; v < vanos; v++) rect(e + v * (av + e), y, av, e, shade(mc.color, .86));
     }
     if (Z > 0) rect(e, 0, W - 2 * e, Z, shade(mc.color, .6));
@@ -68,12 +70,13 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
       const hT = (supe ? H - (m.encimera ? 0 : 0) : H - e) - yB - 2;
       const wT = supe ? W : W - 2 * e - 4, xx = supe ? 0 : e + 2;
       const pw = (wT - 3 * (np - 1)) / np;
-      for (let i = 0; i < np; i++) {
+      const t = tramoPuertas(m, e, yB + 1, yB + 1 + hT);
+      for (let i = 0; i < np && t.alto > 0; i++) {
         const x = xx + i * (pw + 3);
-        rect(x, yB + 1, pw, hT, shade(mf.color, .97), 'rgba(0,0,0,.6)');
+        rect(x, t.y, pw, t.alto, shade(mf.color, .97), 'rgba(0,0,0,.6)');
         ctx.fillStyle = 'rgba(0,0,0,.4)';
         const hx = i < np / 2 ? x + pw - 45 : x + 20;
-        ctx.fillRect(X(hx), Y(yB + hT / 2 + 45), 9 * sc, 90 * sc);
+        ctx.fillRect(X(hx), Y(t.y + t.alto / 2 + 45), 9 * sc, 90 * sc);
       }
     }
     ctx.globalAlpha = 1;

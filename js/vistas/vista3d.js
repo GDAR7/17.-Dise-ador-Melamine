@@ -21,15 +21,17 @@ function geo(m, opts = {}) {
   const Wi = W - 2 * e;
   const vanos = nd + 1;
   const av = (Wi - nd * e) / vanos;
+  const nr = +m.repisas || 0;
+  const y0 = Z + e, y1 = H - e, j = apoyoDivision(m);
+  const yDiv = j ? yRepisa(m, e, j) + e : y0;
   for (let i = 1; i <= nd; i++) {
     const x = e + i * av + (i - 1) * e;
-    box(x, Z + e, 0, e, H - 2 * e - Z, D, cC, 'División');
+    box(x, yDiv, 0, e, y1 - yDiv, D, cC, 'División');
   }
 
-  const nr = +m.repisas || 0;
-  const y0 = Z + e, y1 = H - e;
   for (let i = 1; i <= nr; i++) {
     const y = y0 + (y1 - y0) * i / (nr + 1) - e / 2;
+    if (i <= j) { box(e, y, 0, Wi, e, D - (+m.retr || 0), cC, 'Repisa'); continue; }
     for (let v = 0; v < vanos; v++) {
       const x = e + v * (av + e);
       box(x, y, 0, av, e, D - (+m.retr || 0), cC, 'Repisa');
@@ -68,7 +70,8 @@ function geo(m, opts = {}) {
       const wTot = supe ? W : Wi - 4;
       const x0 = supe ? 0 : e + 2;
       const pw = (wTot - 3 * (np - 1)) / np;
-      for (let i = 0; i < np; i++) box(x0 + i * (pw + 3), yBase + 1, zf, pw, hTot, ef, cF, 'Puerta');
+      const t = tramoPuertas(m, e, yBase + 1, yBase + 1 + hTot);
+      if (t.alto > 0) for (let i = 0; i < np; i++) box(x0 + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta');
     }
   }
   return { B, W, H, D: D + (m.encimera ? 25 : 0) };
