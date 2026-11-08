@@ -2,7 +2,7 @@
 /* ============================================================
    UI — EDITOR DE COLUMNAS Y ZONAS
    ============================================================ */
-const TIPOS_ZONA = { puerta: 'Puerta', cajon: 'Cajón', abierta: 'Abierta / nicho' };
+const TIPOS_ZONA = { puerta: 'Puerta', cajon: 'Cajón', abierta: 'Nicho', seminicho: 'Semi nicho', semivacio: 'Semi abierta', sinlados: 'Abierta' };
 
 function sumaColumna(m, c) {
   const disp = +m.alto - (+m.zocalo || 0);
@@ -24,7 +24,7 @@ function htmlColumnas(m) {
         <div class="f" style="flex:2"><label>Tipo</label><select data-zf="tipo">
           ${Object.keys(TIPOS_ZONA).map(t => `<option value="${t}" ${t === z.tipo ? 'selected' : ''}>${TIPOS_ZONA[t]}</option>`).join('')}
         </select></div>
-        <div class="f"><label>Repisas</label><input type="number" min="0" data-zf="rep" value="${z.rep || 0}" ${z.tipo === 'cajon' ? 'disabled' : ''}></div>
+        <div class="f"><label>Repisas</label><input type="number" min="0" data-zf="rep" value="${z.rep || 0}" ${admiteRepisas(z) ? '' : 'disabled'}></div>
         <div class="zacc">
           <button data-acc="subir" title="Subir zona" aria-label="Subir zona" ${zi === 0 ? 'disabled' : ''}>↑</button>
           <button data-acc="bajar" title="Bajar zona" aria-label="Bajar zona" ${zi === n - 1 ? 'disabled' : ''}>↓</button>
@@ -83,7 +83,7 @@ function bindColumnas(m) {
       const zi = +zd.dataset.zon, z = c.zonas[zi];
       zd.querySelectorAll('[data-zf]').forEach(inp => {
         const f = inp.dataset.zf;
-        if (f === 'tipo') inp.addEventListener('change', () => { z.tipo = inp.value; if (z.tipo === 'cajon') z.rep = 0; estructura(); });
+        if (f === 'tipo') inp.addEventListener('change', () => { z.tipo = inp.value; if (!admiteRepisas(z)) z.rep = 0; estructura(); });
         else inp.addEventListener('input', () => { z[f] = valor(inp); actualizarSumas(m); recalc(); });
       });
       const mover = delta => { const o = c.zonas[zi + delta]; c.zonas[zi + delta] = z; c.zonas[zi] = o; estructura(); };

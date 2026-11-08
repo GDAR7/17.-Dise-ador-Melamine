@@ -14,7 +14,8 @@ function rotularZonas(ctx, m, e, X, Y) {
     zonasColumna(m, c, e).forEach(({ z, a, b }) => {
       if (Y(a) - Y(b) < 11) return;
       // Una zona abierta sin fondo deja ver el lienzo oscuro de la pantalla
-      ctx.fillStyle = z.tipo === 'abierta' && m.fondo === 'ninguno' && !imprimiendo ? '#9aa3b8' : 'rgba(20,16,10,.88)';
+      const hueco = z.tipo !== 'puerta' && z.tipo !== 'cajon';
+      ctx.fillStyle = hueco && m.fondo === 'ninguno' && !imprimiendo ? '#9aa3b8' : 'rgba(20,16,10,.88)';
       ctx.fillText(trunc(ctx, `${z.nom} ${b - a}`, X(W) - X(0) - 6), X(x0 + W / 2), (Y(a) + Y(b)) / 2);
     });
     x0 += W;
