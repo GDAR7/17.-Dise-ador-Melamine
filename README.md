@@ -1,0 +1,38 @@
+# Diseñador de Melamina
+
+Aplicación web para diseñar muebles de melamina: genera el despiece, optimiza el corte de las planchas, muestra vistas 2D y 3D y calcula el costo.
+
+## Cómo usarla
+
+Abre `index.html` con doble clic. No necesita instalación ni servidor.
+
+Los proyectos se guardan en el navegador. Para llevarlos a otro equipo o navegador, usa **Guardar** y **Abrir**.
+
+## Estructura
+
+```
+index.html              Estructura de la página
+css/estilos.css         Estilos
+js/
+  utilidades.js         Funciones de ayuda
+  nucleo/
+    estado.js           Datos del proyecto y guardado
+    despiece.js         Piezas, herrajes y tapacanto
+    corte.js            Optimización de planchas
+  vistas/
+    vista3d.js          Vista 3D
+    vista2d.js          Plano 2D con cotas
+  ui/
+    lista-modulos.js    Lista de módulos y plantillas
+    parametros.js       Panel de parámetros
+    tabla-despiece.js   Pestaña Despiece
+    planchas.js         Pestaña Planchas
+    costeo.js           Pestaña Costeo
+  app.js                Pestañas, botones e inicio
+```
+
+Los scripts se cargan en el orden indicado en `index.html`, y `app.js` debe ir siempre al final porque es el que arranca la aplicación.
+
+## Publicar en GitHub Pages
+
+En el repositorio, entra a **Settings → Pages**, elige **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`.
