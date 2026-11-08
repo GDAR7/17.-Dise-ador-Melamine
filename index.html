@@ -67,12 +67,22 @@
               <button class="btn on" id="b3door">Puertas</button>
               <button class="btn on" id="b3back">Fondo</button>
               <button class="btn" id="b3all">Todo el proyecto</button>
+              <button class="btn on" id="b3sel" hidden></button>
             </div>
+            <label class="cvexp">Separar piezas <input type="range" id="r3exp" min="0" max="100" value="0"></label>
             <div class="cvhint">Arrastra para girar · Rueda o pinza para zoom</div>
             <div class="leg" id="leg3"></div>
           </div>
         </div>
-        <div class="pane" id="pdes"><div class="scroll" id="desbox"></div></div>
+        <div class="pane" id="pdes">
+          <div class="des-lay">
+            <div class="scroll" id="desbox"></div>
+            <div class="des-iso">
+              <div class="des-iso-tit" id="isoTit"></div>
+              <canvas id="cvIso"></canvas>
+            </div>
+          </div>
+        </div>
         <div class="pane" id="popt"><div class="scroll" id="optbox"></div></div>
         <div class="pane" id="pcos"><div class="scroll" id="cosbox"></div></div>
       </div>

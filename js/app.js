@@ -13,6 +13,7 @@ function recalc() {
   if (activePane === 'pdes') renderDespiece();
   if (activePane === 'popt') renderOpt();
   if (activePane === 'pcos') renderCosteo();
+  marcarSeleccion();
   save();
 }
 function refresh() { renderList(); renderParams(); recalc(); }
@@ -36,6 +37,8 @@ $('#b3fit').onclick = () => { V3.yaw = -0.52; V3.pitch = 0.28; V3.zoom = 1; draw
 $('#b3door').onclick = e => { V3.puertas = !V3.puertas; e.currentTarget.classList.toggle('on', V3.puertas); draw3(); };
 $('#b3back').onclick = e => { V3.fondo = !V3.fondo; e.currentTarget.classList.toggle('on', V3.fondo); draw3(); };
 $('#b3all').onclick = e => { V3.all = !V3.all; e.currentTarget.classList.toggle('on', V3.all); draw3(); };
+$('#r3exp').oninput = e => { V3.explode = e.target.value / 100; draw3(); };
+$('#b3sel').onclick = () => { V3.sel = null; marcarSeleccion(); draw3(); };
 $('#b2f').onclick = () => { V2.vista = 'frontal'; $('#b2f').classList.add('on'); $('#b2l').classList.remove('on'); draw2(); };
 $('#b2l').onclick = () => { V2.vista = 'lateral'; $('#b2l').classList.add('on'); $('#b2f').classList.remove('on'); draw2(); };
 $('#b2dim').onclick = e => { V2.cotas = !V2.cotas; e.currentTarget.classList.toggle('on', V2.cotas); draw2(); };

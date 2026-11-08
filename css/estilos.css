@@ -131,6 +131,12 @@ canvas.solo-imp{display:none}
   background:rgba(18,20,26,.8);padding:4px 9px;border-radius:5px;z-index:5;
   backdrop-filter:blur(4px);
 }
+.cvexp{
+  position:absolute;bottom:64px;left:10px;display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:600;color:var(--txt2);z-index:5;
+  background:rgba(25,28,36,.9);border:1px solid var(--line);border-radius:6px;padding:5px 10px;
+}
+.cvexp input{width:170px;accent-color:var(--acc);cursor:pointer}
 .leg{
   position:absolute;top:10px;right:10px;background:rgba(25,28,36,.9);
   border:1px solid var(--line);border-radius:7px;padding:9px 11px;font-size:11px;
@@ -148,6 +154,7 @@ button.btn{
   font-weight:600;font-family:inherit;display:inline-flex;align-items:center;gap:6px;
 }
 button.btn:hover{border-color:var(--line2);color:var(--txt);background:var(--panel)}
+button.btn[hidden]{display:none}
 button.btn.pri{background:var(--acc);border-color:var(--acc);color:#1a1206}
 button.btn.pri:hover{background:var(--acc2);border-color:var(--acc2);color:#1a1206}
 button.btn.on{background:#3a2f18;border-color:var(--accd);color:var(--acc2)}
@@ -204,6 +211,20 @@ tbody tr.grp:hover td{background:var(--panel2)}
 .tcard>.hd .sp{flex:1}
 .tcard>.hd .sub{font-size:11px;color:var(--txt3)}
 .tscroll{max-height:none;overflow-x:auto}
+
+/* ---------- DESPIECE CON VISTA ISOMÉTRICA ---------- */
+.des-lay{display:flex;height:100%}
+.des-lay #desbox{flex:1;min-width:0}
+.des-iso{width:340px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--bg)}
+.des-iso-tit{padding:9px 12px;font-size:11.5px;font-weight:600;color:var(--txt2);border-bottom:1px solid var(--line)}
+.des-iso canvas{flex:1;min-height:0;cursor:grab}
+#desbox tbody tr{cursor:pointer}
+#desbox tbody tr.sel td{background:rgba(30,155,255,.2)}
+@media (max-width:1500px){
+  .des-lay{flex-direction:column}
+  .des-lay #desbox{height:auto;min-height:0}
+  .des-iso{order:-1;width:100%;height:240px;border-left:0;border-bottom:1px solid var(--line)}
+}
 
 /* ---------- SELECTOR DE TAPACANTO ---------- */
 .cantos{--g:10px;position:relative;width:56px;height:30px;margin-left:auto;background:var(--panel2);border-radius:2px}
@@ -328,7 +349,9 @@ tbody tr.grp:hover td{background:var(--panel2)}
     --acc:#8a5a00; --acc2:#8a5a00; --blue:#1f63a8; --green:#1c7a4c;
   }
   html,body{height:auto;background:#fff;color:#000;overflow:visible}
-  header,aside,#rightp,#tabs,#mtabs,#toast,#segCorte,.cvbar,.cvhint,.scroll .btn{display:none!important}
+  header,aside,#rightp,#tabs,#mtabs,#toast,#segCorte,.cvbar,.cvhint,.cvexp,.des-iso,.scroll .btn{display:none!important}
+  .des-lay{display:block;height:auto}
+  #desbox tbody tr.sel td{background:none}
 
   /* quitar el layout de pantalla completa para que el contenido pase de página */
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}

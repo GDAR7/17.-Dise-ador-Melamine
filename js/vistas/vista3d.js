@@ -10,7 +10,8 @@ function geo(m, opts = {}) {
   const e = mc.esp, ef = mf.esp, eb = mb.esp;
   const W = +m.ancho, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0;
   const B = [];
-  const box = (x, y, z, w, h, d, c, tag) => B.push({ x, y, z, w, h, d, c, tag });
+  // pieza: nombre de la pieza en el despiece, para poder resaltarla
+  const box = (x, y, z, w, h, d, c, tag, pieza = tag) => B.push({ x, y, z, w, h, d, c, tag, pieza });
   const cC = mc.color, cF = mf.color, cB = mb.color;
 
   box(0, 0, 0, e, H, D, cC, 'Lateral');
@@ -27,12 +28,12 @@ function geo(m, opts = {}) {
   const yDiv = j ? yRepisa(m, e, j) + e : y0;
   for (let i = 1; i <= nd; i++) {
     const x = e + i * av + (i - 1) * e;
-    box(x, yDiv, 0, e, y1 - yDiv, D, cC, 'División');
+    box(x, yDiv, 0, e, y1 - yDiv, D, cC, 'División', 'División vertical');
   }
 
   for (let i = 1; i <= nr; i++) {
     const y = y0 + (y1 - y0) * i / (nr + 1) - e / 2;
-    if (i <= j) { box(e, y, 0, Wi, e, D - (+m.retr || 0), cC, 'Repisa'); continue; }
+    if (i <= j) { box(e, y, 0, Wi, e, D - (+m.retr || 0), cC, 'Repisa', 'Repisa entera'); continue; }
     for (let v = 0; v < vanos; v++) {
       const x = e + v * (av + e);
       box(x, y, 0, av, e, D - (+m.retr || 0), cC, 'Repisa');
@@ -40,13 +41,13 @@ function geo(m, opts = {}) {
   }
 
   if (Z > 0) {
-    box(e, 0, D - e, W - 2 * e, Z, e, cC, 'Zócalo');
-    box(e, 0, 0, W - 2 * e, Z, e, cC, 'Zócalo');
+    box(e, 0, D - e, W - 2 * e, Z, e, cC, 'Zócalo', 'Zócalo frontal');
+    box(e, 0, 0, W - 2 * e, Z, e, cC, 'Zócalo', 'Zócalo posterior');
   }
 
   if (opts.fondo !== false && m.fondo !== 'ninguno') {
     if (m.fondo === 'clavado') box(0, Z, -eb, W, H - Z, eb, cB, 'Fondo');
-    else box(e - 6, Z + e - 6, 0, Wi + 12, H - 2 * e - Z + 12, eb, cB, 'Fondo');
+    else box(e - 6, Z + e - 6, 0, Wi + 12, H - 2 * e - Z + 12, eb, cB, 'Fondo', 'Fondo (ranurado)');
   }
 
   if (m.encimera) box(0, H, -0, W, ef, D + 25, cF, 'Encimera');
@@ -62,7 +63,9 @@ function geo(m, opts = {}) {
       const y = Z + i * hc;
       const x = supe ? 0 : e + 2;
       const w = supe ? W : Wi - 4;
-      box(x, y + 1, zf, w, hc - 3, ef, cF, 'Frente cajón');
+      box(x, y + 1, zf, w, hc - 3, ef, cF, 'Frente cajón', 'Frente de cajón');
+      cajaCajon(box, e + 13, y + 15, zf, Wi - 26, Math.max(80, hc - 40), Math.max(200, D - 60), e, eb, cC, cB,
+        { lateral: 'Lateral de cajón', frontal: 'Frontal/Trasera cajón', fondo: 'Fondo de cajón' });
     }
     // puertas arriba
     if (np > 0) {
@@ -78,13 +81,26 @@ function geo(m, opts = {}) {
   return { B, W, H, D: D + (m.encimera ? 25 : 0) };
 }
 
+/* Caja interior de un cajón, que termina en zFin (donde empieza el frente) */
+function cajaCajon(box, x, y, zFin, ancho, alto, prof, e, eb, cC, cB, nombres) {
+  const z = zFin - prof, interior = ancho - 2 * e;
+  box(x, y, z, e, alto, prof, cC, 'Cajón', nombres.lateral);
+  box(x + ancho - e, y, z, e, alto, prof, cC, 'Cajón', nombres.lateral);
+  box(x + e, y, z, interior, alto, e, cC, 'Cajón', nombres.frontal);
+  box(x + e, y, zFin - e, interior, alto, e, cC, 'Cajón', nombres.frontal);
+  box(x + e, y, z + e, interior, eb, prof - 2 * e, cB, 'Cajón', nombres.fondo);
+}
+
 /* ============================================================
    RENDER 3D
    ============================================================ */
-const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo: true, drag: null };
+const COLOR_SELECCION = '#1e9bff';
+// explode: separación de piezas de 0 a 1. sel: pieza resaltada { modId, nom }
+const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo: true, drag: null, explode: 0, sel: null };
 
-function draw3() {
-  const cv = $('#cv3'), ctx = cv.getContext('2d');
+function draw3(cv = $('#cv3')) {
+  const ctx = cv.getContext('2d');
+  const esPrincipal = cv.id === 'cv3';
   const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
   const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
   if (!w || !h) return;
@@ -93,15 +109,16 @@ function draw3() {
   ctx.clearRect(0, 0, w, h);
 
   const mods = V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
-  if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); $('#leg3').innerHTML = ''; return; }
+  if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); if (esPrincipal) $('#leg3').innerHTML = ''; return; }
 
-  // Ensamblar escena (módulos lado a lado)
+  // Ensamblar escena (módulos lado a lado). Con una pieza seleccionada se muestran todas, para poder ubicarla.
+  const conSel = !!V3.sel && !imprimiendo;
   let boxes = [], ox = 0, maxH = 0, maxD = 0;
   mods.forEach(m => {
     const n = V3.all ? (+m.qty || 1) : 1;
     for (let i = 0; i < n; i++) {
-      const g = geo(m, { puertas: V3.puertas, fondo: V3.fondo });
-      g.B.forEach(b => boxes.push({ ...b, x: b.x + ox }));
+      const g = geo(m, { puertas: V3.puertas || conSel, fondo: V3.fondo || conSel });
+      g.B.forEach(b => boxes.push({ ...b, x: b.x + ox, mod: m.id }));
       ox += g.W + (V3.all ? 20 : 0);
       maxH = Math.max(maxH, g.H); maxD = Math.max(maxD, g.D);
     }
@@ -109,8 +126,17 @@ function draw3() {
   const totW = ox;
   const cx0 = totW / 2, cy0 = maxH / 2, cz0 = maxD / 2;
 
+  // Vista separada: cada pieza se aleja del centro del mueble. En profundidad un poco más, porque el mueble es menos hondo que alto.
+  const k = V3.explode;
+  if (k) boxes.forEach(b => {
+    b.x += (b.x + b.w / 2 - cx0) * k;
+    b.y += (b.y + b.h / 2 - cy0) * k;
+    b.z += (b.z + b.d / 2 - cz0) * k * 2;
+  });
+  const hayPiezaSel = conSel && boxes.some(b => b.mod === V3.sel.modId && b.pieza === V3.sel.nom);
+
   // escala
-  const span = Math.max(totW, maxH, maxD) * 1.45;
+  const span = Math.max(totW, maxH, maxD) * 1.45 * (1 + k);
   const sc = Math.min(w, h) / span * V3.zoom;
 
   const cy = Math.cos(V3.yaw), sy = Math.sin(V3.yaw);
@@ -140,30 +166,37 @@ function draw3() {
   ];
   boxes.forEach(b => {
     const V = C.map(c => pr([b.x + c[0] * b.w, b.y + c[1] * b.h, b.z + c[2] * b.d]));
+    const sel = hayPiezaSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom;
     FI.forEach(f => {
       const pts = f.i.map(k => V[k]);
       const z = pts.reduce((s, p) => s + p[2], 0) / 4;
-      faces.push({ pts, z, c: b.c, l: f.l, tag: b.tag });
+      faces.push({ pts, z, c: b.c, l: f.l, tag: b.tag, sel });
     });
   });
-  faces.sort((a, b) => b.z - a.z);
+  // La pieza seleccionada se pinta al final, para que se vea aunque esté dentro del mueble
+  faces.sort((a, b) => (a.sel - b.sel) || (b.z - a.z));
 
   // Piso sombra
-  ctx.save();
-  const sh = [[0, 0, 0], [totW, 0, 0], [totW, 0, maxD], [0, 0, maxD]].map(pr);
-  ctx.beginPath(); ctx.moveTo(sh[0][0], sh[0][1]);
-  sh.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath();
-  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.filter = 'blur(2px)'; ctx.fill();
-  ctx.restore();
+  if (!k && !hayPiezaSel) {
+    ctx.save();
+    const sh = [[0, 0, 0], [totW, 0, 0], [totW, 0, maxD], [0, 0, maxD]].map(pr);
+    ctx.beginPath(); ctx.moveTo(sh[0][0], sh[0][1]);
+    sh.slice(1).forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath();
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.filter = 'blur(2px)'; ctx.fill();
+    ctx.restore();
+  }
 
   faces.forEach(f => {
     ctx.beginPath();
     ctx.moveTo(f.pts[0][0], f.pts[0][1]);
     for (let i = 1; i < 4; i++) ctx.lineTo(f.pts[i][0], f.pts[i][1]);
     ctx.closePath();
-    ctx.fillStyle = shade(f.c, f.l);
+    const fantasma = hayPiezaSel && !f.sel;
+    ctx.globalAlpha = fantasma ? 0.08 : 1;
+    ctx.fillStyle = shade(f.sel ? COLOR_SELECCION : f.c, f.l);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.30)'; ctx.lineWidth = 0.6; ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = fantasma ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.30)'; ctx.lineWidth = 0.6; ctx.stroke();
   });
 
   // Cotas generales
@@ -173,9 +206,10 @@ function draw3() {
   const txt = V3.all
     ? `Proyecto · ${S.mods.length} módulo(s) · ${S.mods.reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`
     : `${mm.nom} · ${mm.ancho} × ${mm.alto} × ${mm.prof} mm`;
-  ctx.fillText(txt, 12, h - 28);
+  ctx.fillText(txt, 12, h - 44);
 
   // Leyenda materiales
+  if (!esPrincipal) return;
   const usados = {};
   boxes.forEach(b => usados[b.c] = true);
   const legm = S.mats.filter(m => usados[m.color]);
@@ -195,22 +229,21 @@ function msgCv(ctx, w, h, t) {
 }
 
 /* ---------- interacción 3D ---------- */
-(function () {
-  const cv = $('#cv3');
+[$('#cv3'), $('#cvIso')].forEach(cv => {
   let last = null, pinch = null;
   const pos = e => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
   const down = e => { last = pos(e); };
   const move = e => {
     if (e.touches && e.touches.length === 2) {
       const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      if (pinch) { V3.zoom = cl(V3.zoom * (d / pinch), .3, 4); draw3(); }
+      if (pinch) { V3.zoom = cl(V3.zoom * (d / pinch), .3, 4); draw3(cv); }
       pinch = d; e.preventDefault(); return;
     }
     if (!last) return;
     const p = pos(e);
     V3.yaw += (p.x - last.x) * 0.009;
     V3.pitch = cl(V3.pitch + (p.y - last.y) * 0.007, -1.35, 1.35);
-    last = p; draw3();
+    last = p; draw3(cv);
     if (e.touches) e.preventDefault();
   };
   const up = () => { last = null; pinch = null; };
@@ -218,5 +251,5 @@ function msgCv(ctx, w, h, t) {
   cv.addEventListener('touchstart', down, { passive: true });
   cv.addEventListener('touchmove', move, { passive: false });
   cv.addEventListener('touchend', up);
-  cv.addEventListener('wheel', e => { e.preventDefault(); V3.zoom = cl(V3.zoom * (e.deltaY < 0 ? 1.1 : .9), .3, 4); draw3(); }, { passive: false });
-})();
+  cv.addEventListener('wheel', e => { e.preventDefault(); V3.zoom = cl(V3.zoom * (e.deltaY < 0 ? 1.1 : .9), .3, 4); draw3(cv); }, { passive: false });
+});

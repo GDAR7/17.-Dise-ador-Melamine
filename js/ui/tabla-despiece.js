@@ -39,7 +39,7 @@ function renderDespiece() {
       <div class="tscroll"><table>
         <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Cant.</th>
         <th class="n">C.L</th><th class="n">C.A</th><th class="n">Lados</th><th>Material</th><th class="n">Canto m</th></tr></thead>
-        <tbody>${fs.map(p => `<tr>
+        <tbody>${fs.map(p => `<tr data-i="${filas.indexOf(p)}" data-mod="${p.modId}" data-nom="${esc(p.nom)}">
           <td class="nm">${esc(p.nom)}</td>
           <td class="n">${nf(p.L)}</td><td class="n">${nf(p.A)}</td>
           <td class="n">${p.q}</td>
@@ -54,6 +54,10 @@ function renderDespiece() {
     <button class="btn" id="bCsv">⧉ Copiar despiece (CSV)</button>
     <button class="btn" id="bTxt">⧉ Copiar lista para el carpintero</button></div>`;
   box.innerHTML = h;
+
+  box.querySelectorAll('tbody tr').forEach(tr => tr.onclick = e => {
+    if (!e.target.closest('.lado')) seleccionarPieza(filas[tr.dataset.i]);
+  });
 
   box.querySelectorAll('.lado').forEach(b => b.onclick = () => {
     const { i, lado } = b.dataset;
@@ -80,6 +84,26 @@ function renderDespiece() {
     t += `\nTapacanto total: ${tc.toFixed(1)} m\nÁrea: ${m2.toFixed(2)} m²\n`;
     copy(t, 'Lista copiada');
   };
+}
+
+/* Resalta en 3D la pieza de la fila elegida; un segundo clic la deselecciona */
+function seleccionarPieza(p) {
+  const misma = V3.sel && V3.sel.modId === p.modId && V3.sel.nom === p.nom;
+  V3.sel = misma ? null : { modId: p.modId, nom: p.nom };
+  if (V3.sel && S.sel !== p.modId) { S.sel = p.modId; renderList(); renderParams(); }
+  marcarSeleccion();
+  draw3();
+}
+
+/* Sincroniza la fila marcada, los textos y la vista isométrica con la selección */
+function marcarSeleccion() {
+  if (V3.sel && !todasPiezas().some(p => p.modId === V3.sel.modId && p.nom === V3.sel.nom)) V3.sel = null;
+  $$('#desbox tbody tr').forEach(tr => tr.classList.toggle('sel', !!V3.sel && tr.dataset.mod === V3.sel.modId && tr.dataset.nom === V3.sel.nom));
+  const chip = $('#b3sel');
+  chip.hidden = !V3.sel;
+  chip.textContent = V3.sel ? `✕ ${V3.sel.nom}` : '';
+  $('#isoTit').textContent = V3.sel ? V3.sel.nom : 'Haz clic en una pieza de la tabla para ubicarla';
+  draw3($('#cvIso'));
 }
 
 const NOMBRES_LADO = { L2: 'Largo superior', L1: 'Largo inferior', A2: 'Ancho izquierdo', A1: 'Ancho derecho' };

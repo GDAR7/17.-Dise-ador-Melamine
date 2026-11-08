@@ -118,35 +118,44 @@ function geoColumnas(m, opts = {}) {
   const e = mc.esp, ef = mf.esp, eb = mb.esp, cC = mc.color, cF = mf.color, cB = mb.color;
   const H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = +m.retr || 0;
   const B = [];
-  const box = (x, y, z, w, h, d, c, tag) => B.push({ x, y, z, w, h, d, c, tag });
+  // pieza: el mismo nombre que le da piezasColumnas, para poder resaltarla desde el despiece
+  const box = (x, y, z, w, h, d, c, tag, pieza = tag) => B.push({ x, y, z, w, h, d, c, tag, pieza });
 
   let x0 = 0;
   (m.columnas || []).forEach(c => {
-    const W = +c.ancho || 0, Wi = W - 2 * e, xi = x0 + e;
-    tramosPanel(m, c, e, 0, H, CORTAN_LATERAL).forEach(([y0, y1]) => {
-      box(x0, y0, 0, e, y1 - y0, D, cC, 'Lateral');
-      box(x0 + W - e, y0, 0, e, y1 - y0, D, cC, 'Lateral');
+    const W = +c.ancho || 0, Wi = W - 2 * e, xi = x0 + e, pre = `${c.nom} · `;
+    const laterales = tramosPanel(m, c, e, 0, H, CORTAN_LATERAL);
+    laterales.forEach(([y0, y1], i) => {
+      const nom = pre + (laterales.length > 1 ? `Lateral tramo ${i + 1}` : 'Lateral');
+      box(x0, y0, 0, e, y1 - y0, D, cC, 'Lateral', nom);
+      box(x0 + W - e, y0, 0, e, y1 - y0, D, cC, 'Lateral', nom);
     });
-    box(xi, Z, 0, Wi, e, D, cC, 'Piso');
-    box(xi, H - e, 0, Wi, e, D, cC, 'Techo');
+    box(xi, Z, 0, Wi, e, D, cC, 'Piso', pre + 'Piso');
+    box(xi, H - e, 0, Wi, e, D, cC, 'Techo', pre + 'Techo');
     if (Z > 0) {
-      box(xi, 0, D - e, Wi, Z, e, cC, 'Zócalo');
-      box(xi, 0, 0, Wi, Z, e, cC, 'Zócalo');
+      box(xi, 0, D - e, Wi, Z, e, cC, 'Zócalo', pre + 'Zócalo frontal');
+      box(xi, 0, 0, Wi, Z, e, cC, 'Zócalo', pre + 'Zócalo posterior');
     }
     if (opts.fondo !== false && m.fondo !== 'ninguno') {
-      tramosPanel(m, c, e, ...rangoFondo(m, e), CORTAN_FONDO).forEach(([y0, y1]) => {
-        if (m.fondo === 'clavado') box(x0, y0, -eb, W, y1 - y0, eb, cB, 'Fondo');
-        else box(xi - 6, y0, 0, Wi + 12, y1 - y0, eb, cB, 'Fondo');
+      const clavado = m.fondo === 'clavado', fondos = tramosPanel(m, c, e, ...rangoFondo(m, e), CORTAN_FONDO);
+      fondos.forEach(([y0, y1], i) => {
+        const nom = `${pre}${clavado ? 'Fondo' : 'Fondo (ranurado)'}${fondos.length > 1 ? ` tramo ${i + 1}` : ''}`;
+        if (clavado) box(x0, y0, -eb, W, y1 - y0, eb, cB, 'Fondo', nom);
+        else box(xi - 6, y0, 0, Wi + 12, y1 - y0, eb, cB, 'Fondo', nom);
       });
     }
     zonasColumna(m, c, e).forEach(({ z, a, b, ib, it, panel, yPanel }) => {
-      if (panel) box(xi, yPanel, 0, Wi, e, D, cC, 'Entrepaño');
+      const nom = pre + z.nom;
+      if (panel) box(xi, yPanel, 0, Wi, e, D, cC, 'Entrepaño', pre + 'Entrepaño');
       if (admiteRepisas(z)) {
         const n = +z.rep || 0;
-        for (let i = 1; i <= n; i++) box(xi, ib + (it - ib) * i / (n + 1) - e / 2, 0, Wi, e, D - retr, cC, 'Repisa');
+        for (let i = 1; i <= n; i++) box(xi, ib + (it - ib) * i / (n + 1) - e / 2, 0, Wi, e, D - retr, cC, 'Repisa', `${nom} · Repisa`);
       }
-      if ((z.tipo === 'puerta' || z.tipo === 'cajon') && opts.puertas !== false) {
-        box(x0 + 1.5, a + 1.5, D, W - 3, b - a - 3, ef, cF, z.tipo === 'cajon' ? 'Frente cajón' : 'Puerta');
+      if (opts.puertas !== false && z.tipo === 'puerta') box(x0 + 1.5, a + 1.5, D, W - 3, b - a - 3, ef, cF, 'Puerta', `${nom} · Puerta`);
+      if (opts.puertas !== false && z.tipo === 'cajon') {
+        box(x0 + 1.5, a + 1.5, D, W - 3, b - a - 3, ef, cF, 'Frente cajón', `${nom} · Frente`);
+        cajaCajon(box, xi + 13, a + 15, D, Wi - 26, Math.max(80, b - a - 40), Math.max(200, D - 60), e, eb, cC, cB,
+          { lateral: `${nom} · Lateral cajón`, frontal: `${nom} · Frontal/Trasera cajón`, fondo: `${nom} · Fondo cajón` });
       }
     });
     x0 += W;
