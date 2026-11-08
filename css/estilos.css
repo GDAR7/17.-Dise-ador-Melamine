@@ -226,6 +226,28 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .des-iso{order:-1;width:100%;height:240px;border-left:0;border-bottom:1px solid var(--line)}
 }
 
+/* ---------- CONSTRUCCIÓN ---------- */
+.det-lay{display:flex;height:100%}
+.det-lista{width:230px;flex-shrink:0;overflow-y:auto;border-right:1px solid var(--line);background:var(--bg2);padding:8px}
+.det-grupo{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--txt3);padding:9px 6px 4px}
+.det-item{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:6px;padding:6px 8px;color:var(--txt2);font:inherit;font-size:12px;cursor:pointer}
+.det-item:hover{background:var(--panel);color:var(--txt)}
+.det-item.on{background:#3a2f18;border-color:var(--accd);color:var(--acc2)}
+.det-item small{font-size:10.5px;color:var(--txt3)}
+.det-cuerpo{flex:1;min-width:0;display:flex;flex-direction:column}
+.det-3d{height:44%;flex-shrink:0;border-bottom:1px solid var(--line)}
+.det-3d canvas{cursor:grab}
+.det-3d .cvexp{bottom:10px}
+.det-cuerpo #detbox{flex:1;height:auto;min-height:0}
+.det-guia{display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.det-txt{padding:10px 13px 10px 30px;font-size:12px;color:var(--txt2)}
+.det-txt li{margin-bottom:5px}
+@media (max-width:1100px){
+  .det-lay{flex-direction:column}
+  .det-lista{width:100%;height:120px;border-right:0;border-bottom:1px solid var(--line)}
+  .det-guia{grid-template-columns:1fr}
+}
+
 /* ---------- PERFORACIONES ---------- */
 .perf{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .perf .bh{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -372,6 +394,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
   /* quitar el layout de pantalla completa para que el contenido pase de página */
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
   .pane{display:block!important;height:auto}
+  #pdet{display:none!important}
   #p3d,#p2d{break-inside:avoid}
   #pdes,#popt,#pcos,#pper{break-before:page}
   .perf{break-inside:avoid}

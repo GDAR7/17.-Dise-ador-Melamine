@@ -1,0 +1,110 @@
+"use strict";
+/* ============================================================
+   DETALLE DE CONSTRUCCIÓN
+   Agrupa las piezas de un mueble en elementos que se arman por
+   separado: cuerpo, repisas, puertas y cajones.
+   ============================================================ */
+function elementosConstruccion(m) {
+  const todas = piezas(m), porNom = new Map(todas.map(p => [p.nom, p]));
+  const qty = +m.qty || 1, lista = [];
+  const crear = (id, grupo, titulo, tipo, unidades, noms, extra = {}) => {
+    const ps = noms.map(n => porNom.get(n)).filter(Boolean);
+    if (ps.length) lista.push({ id, grupo, titulo, tipo, cant: unidades * qty, piezas: ps, ...extra });
+  };
+
+  if (m.tipo === 'columnas') {
+    m.columnas.forEach((c, ci) => {
+      const pre = `${c.nom} · `, deZonas = new Set();
+      const propias = c.zonas.map((z, zi) => {
+        const base = pre + z.nom, noms = {
+          repisa: `${base} · Repisa`, puerta: `${base} · Puerta`,
+          cajon: [`${base} · Frente`, `${base} · Lateral cajón`, `${base} · Frontal/Trasera cajón`, `${base} · Fondo cajón`]
+        };
+        [noms.repisa, noms.puerta, ...noms.cajon].forEach(n => deZonas.add(n));
+        return { z, zi, noms };
+      });
+      crear(`c${ci}-cuerpo`, c.nom, 'Cuerpo', 'cuerpo', 1, todas.filter(p => p.nom.startsWith(pre) && !deZonas.has(p.nom)).map(p => p.nom));
+      const bisagra = bisagraColumna(m.columnas, ci);
+      propias.forEach(({ z, zi, noms }) => {
+        crear(`c${ci}-z${zi}-p`, c.nom, `${z.nom} · Puerta`, 'puerta', 1, [noms.puerta], { bisagra: bisagra.nombre, lado: bisagra.lado });
+        crear(`c${ci}-z${zi}-c`, c.nom, `${z.nom} · Cajón`, 'cajon', 1, noms.cajon);
+        if (porNom.has(noms.repisa)) crear(`c${ci}-z${zi}-r`, c.nom, `${z.nom} · Repisas`, 'repisa', +z.rep || 1, [noms.repisa]);
+      });
+    });
+    return lista;
+  }
+
+  const np = +m.puertas || 0, nc = +m.cajones || 0;
+  crear('cuerpo', m.nom, 'Cuerpo', 'cuerpo', 1, ['Lateral', 'Techo', 'Piso', 'División vertical', 'Zócalo frontal', 'Zócalo posterior', 'Fondo', 'Fondo (ranurado)', 'Encimera']);
+  [['Repisa', 'Repisas'], ['Repisa entera', 'Repisas enteras']].forEach(([nom, titulo]) => {
+    const p = porNom.get(nom);
+    if (p) crear(nom, m.nom, titulo, 'repisa', p.q / qty, [nom]);
+  });
+  crear('puerta', m.nom, 'Puerta', 'puerta', np, ['Puerta'], { bisagra: m.tipoP === 'embutida' ? 'Embutida' : 'Recta', lado: 'de las bisagras' });
+  crear('cajon', m.nom, 'Cajón', 'cajon', nc, ['Frente de cajón', 'Lateral de cajón', 'Frontal/Trasera cajón', 'Fondo de cajón']);
+  return lista;
+}
+
+/* Cajas 3D de una sola unidad del elemento */
+function filtrarDetalle(boxes, det) {
+  const porUnidad = new Map(det.piezas.map(p => [p.nom, Math.max(1, Math.round(p.q / det.cant))]));
+  const vistos = new Map();
+  return boxes.filter(b => {
+    if (!porUnidad.has(b.pieza)) return false;
+    const n = (vistos.get(b.pieza) || 0) + 1;
+    vistos.set(b.pieza, n);
+    return n <= porUnidad.get(b.pieza);
+  });
+}
+
+/* Herrajes y pasos de armado de un elemento */
+function guiaConstruccion(el) {
+  const busca = t => el.piezas.find(p => p.nom.includes(t));
+  if (el.tipo === 'cajon') {
+    const lat = busca('Lateral'), fro = busca('Frontal');
+    return {
+      herrajes: ['1 par de correderas', '1 tirador', 'Tornillos para las uniones de la caja y el frente'],
+      pasos: [
+        `Une el frontal y la trasera (${nf(fro.L)} mm) entre los dos laterales (${nf(lat.L)} mm).`,
+        'Coloca el fondo por debajo y clávalo; úsalo para dejar la caja a escuadra, comparando las dos diagonales.',
+        `Fija la parte interior de la corredera a cada lateral de la caja. Elige el largo comercial más cercano sin pasar de ${nf(lat.L)} mm.`,
+        'Fija la parte exterior de la corredera al lateral del mueble, en la altura indicada en Perforaciones.',
+        'Presenta el frente y atorníllalo desde dentro de la caja, dejando unos 3 mm de luz con los frentes vecinos.',
+        'Coloca el tirador y regula la corredera.'
+      ]
+    };
+  }
+  if (el.tipo === 'puerta') {
+    const p = el.piezas[0], n = alturasBisagra(p.L).length;
+    return {
+      herrajes: [`${n} bisagras ${el.bisagra.toLowerCase()}`, '1 tirador'],
+      pasos: [
+        `Perfora ${n} cazoletas Ø${CAZOLETA.diametro} a ${CAZOLETA.aCanto} mm del canto ${el.lado}, a ${alturasBisagra(p.L).join(', ')} mm del canto inferior.`,
+        'Atornilla las bisagras a la puerta.',
+        'Fija las bases de bisagra al lateral del mueble, a la misma altura.',
+        'Monta la puerta y regula los tornillos de la bisagra hasta dejar una luz pareja.',
+        'Coloca el tirador.'
+      ]
+    };
+  }
+  if (el.tipo === 'repisa') {
+    return {
+      herrajes: ['4 soportes por repisa'],
+      pasos: [
+        'Perfora los soportes en los laterales, en las alturas indicadas en Perforaciones.',
+        'Pon el tapacanto en el lado que quedará al frente.',
+        'Inserta los soportes y apoya la repisa, comprobando que no se balancee.'
+      ]
+    };
+  }
+  return {
+    herrajes: ['Tornillos y tarugos para las uniones', 'Niveladores, si lleva zócalo'],
+    pasos: [
+      'Antes de armar, haz en los laterales las perforaciones de soportes y correderas.',
+      'Une el piso y el techo entre los laterales, y luego los entrepaños.',
+      'Coloca los zócalos, si los lleva.',
+      'Coloca el fondo y úsalo para dejar el cuerpo a escuadra, comparando las dos diagonales.',
+      'Instala el cuerpo nivelado y fíjalo a la pared o a los muebles vecinos.'
+    ]
+  };
+}

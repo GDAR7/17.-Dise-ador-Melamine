@@ -101,6 +101,7 @@ const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo:
 function draw3(cv = $('#cv3')) {
   const ctx = cv.getContext('2d');
   const esPrincipal = cv.id === 'cv3';
+  const det = cv.id === 'cvDet' ? V3.detalle : null;   // vista de un solo elemento, en la pestaña Construcción
   const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
   const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
   if (!w || !h) return;
@@ -108,16 +109,16 @@ function draw3(cv = $('#cv3')) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
 
-  const mods = V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
+  const mods = det ? [det.mod] : V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
   if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); if (esPrincipal) $('#leg3').innerHTML = ''; return; }
 
   // Ensamblar escena (módulos lado a lado). Con una pieza seleccionada se muestran todas, para poder ubicarla.
-  const conSel = !!V3.sel && !imprimiendo;
+  const conSel = !!V3.sel && !imprimiendo && !det;
   let boxes = [], ox = 0, maxH = 0, maxD = 0;
   mods.forEach(m => {
-    const n = V3.all ? (+m.qty || 1) : 1;
+    const n = V3.all && !det ? (+m.qty || 1) : 1;
     for (let i = 0; i < n; i++) {
-      const g = geo(m, { puertas: V3.puertas || conSel, fondo: V3.fondo || conSel });
+      const g = geo(m, { puertas: V3.puertas || conSel || !!det, fondo: V3.fondo || conSel || !!det });
       const info = new Map(piezas(m).map(p => [p.nom, p]));
       g.B.forEach(b => {
         const pz = info.get(b.pieza), mat = pz && S.mats.find(x => x.id === pz.mat);
@@ -127,11 +128,21 @@ function draw3(cv = $('#cv3')) {
       maxH = Math.max(maxH, g.H); maxD = Math.max(maxD, g.D);
     }
   });
-  const totW = ox;
+  let totW = ox;
+  if (det) {
+    // Solo una unidad del elemento, llevada al origen para que se encuadre sola
+    boxes = filtrarDetalle(boxes, det);
+    if (!boxes.length) { msgCv(ctx, w, h, 'Sin piezas para mostrar'); return; }
+    const x0 = Math.min(...boxes.map(b => b.x)), y0 = Math.min(...boxes.map(b => b.y)), z0 = Math.min(...boxes.map(b => b.z));
+    boxes.forEach(b => { b.x -= x0; b.y -= y0; b.z -= z0; });
+    totW = Math.max(...boxes.map(b => b.x + b.w));
+    maxH = Math.max(...boxes.map(b => b.y + b.h));
+    maxD = Math.max(...boxes.map(b => b.z + b.d));
+  }
   const cx0 = totW / 2, cy0 = maxH / 2, cz0 = maxD / 2;
 
   // Vista separada: cada pieza se aleja del centro del mueble. En profundidad un poco más, porque el mueble es menos hondo que alto.
-  const k = V3.explode;
+  const k = det ? det.explode : V3.explode;
   if (k) boxes.forEach(b => {
     b.x += (b.x + b.w / 2 - cx0) * k;
     b.y += (b.y + b.h / 2 - cy0) * k;
@@ -255,7 +266,7 @@ function draw3(cv = $('#cv3')) {
   const txt = V3.all
     ? `Proyecto · ${S.mods.length} módulo(s) · ${S.mods.reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`
     : `${mm.nom} · ${mm.ancho} × ${mm.alto} × ${mm.prof} mm`;
-  ctx.fillText(txt, 12, h - 44);
+  if (!det) ctx.fillText(txt, 12, h - 44);
 
   // Leyenda materiales
   if (!esPrincipal) return;
@@ -278,7 +289,7 @@ function msgCv(ctx, w, h, t) {
 }
 
 /* ---------- interacción 3D ---------- */
-[$('#cv3'), $('#cvIso')].forEach(cv => {
+[$('#cv3'), $('#cvIso'), $('#cvDet')].forEach(cv => {
   let last = null, pinch = null;
   const pos = e => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
   const down = e => { last = pos(e); };

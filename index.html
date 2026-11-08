@@ -46,6 +46,7 @@
         <button class="tab" data-p="popt"><span>▭</span> Planchas <b id="bopt">0</b></button>
         <button class="tab" data-p="pcos"><span>◎</span> Costeo</button>
         <button class="tab" data-p="pper"><span>⊙</span> Perforaciones</button>
+        <button class="tab" data-p="pdet"><span>⚒</span> Construcción</button>
       </div>
       <div id="view">
         <div class="pane" id="p2d">
@@ -88,6 +89,18 @@
         <div class="pane" id="popt"><div class="scroll" id="optbox"></div></div>
         <div class="pane" id="pcos"><div class="scroll" id="cosbox"></div></div>
         <div class="pane" id="pper"><div class="scroll" id="perbox"></div></div>
+        <div class="pane" id="pdet">
+          <div class="det-lay">
+            <div class="det-lista" id="detLista"></div>
+            <div class="det-cuerpo">
+              <div class="cvwrap det-3d">
+                <canvas id="cvDet"></canvas>
+                <label class="cvexp">Separar piezas <input type="range" id="rDet" min="0" max="100" value="45"></label>
+              </div>
+              <div class="scroll" id="detbox"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -113,6 +126,7 @@
 <script src="js/nucleo/despiece.js"></script>
 <script src="js/nucleo/columnas.js"></script>
 <script src="js/nucleo/perforaciones.js"></script>
+<script src="js/nucleo/construccion.js"></script>
 <script src="js/nucleo/corte.js"></script>
 <script src="js/vistas/textura.js"></script>
 <script src="js/vistas/vista3d.js"></script>
@@ -124,6 +138,7 @@
 <script src="js/ui/planchas.js"></script>
 <script src="js/ui/costeo.js"></script>
 <script src="js/ui/perforaciones.js"></script>
+<script src="js/ui/construccion.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

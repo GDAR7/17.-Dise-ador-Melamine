@@ -14,6 +14,7 @@ function recalc() {
   if (activePane === 'popt') renderOpt();
   if (activePane === 'pcos') renderCosteo();
   if (activePane === 'pper') renderPerforaciones();
+  if (activePane === 'pdet') renderConstruccion();
   marcarSeleccion();
   save();
 }

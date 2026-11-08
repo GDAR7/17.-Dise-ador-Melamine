@@ -20,6 +20,7 @@ js/
     despiece.js         Piezas, herrajes y tapacanto
     columnas.js         Muebles por columnas y zonas
     perforaciones.js    Posición de bisagras, correderas y soportes
+    construccion.js     Elementos del mueble y pasos de armado
     corte.js            Optimización de planchas
   vistas/
     textura.js          Imágenes de melamina
@@ -33,6 +34,7 @@ js/
     planchas.js         Pestaña Planchas
     costeo.js           Pestaña Costeo
     perforaciones.js    Pestaña Perforaciones
+    construccion.js     Pestaña Construcción
   app.js                Pestañas, botones e inicio
 ```
 
