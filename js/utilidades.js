@@ -10,6 +10,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 const nf = (n, d = 0) => (isFinite(n) ? n : 0).toLocaleString('es-PE', { minimumFractionDigits: d, maximumFractionDigits: d });
 const cl = (v, a, b) => Math.max(a, Math.min(b, v));
 let imprimiendo = false; // los dibujos usan colores y tamaño para papel mientras es true
+const IMP = { w: 700, w2d: 350, h: 410, dpr: 3 }; // tamaño en papel: 2D (frontal + lateral) y 3D caben en una hoja
 
 function toast(msg) {
   const t = $('#toast'); t.textContent = msg; t.classList.add('on');

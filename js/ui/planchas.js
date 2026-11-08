@@ -57,10 +57,10 @@ function boardHtml(b, i, g) {
 
 function drawBoard(id, b, g) {
   const cv = document.getElementById(id); if (!cv) return;
-  const W = imprimiendo ? 700 : (cv.clientWidth || 600);
+  const W = imprimiendo ? IMP.w : (cv.clientWidth || 600);
   const ar = g.BH / g.BW;
   const H = Math.round(W * ar);
-  const dpr = imprimiendo ? 3 : (window.devicePixelRatio || 1);
+  const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
   cv.style.height = H + 'px';
   cv.width = W * dpr; cv.height = H * dpr;
   const ctx = cv.getContext('2d');

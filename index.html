@@ -46,6 +46,18 @@
         <button class="tab" data-p="pcos"><span>◎</span> Costeo</button>
       </div>
       <div id="view">
+        <div class="pane" id="p2d">
+          <div class="cvwrap">
+            <canvas id="cv2"></canvas>
+            <canvas id="cv2b" class="solo-imp"></canvas>
+            <div class="cvbar">
+              <button class="btn on" id="b2f">Frontal</button>
+              <button class="btn" id="b2l">Lateral</button>
+              <button class="btn on" id="b2dim">Cotas</button>
+            </div>
+            <div class="cvhint">Vista a escala con cotas en mm</div>
+          </div>
+        </div>
         <div class="pane on" id="p3d">
           <div class="cvwrap">
             <canvas id="cv3"></canvas>
@@ -57,17 +69,6 @@
             </div>
             <div class="cvhint">Arrastra para girar · Rueda o pinza para zoom</div>
             <div class="leg" id="leg3"></div>
-          </div>
-        </div>
-        <div class="pane" id="p2d">
-          <div class="cvwrap">
-            <canvas id="cv2"></canvas>
-            <div class="cvbar">
-              <button class="btn on" id="b2f">Frontal</button>
-              <button class="btn" id="b2l">Lateral</button>
-              <button class="btn on" id="b2dim">Cotas</button>
-            </div>
-            <div class="cvhint">Vista a escala con cotas en mm</div>
           </div>
         </div>
         <div class="pane" id="pdes"><div class="scroll" id="desbox"></div></div>

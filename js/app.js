@@ -73,7 +73,9 @@ addEventListener('beforeprint', () => {
   renderDespiece();
   renderOpt();
   renderCosteo();
-  if (activePane === 'p2d') draw2();
+  draw3();
+  draw2($('#cv2'), 'frontal');
+  draw2($('#cv2b'), 'lateral');
 });
 addEventListener('afterprint', () => {
   imprimiendo = false;

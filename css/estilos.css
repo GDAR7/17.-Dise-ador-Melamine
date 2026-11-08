@@ -121,6 +121,7 @@ aside{
 .cvwrap{position:relative;height:100%;background:
   radial-gradient(circle at 50% 40%, #1b1f29 0%, #101217 100%);}
 canvas{display:block;width:100%;height:100%}
+canvas.solo-imp{display:none}
 .cvbar{
   position:absolute;top:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap;
   z-index:5;
@@ -307,7 +308,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
   /* quitar el layout de pantalla completa para que el contenido pase de página */
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
   .pane{display:block!important;height:auto}
-  #p3d:not(.on),#p2d:not(.on){display:none!important}
+  #p3d,#p2d{break-inside:avoid}
   #pdes,#popt,#pcos{break-before:page}
   .pane::before{display:block;font-size:18px;font-weight:700;margin-bottom:10px}
   #p3d::before{content:'Vista 3D'}
@@ -318,7 +319,10 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .scroll{height:auto;overflow:visible;padding:0}
 
   .cvwrap{height:auto;background:none}
-  #cv2,#cv3{height:auto;max-height:240mm;object-fit:contain}
+  #p2d .cvwrap{display:flex;align-items:flex-start}
+  canvas.solo-imp{display:block}
+  #cv2,#cv2b,#cv3{height:auto}
+  #cv2,#cv2b{width:50%}
   .bcv{height:auto!important}
   .leg{background:#fff;backdrop-filter:none}
 

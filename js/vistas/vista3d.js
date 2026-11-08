@@ -81,8 +81,8 @@ const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo:
 
 function draw3() {
   const cv = $('#cv3'), ctx = cv.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const w = cv.clientWidth, h = cv.clientHeight;
+  const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
+  const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
   if (!w || !h) return;
   cv.width = w * dpr; cv.height = h * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -163,7 +163,7 @@ function draw3() {
 
   // Cotas generales
   ctx.font = '600 11px Inter, sans-serif';
-  ctx.fillStyle = '#9aa3b8';
+  ctx.fillStyle = imprimiendo ? '#333' : '#9aa3b8';
   const mm = mods[0];
   const txt = V3.all
     ? `Proyecto · ${S.mods.length} módulo(s) · ${S.mods.reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`

@@ -4,10 +4,10 @@
    ============================================================ */
 const V2 = { vista: 'frontal', cotas: true };
 
-function draw2() {
-  const cv = $('#cv2'), ctx = cv.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  const w = cv.clientWidth, h = cv.clientHeight;
+function draw2(cv = $('#cv2'), vista = V2.vista) {
+  const ctx = cv.getContext('2d');
+  const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
+  const w = imprimiendo ? IMP.w2d : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
   if (!w || !h) return;
   cv.width = w * dpr; cv.height = h * dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -21,9 +21,9 @@ function draw2() {
   const e = mc.esp, ef = mf.esp;
   const W = +m.ancho, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0;
 
-  const front = V2.vista === 'frontal';
+  const front = vista === 'frontal';
   const ow = front ? W : D, oh = H;
-  const pad = 78;
+  const pad = imprimiendo ? 50 : 78;
   const sc = Math.min((w - pad * 2) / ow, (h - pad * 2) / oh);
   const x0 = (w - ow * sc) / 2, y0 = (h - oh * sc) / 2;
   const X = v => x0 + v * sc;
@@ -91,6 +91,12 @@ function draw2() {
     }
     if (Z > 0) rect(0, 0, D, Z, shade(mc.color, .6));
     if (m.encimera) rect(0, H, D + 25, ef, shade(mf.color, 1));
+  }
+
+  if (imprimiendo) {
+    ctx.fillStyle = '#000'; ctx.font = '700 12px Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(front ? 'Vista frontal' : 'Vista lateral', w / 2, 16);
+    ctx.textAlign = 'left';
   }
 
   if (!V2.cotas) return;
