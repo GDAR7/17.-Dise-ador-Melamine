@@ -7,11 +7,14 @@ function renderCosteo() {
   if (!S.mods.length) { box.innerHTML = emptyHtml('Sin costeo', 'Crea un módulo para calcular el presupuesto.'); return; }
   const M = S.cfg.moneda;
   const grupos = optimizarTodo();
-  const merma = 1 + (+S.cfg.merma || 0) / 100;
+  const pctMerma = +S.cfg.merma || 0;
+  const merma = 1 + pctMerma / 100;
 
   const planchas = grupos.map(g => {
-    const n = Math.ceil(g.boards.length * merma);
-    return { nom: g.mat.nom, n, pu: g.mat.precio, tot: n * g.mat.precio, base: g.boards.length };
+    const base = g.boards.length;
+    // Las planchas se compran enteras: la merma solo suma cuando completa una unidad.
+    const n = base + Math.floor(base * pctMerma / 100);
+    return { nom: g.mat.nom, n, pu: g.mat.precio, tot: n * g.mat.precio, base };
   });
   const subPl = planchas.reduce((s, p) => s + p.tot, 0);
 
@@ -30,7 +33,7 @@ function renderCosteo() {
     <div class="stat"><div class="k">Tapacanto</div><div class="v">${M} ${nf(subTc, 0)}</div></div>
     <div class="stat"><div class="k">Herrajes</div><div class="v">${M} ${nf(subHw, 0)}</div></div>
   </div>
-  <div class="note">Incluye <b>${S.cfg.merma}%</b> de merma sobre planchas y tapacanto. No incluye mano de obra, transporte, pegamento ni acabados.</div>
+  <div class="note">Incluye <b>${S.cfg.merma}%</b> de merma sobre el tapacanto y sobre las planchas (solo cuando completa una plancha entera). No incluye mano de obra, transporte, pegamento ni acabados.</div>
 
   <div class="tcard"><div class="hd"><h3>Planchas</h3><div class="sp"></div>
     <span class="pill">${planchas.reduce((s, p) => s + p.n, 0)} unidades</span></div>
