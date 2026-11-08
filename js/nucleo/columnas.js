@@ -17,7 +17,7 @@ function columnasEjemplo() {
 
 /* Tipos de zona sin frente. 'abierta' es el nicho de 4 lados: conserva esa clave para que los archivos guardados sigan valiendo.
    'seminicho' solo tiene los 2 laterales, 'semivacio' (Semi abierta) solo el fondo y 'sinlados' (Abierta) nada. */
-const sinEntrepano = z => ['seminicho', 'semivacio', 'sinlados'].includes(z.tipo);
+const esZonaAbierta = z => ['seminicho', 'semivacio', 'sinlados'].includes(z.tipo);
 const admiteRepisas = z => !['cajon', 'semivacio', 'sinlados'].includes(z.tipo);
 const CORTAN_LATERAL = ['semivacio', 'sinlados'];
 const CORTAN_FONDO = ['sinlados'];
@@ -49,14 +49,14 @@ function zonasColumna(m, c, e) {
     const a = y, b = Math.min(H, y + +z.alto);
     y = b;
     const sig = zs[i + 1], ant = zs[i - 1];
-    // Los cajones seguidos comparten hueco, y las zonas sin entrepaño no lo llevan arriba ni abajo
-    const separa = o => !(o.tipo === 'cajon' && z.tipo === 'cajon') && !sinEntrepano(o) && !sinEntrepano(z);
-    const juntoAbajo = ant && separa(ant);
-    const juntoArriba = sig && separa(sig);
+    // Solo no hay tablero entre cajones seguidos o entre dos zonas abiertas: toda zona cerrada conserva su piso y su techo
+    const separa = o => !(o.tipo === 'cajon' && z.tipo === 'cajon') && !(esZonaAbierta(o) && esZonaAbierta(z));
+    // Grosor del tablero que entra en esta zona: junto a una zona abierta, va entero dentro de la cerrada
+    const entra = o => (!o || !separa(o) || esZonaAbierta(z) ? 0 : esZonaAbierta(o) ? e : e / 2);
     return {
-      z, a, b, panel: !!juntoArriba,
-      ib: ant ? (juntoAbajo ? a + e / 2 : a) : Z + e,
-      it: sig ? (juntoArriba ? b - e / 2 : b) : H - e
+      z, a, b, panel: !!sig && separa(sig), yPanel: b - entra(sig),
+      ib: ant ? a + entra(ant) : Z + e,
+      it: sig ? b - entra(sig) : H - e
     };
   });
 }
@@ -139,8 +139,8 @@ function geoColumnas(m, opts = {}) {
         else box(xi - 6, y0, 0, Wi + 12, y1 - y0, eb, cB, 'Fondo');
       });
     }
-    zonasColumna(m, c, e).forEach(({ z, a, b, ib, it, panel }) => {
-      if (panel) box(xi, b - e / 2, 0, Wi, e, D, cC, 'Entrepaño');
+    zonasColumna(m, c, e).forEach(({ z, a, b, ib, it, panel, yPanel }) => {
+      if (panel) box(xi, yPanel, 0, Wi, e, D, cC, 'Entrepaño');
       if (admiteRepisas(z)) {
         const n = +z.rep || 0;
         for (let i = 1; i <= n; i++) box(xi, ib + (it - ib) * i / (n + 1) - e / 2, 0, Wi, e, D - retr, cC, 'Repisa');
