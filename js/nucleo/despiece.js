@@ -17,7 +17,9 @@ function piezas(m) {
     // Lados con tapacanto, con el largo en horizontal: L1 abajo, L2 arriba, A1 derecha, A2 izquierda.
     // m.cantos guarda lo que eligió el usuario; cL y cA son solo el valor por defecto.
     const lados = (m.cantos && m.cantos[nom]) || { L1: cL >= 1, L2: cL >= 2, A1: cA >= 1, A2: cA >= 2 };
-    P.push({ nom, L: Math.round(L), A: Math.round(A), q: q * (+m.qty || 1), cL: lados.L1 + lados.L2, cA: lados.A1 + lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
+    // Medida de corte: los cantos de los extremos acortan el largo y los de los lados largos, el ancho
+    const tc = +S.cfg.tcEsp || 0;
+    P.push({ nom, L: Math.round(L - tc * (lados.A1 + lados.A2)), A: Math.round(A - tc * (lados.L1 + lados.L2)), q: q * (+m.qty || 1), cL: lados.L1 + lados.L2, cA: lados.A1 + lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
   };
 
   if (m.tipo === 'columnas') { piezasColumnas(m, add, mc, mf, mb); return P; }
@@ -129,18 +131,19 @@ function todasPiezas() {
 
 /* ---------- HERRAJES ---------- */
 function herrajesCalc() {
-  let bis = 0, cor = 0, tir = 0, tor = 0, sop = 0, reg = 0;
+  let bis = 0, bisSemi = 0, bisEmb = 0, cor = 0, tir = 0, tor = 0, sop = 0, reg = 0;
   S.mods.forEach(m => {
     const q = +m.qty || 1;
     if (m.tipo === 'columnas') {
       const r = herrajesColumnas(m);
-      bis += q * r.bis; cor += q * r.cor; tir += q * r.tir; tor += q * r.tor; sop += q * r.sop; reg += q * r.reg;
+      bis += q * r.bis; bisSemi += q * r.bisSemi; cor += q * r.cor; tir += q * r.tir; tor += q * r.tor; sop += q * r.sop; reg += q * r.reg;
       return;
     }
     const np = +m.puertas || 0, nc = +m.cajones || 0, nr = +m.repisas || 0, nd = +m.divs || 0;
     const alto = +m.alto;
     const puerta = (+m.puertaDesde || +m.puertaHasta) ? piezas(m).find(p => p.kind === 'puerta') : null;
-    bis += q * np * ((puerta ? puerta.L : alto) > 1600 ? 3 : 2);
+    const nBis = q * np * ((puerta ? puerta.L : alto) > 1600 ? 3 : 2);
+    if (m.tipoP === 'embutida') bisEmb += nBis; else bis += nBis;
     cor += q * nc;
     tir += q * (np + nc);
     const j = apoyoDivision(m);
@@ -148,7 +151,7 @@ function herrajesCalc() {
     tor += q * (16 + nr * 4 + nd * 8 + np * 4 + nc * 6);
     reg += q * ((+m.zocalo || 0) > 0 ? 4 : 0);
   });
-  const map = { bisagra: bis, corredera: cor, tirador: tir, tornillo: tor, soporte: sop, regaton: reg };
+  const map = { bisagra: bis, bisagraSemi: bisSemi, bisagraEmb: bisEmb, corredera: cor, tirador: tir, tornillo: tor, soporte: sop, regaton: reg };
   return S.herrajes.map(h => ({ ...h, cant: map[h.por] != null ? map[h.por] : 0 }));
 }
 

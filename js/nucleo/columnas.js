@@ -71,6 +71,13 @@ function lateralesColumna(m, i, e) {
   return lados;
 }
 
+/* La bisagra va en el lado libre de la columna; solo con ambos lados compartidos hace falta semicodo */
+function bisagraColumna(cols, i) {
+  const izq = compartida(cols, i - 1), der = compartida(cols, i);
+  if (izq && der) return { clave: 'bisSemi', nombre: 'Semicodo', lado: 'izquierdo' };
+  return { clave: 'bis', nombre: 'Recta', lado: izq ? 'derecho' : 'izquierdo' };
+}
+
 const nombreTramo = (base, tramos, i) => (tramos.length > 1 ? `${base} tramo ${i + 1}` : base);
 
 /* Zonas de abajo hacia arriba con su tramo [a, b], su interior libre [ib, it] y si llevan entrepaño encima */
@@ -131,13 +138,14 @@ function piezasColumnas(m, add, mc, mf, mb) {
 
 function herrajesColumnas(m) {
   const e = (S.mats.find(x => x.id === m.matC) || S.mats[0]).esp;
-  const r = { bis: 0, cor: 0, tir: 0, tor: 0, sop: 0, reg: 0 };
-  (m.columnas || []).forEach(c => {
+  const r = { bis: 0, bisSemi: 0, cor: 0, tir: 0, tor: 0, sop: 0, reg: 0 };
+  (m.columnas || []).forEach((c, ci) => {
+    const bisagra = bisagraColumna(m.columnas, ci);
     r.tor += 16;
     if ((+m.zocalo || 0) > 0) r.reg += 4;
     zonasColumna(m, c, e).forEach(({ z, a, b, panel }) => {
       if (panel) r.tor += 8;
-      if (z.tipo === 'puerta') { r.bis += b - a > 1600 ? 3 : 2; r.tir++; r.tor += 4; }
+      if (z.tipo === 'puerta') { r[bisagra.clave] += b - a > 1600 ? 3 : 2; r.tir++; r.tor += 4; }
       if (z.tipo === 'cajon') { r.cor++; r.tir++; r.tor += 6; }
       if (admiteRepisas(z)) { r.sop += (+z.rep || 0) * 4; r.tor += (+z.rep || 0) * 4; }
     });
@@ -153,10 +161,12 @@ function geoColumnas(m, opts = {}) {
   const H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = +m.retr || 0;
   const B = [];
   // pieza: el mismo nombre que le da piezasColumnas, para poder resaltarla desde el despiece
-  const box = (x, y, z, w, h, d, c, tag, pieza = tag) => B.push({ x, y, z, w, h, d, c, tag, pieza });
+  let col = 0;
+  const box = (x, y, z, w, h, d, c, tag, pieza = tag) => B.push({ x, y, z, w, h, d, c, tag, pieza, col });
 
   let x0 = 0;
   (m.columnas || []).forEach((c, ci) => {
+    col = ci;
     const W = +c.ancho || 0, { izq, Wi } = anchoInterior(m.columnas, ci, e), xi = x0 + izq, pre = `${c.nom} · `;
     lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
       tramos.forEach(([y0, y1], i) => xs.forEach(px => box(x0 + px, y0, 0, e, y1 - y0, D, cC, 'Lateral', pre + nombreTramo(base, tramos, i))));

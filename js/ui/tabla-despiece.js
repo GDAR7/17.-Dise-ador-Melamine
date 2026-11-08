@@ -27,7 +27,7 @@ function renderDespiece() {
     <div class="stat acc"><div class="k">Tapacanto</div><div class="v">${nf(tc, 1)} <small>m</small></div></div>
     <div class="stat gr"><div class="k">Tipos de pieza</div><div class="v">${filas.length}</div></div>
   </div>
-  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. <b>Haz clic en un lado del dibujo de la columna Lados</b> para poner o quitar el tapacanto: el dibujo tiene el largo en horizontal, y los metros, el costo y el plano de corte se actualizan solos.</div>`;
+  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. <b>Haz clic en un lado del dibujo de la columna Lados</b> para poner o quitar el tapacanto: el dibujo tiene el largo en horizontal, y los metros, el costo y el plano de corte se actualizan solos.${(+S.cfg.tcEsp || 0) > 0 ? ` <b>Largo y Ancho son medidas de corte:</b> ya descuentan ${S.cfg.tcEsp} mm por cada lado con tapacanto.` : ''}</div>`;
 
   S.mods.forEach(m => {
     const fs = porMod[m.id]; if (!fs) return;

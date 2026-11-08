@@ -226,6 +226,20 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .des-iso{order:-1;width:100%;height:240px;border-left:0;border-bottom:1px solid var(--line)}
 }
 
+/* ---------- PERFORACIONES ---------- */
+.perf{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
+.perf .bh{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.perf .bh b{font-size:12.5px}
+.perf .bh .sub{font-size:11px;color:var(--txt3)}
+.perf .bh .sp{flex:1}
+.perf-txt{font-size:11.5px;color:var(--txt2);margin-top:8px}
+.perf-txt b{color:var(--txt)}
+.plano{display:block;max-width:100%;height:auto}
+.plano rect{fill:var(--panel2);stroke:var(--line2);stroke-width:1}
+.plano circle{fill:none;stroke:#e5383b;stroke-width:1.4}
+.plano line{stroke:var(--blue);stroke-width:1.6;stroke-dasharray:6 3}
+#s2col{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:11.5px;font-weight:600;font-family:inherit}
+
 /* ---------- SELECTOR DE TAPACANTO ---------- */
 .cantos{--g:10px;position:relative;width:56px;height:30px;margin-left:auto;background:var(--panel2);border-radius:2px}
 .lado{position:absolute;padding:0;background:none;border:0 solid var(--line2);cursor:pointer}
@@ -357,13 +371,15 @@ tbody tr.grp:hover td{background:var(--panel2)}
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
   .pane{display:block!important;height:auto}
   #p3d,#p2d{break-inside:avoid}
-  #pdes,#popt,#pcos{break-before:page}
+  #pdes,#popt,#pcos,#pper{break-before:page}
+  .perf{break-inside:avoid}
   .pane::before{display:block;font-size:18px;font-weight:700;margin-bottom:10px}
   #p3d::before{content:'Vista 3D'}
   #p2d::before{content:'Plano 2D'}
   #pdes::before{content:'Despiece'}
   #popt::before{content:'Planchas'}
   #pcos::before{content:'Costeo'}
+  #pper::before{content:'Perforaciones'}
   .scroll{height:auto;overflow:visible;padding:0}
 
   .cvwrap{height:auto;background:none}

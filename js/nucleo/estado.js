@@ -15,14 +15,16 @@ let S = null;
 
 function defState() {
   const m18 = { id: uid(), nom: 'Melamina Blanca 18 mm', esp: 18, color: '#e8e4dc', precio: 135, fw: 2500, fh: 1830 };
-  const m15 = { id: uid(), nom: 'Melamina Roble 15 mm', esp: 15, color: '#c49a6a', precio: 128, fw: 2500, fh: 1830 };
+  const m15 = { id: uid(), nom: 'Melamina Roble 15 mm', esp: 15, color: '#c49a6a', precio: 128, fw: 2500, fh: 1830, veta: true };
   const m03 = { id: uid(), nom: 'Fondo HDF 3 mm', esp: 3, color: '#b8a98f', precio: 42, fw: 2440, fh: 1220 };
   return {
     proyecto: 'Mi proyecto de melamina',
-    cfg: { kerf: 4, rotar: true, moneda: 'S/', tcPrecio: 1.80, merma: 5 },
+    cfg: { kerf: 4, rotar: true, moneda: 'S/', tcPrecio: 1.80, tcEsp: 0, merma: 5 },
     mats: [m18, m15, m03],
     herrajes: [
       { id: uid(), nom: 'Bisagra cazoleta 35 mm', precio: 4.5, por: 'bisagra' },
+      { id: uid(), nom: 'Bisagra semicodo', precio: 4.5, por: 'bisagraSemi' },
+      { id: uid(), nom: 'Bisagra embutida', precio: 4.5, por: 'bisagraEmb' },
       { id: uid(), nom: 'Corredera telescópica 45 cm', precio: 18, por: 'corredera' },
       { id: uid(), nom: 'Tirador / jaladera', precio: 6, por: 'tirador' },
       { id: uid(), nom: 'Tornillo + tarugo (juego)', precio: 0.35, por: 'tornillo' },
@@ -81,8 +83,45 @@ function agregarProyecto(p) {
   return nuevos;
 }
 
+/* Los proyectos guardados antes de existir estos tipos de bisagra las reciben con el precio de la normal */
+function asegurarHerrajes(st) {
+  const base = st.herrajes.find(h => h.por === 'bisagra');
+  [['bisagraSemi', 'Bisagra semicodo'], ['bisagraEmb', 'Bisagra embutida']].forEach(([por, nom]) => {
+    if (!st.herrajes.some(h => h.por === por)) st.herrajes.push({ id: uid(), nom, precio: base ? base.precio : 4.5, por });
+  });
+}
+
+/* ---------- DESHACER ---------- */
+const historial = [];
+const MAX_HISTORIAL = 60, UNIR_CAMBIOS_MS = 700;
+let ultimoCambio = 0;
+
+function registrarHistorial() {
+  const clave = JSON.stringify({ ...S, sel: null });
+  const ult = historial[historial.length - 1];
+  if (ult && ult.clave === clave) { ult.sel = S.sel; return; }
+  const ahora = Date.now();
+  // Lo que se escribe seguido en un campo cuenta como un solo cambio
+  if (ult && historial.length > 1 && ahora - ultimoCambio < UNIR_CAMBIOS_MS) historial.pop();
+  historial.push({ clave, sel: S.sel });
+  if (historial.length > MAX_HISTORIAL) historial.shift();
+  ultimoCambio = ahora;
+}
+
+function deshacer() {
+  if (historial.length < 2) { toast('No hay nada que deshacer'); return; }
+  historial.pop();
+  const previo = historial[historial.length - 1];
+  S = JSON.parse(previo.clave);
+  S.sel = S.mods.some(m => m.id === previo.sel) ? previo.sel : (S.mods[0] ? S.mods[0].id : null);
+  ultimoCambio = 0;
+  refresh();
+  toast('Cambio deshecho');
+}
+
 /* ---------- PERSISTENCIA ---------- */
 function save() {
+  registrarHistorial();
   try { localStorage.setItem('melamina.v1', JSON.stringify(S)); } catch (e) { }
 }
 function load() {

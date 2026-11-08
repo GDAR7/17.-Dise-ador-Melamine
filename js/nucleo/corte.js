@@ -16,7 +16,7 @@ const _cacheCorte = new Map();
 function optimizarMax(lista, mat) {
   const kerf = +S.cfg.kerf || 0;
   const BW = +mat.fw, BH = +mat.fh;
-  const rotar = !!S.cfg.rotar;
+  const rotar = !!S.cfg.rotar && !mat.veta;
   const clave = JSON.stringify([lista, kerf, BW, BH, rotar]);
   if (_cacheCorte.has(clave)) return _cacheCorte.get(clave);
 
@@ -165,12 +165,13 @@ function unirLibres(libres, kerf) {
 function optimizarBandas(lista, mat) {
   const kerf = +S.cfg.kerf || 0;
   const BW = +mat.fw, BH = +mat.fh;
+  const rotar = !!S.cfg.rotar && !mat.veta;
   // expandir cantidades
   const items = [];
   lista.forEach(p => { for (let i = 0; i < p.q; i++) items.push({ ...p, w: p.L, h: p.A }); });
   // normalizar: w = dimensión larga si cabe
   items.forEach(it => {
-    if (S.cfg.rotar && it.h > it.w && it.h <= BW && it.w <= BH) { const t = it.w; it.w = it.h; it.h = t; it.rot = true; }
+    if (rotar && it.h > it.w && it.h <= BW && it.w <= BH) { const t = it.w; it.w = it.h; it.h = t; it.rot = true; }
   });
   const grandes = items.filter(it => (it.w > BW || it.h > BH) && (it.h > BW || it.w > BH));
   const ok = items.filter(it => !grandes.includes(it));
@@ -218,7 +219,7 @@ function optimizarBandas(lista, mat) {
 
   function orientaciones(it) {
     const o = [{ w: it.w, h: it.h, rot: !!it.rot }];
-    if (S.cfg.rotar) o.push({ w: it.h, h: it.w, rot: !it.rot });
+    if (rotar) o.push({ w: it.h, h: it.w, rot: !it.rot });
     return o;
   }
 

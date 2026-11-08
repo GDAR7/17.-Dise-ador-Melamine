@@ -13,13 +13,23 @@ function renderList() {
         <div class="ic">${TIPOS[m.tipo].ic}</div>
         <div class="nm"><b>${esc(m.nom)}</b><span>${m.ancho}×${m.alto}×${m.prof}</span></div>
         ${(+m.qty || 1) > 1 ? `<div class="qt">×${m.qty}</div>` : ''}
-        <button class="del" data-del="${m.id}" title="Eliminar">×</button>
+        <button class="del" data-dup="${m.id}" title="Duplicar" aria-label="Duplicar">⧉</button>
+        <button class="del" data-del="${m.id}" title="Eliminar" aria-label="Eliminar">×</button>
       </div>`).join('');
   }
   $('#modcount').textContent = S.mods.reduce((s, m) => s + (+m.qty || 1), 0);
   el.querySelectorAll('.mod').forEach(d => d.onclick = ev => {
-    if (ev.target.dataset.del) return;
+    if (ev.target.dataset.del || ev.target.dataset.dup) return;
     S.sel = d.dataset.id; refresh();
+  });
+  el.querySelectorAll('[data-dup]').forEach(b => b.onclick = ev => {
+    ev.stopPropagation();
+    const i = S.mods.findIndex(m => m.id === b.dataset.dup);
+    const copia = { ...JSON.parse(JSON.stringify(S.mods[i])), id: uid() };
+    copia.nom += ' (copia)';
+    S.mods.splice(i + 1, 0, copia);
+    S.sel = copia.id;
+    refresh(); toast('Mueble duplicado');
   });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = ev => {
     ev.stopPropagation();

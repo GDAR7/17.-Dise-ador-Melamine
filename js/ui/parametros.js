@@ -103,6 +103,9 @@ function renderParams() {
       <div class="f"><label>Tapacanto ${S.cfg.moneda}/m</label><input type="number" step="0.01" data-c="tcPrecio" value="${S.cfg.tcPrecio}"></div>
       <div class="f"><label>Moneda</label><input type="text" data-c="moneda" value="${esc(S.cfg.moneda)}"></div>
     </div>
+    <div class="row">
+      <div class="f"><label>Espesor del tapacanto (mm) · se descuenta de la medida de corte</label><input type="number" min="0" step="0.05" data-c="tcEsp" value="${S.cfg.tcEsp || 0}"></div>
+    </div>
     <label class="chk"><input type="checkbox" data-c="rotar" ${S.cfg.rotar ? 'checked' : ''}> Permitir girar piezas (ignorar veta)</label>
   </div>
 
@@ -164,7 +167,7 @@ function renderParams() {
     renderParams(); recalc();
   };
   $('#bReset').onclick = () => {
-    if (!window.confirmBox) { }
+    if (!confirm('¿Borrar todo el proyecto y empezar de cero?')) return;
     S = defState(); S.sel = null; refresh(); toast('Proyecto reiniciado');
   };
 }
@@ -184,13 +187,14 @@ function renderMats() {
         <div class="f"><label>Ancho plancha</label><input type="number" data-f="fw" value="${m.fw}"></div>
         <div class="f"><label>Alto plancha</label><input type="number" data-f="fh" value="${m.fh}"></div>
       </div>
+      <label class="chk"><input type="checkbox" data-f="veta" ${m.veta ? 'checked' : ''}> Tiene veta (no girar sus piezas)</label>
     </div>`).join('');
   el.querySelectorAll('.mat').forEach(d => {
     const mat = S.mats.find(x => x.id === d.dataset.id);
     d.querySelectorAll('[data-f]').forEach(inp => {
       const f = inp.dataset.f;
       inp.addEventListener(inp.type === 'color' ? 'input' : 'input', () => {
-        mat[f] = inp.type === 'number' ? (+inp.value || 0) : inp.value;
+        mat[f] = inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? (+inp.value || 0) : inp.value;
         if (f === 'nom' || f === 'esp') renderParams();
         recalc();
       });

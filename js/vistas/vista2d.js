@@ -2,7 +2,7 @@
 /* ============================================================
    RENDER 2D (plano con cotas)
    ============================================================ */
-const V2 = { vista: 'frontal', cotas: true };
+const V2 = { vista: 'frontal', cotas: true, col: 0 };   // col: columna que se corta en la vista lateral
 
 /* Escribe sobre cada zona su nombre y su alto */
 function rotularZonas(ctx, m, e, X, Y) {
@@ -41,6 +41,13 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
   const W = +m.ancho, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0;
 
   const front = vista === 'frontal';
+  const iCol = m.tipo === 'columnas' ? Math.min(V2.col, m.columnas.length - 1) : 0;
+  const colLateral = m.tipo === 'columnas' && !front ? m.columnas[iCol] : null;
+  if (cv.id === 'cv2') {
+    const selCol = $('#s2col');
+    selCol.hidden = !colLateral;
+    if (colLateral) selCol.innerHTML = m.columnas.map((c, i) => `<option value="${i}" ${i === iCol ? 'selected' : ''}>${esc(c.nom)}</option>`).join('');
+  }
   const ow = front ? W : D, oh = H;
   const pad = imprimiendo ? 50 : 78;
   const sc = Math.min((w - pad * 2) / ow, (h - pad * 2) / oh);
@@ -58,8 +65,10 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
   ctx.fillRect(X(0), Y(oh), ow * sc, oh * sc);
 
   if (m.tipo === 'columnas') {
-    // De atrás hacia adelante, para que los frentes queden encima. En la vista lateral se omiten los laterales para ver el interior.
-    geo(m).B.filter(b => front || b.tag !== 'Lateral').sort((a, b) => a.z - b.z).forEach(b => {
+    // De atrás hacia adelante, para que los frentes queden encima. La vista lateral es un corte por una sola columna:
+    // se omiten los laterales del mueble y los de las cajas de cajón, que taparían el interior.
+    const enCorte = b => b.col === iCol && b.tag !== 'Lateral' && !(b.tag === 'Cajón' && b.w <= e);
+    geo(m).B.filter(b => front || enCorte(b)).sort((a, b) => a.z - b.z).forEach(b => {
       const frente = b.tag === 'Puerta' || b.tag === 'Frente cajón';
       rect(front ? b.x : b.z, b.y, front ? b.w : b.d, b.h, shade(b.c, frente ? .97 : .8));
     });
@@ -124,7 +133,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
 
   if (imprimiendo) {
     ctx.fillStyle = '#000'; ctx.font = '700 12px Inter, sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(front ? 'Vista frontal' : 'Vista lateral', w / 2, 16);
+    ctx.fillText(front ? 'Vista frontal' : `Vista lateral${colLateral ? ` · ${colLateral.nom}` : ''}`, w / 2, 16);
     ctx.textAlign = 'left';
   }
 
@@ -161,7 +170,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
 
   // profundidad / altos parciales
   ctx.fillStyle = '#6b7489'; ctx.font = '500 11px Inter, sans-serif';
-  ctx.fillText(front ? `Profundidad ${D} mm · esp. ${e} mm` : `Ancho ${W} mm · esp. ${e} mm`, X(0), Y(oh) - 14);
+  ctx.fillText(front ? `Profundidad ${D} mm · esp. ${e} mm` : `Ancho ${colLateral ? colLateral.ancho : W} mm · esp. ${e} mm`, X(0), Y(oh) - 14);
   if (Z > 0) {
     ctx.strokeStyle = '#5b9dd9'; ctx.fillStyle = '#5b9dd9'; ctx.font = '600 10px "JetBrains Mono",monospace';
     dim(X(ow) + 22, Y(0), X(ow) + 22, Y(Z), `${Z}`);

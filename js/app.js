@@ -13,6 +13,7 @@ function recalc() {
   if (activePane === 'pdes') renderDespiece();
   if (activePane === 'popt') renderOpt();
   if (activePane === 'pcos') renderCosteo();
+  if (activePane === 'pper') renderPerforaciones();
   marcarSeleccion();
   save();
 }
@@ -37,6 +38,7 @@ $('#b3fit').onclick = () => { V3.yaw = -0.52; V3.pitch = 0.28; V3.zoom = 1; draw
 $('#b3door').onclick = e => { V3.puertas = !V3.puertas; e.currentTarget.classList.toggle('on', V3.puertas); draw3(); };
 $('#b3back').onclick = e => { V3.fondo = !V3.fondo; e.currentTarget.classList.toggle('on', V3.fondo); draw3(); };
 $('#b3all').onclick = e => { V3.all = !V3.all; e.currentTarget.classList.toggle('on', V3.all); draw3(); };
+$('#s2col').onchange = e => { V2.col = +e.target.value; draw2(); };
 $('#r3exp').oninput = e => { V3.explode = e.target.value / 100; draw3(); };
 $('#b3sel').onclick = () => { V3.sel = null; marcarSeleccion(); draw3(); };
 $('#b2f').onclick = () => { V2.vista = 'frontal'; $('#b2f').classList.add('on'); $('#b2l').classList.remove('on'); draw2(); };
@@ -76,6 +78,7 @@ $('#fileIn').onchange = e => {
         refresh(); toast(`${nuevos.length} mueble(s) agregado(s)`);
       } else {
         S = Object.assign(defState(), p);
+        asegurarHerrajes(S);
         S.sel = S.mods[0] ? S.mods[0].id : null;
         refresh(); toast('Proyecto cargado');
       }
@@ -92,6 +95,7 @@ addEventListener('beforeprint', () => {
   renderDespiece();
   renderOpt();
   renderCosteo();
+  renderPerforaciones();
   draw3();
   draw2($('#cv2'), 'frontal');
   draw2($('#cv2b'), 'lateral');
@@ -116,8 +120,17 @@ $$('#mtabs button').forEach(b => b.onclick = () => mview(b.dataset.m));
 let rt;
 addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { _gi = 0; recalc(); }, 120); });
 
+/* Ctrl+Z deshace cambios del proyecto; dentro de un campo de texto sigue siendo el deshacer del navegador */
+addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== 'z') return;
+  if (e.target.matches && e.target.matches('input:not([type=checkbox]):not([type=range]):not([type=color]), textarea')) return;
+  e.preventDefault();
+  deshacer();
+});
+
 /* ---------- INIT ---------- */
 S = load() || defState();
+asegurarHerrajes(S);
 if (!S.mods.length) {
   const a = nuevoMod('librero');
   const b = nuevoMod('repbajo');
