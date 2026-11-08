@@ -65,9 +65,20 @@ $('#fileIn').onchange = e => {
   r.readAsText(f);
   e.target.value = '';
 };
-$('#bPrint').onclick = () => {
-  toast('Usa el menú del navegador → Imprimir / Guardar como PDF');
-};
+$('#bPrint').onclick = () => window.print();
+
+/* impresión: solo la pestaña abierta está dibujada, así que se generan todas antes de imprimir */
+addEventListener('beforeprint', () => {
+  imprimiendo = true;
+  renderDespiece();
+  renderOpt();
+  renderCosteo();
+  if (activePane === 'p2d') draw2();
+});
+addEventListener('afterprint', () => {
+  imprimiendo = false;
+  recalc();
+});
 
 /* mobile nav */
 function mview(which) {

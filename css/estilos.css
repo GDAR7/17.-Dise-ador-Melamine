@@ -294,8 +294,38 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .stats{grid-template-columns:1fr 1fr;gap:7px}
 }
 @media print{
-  body{background:#fff;color:#000;overflow:visible}
-  header,aside,#rightp,#tabs,#mtabs,.cvbar,.cvhint{display:none!important}
-  #view{overflow:visible}
-  .pane{display:block!important}
+  @page{margin:12mm}
+  :root{
+    --bg:#fff; --bg2:#fff; --panel:#f2f3f5; --panel2:#e9ebef;
+    --line:#c9cdd6; --line2:#9aa1af;
+    --txt:#000; --txt2:#222; --txt3:#555;
+    --acc:#8a5a00; --acc2:#8a5a00; --blue:#1f63a8; --green:#1c7a4c;
+  }
+  html,body{height:auto;background:#fff;color:#000;overflow:visible}
+  header,aside,#rightp,#tabs,#mtabs,#toast,#segCorte,.cvbar,.cvhint,.scroll .btn{display:none!important}
+
+  /* quitar el layout de pantalla completa para que el contenido pase de página */
+  #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
+  .pane{display:block!important;height:auto}
+  #p3d:not(.on),#p2d:not(.on){display:none!important}
+  #pdes,#popt,#pcos{break-before:page}
+  .pane::before{display:block;font-size:18px;font-weight:700;margin-bottom:10px}
+  #p3d::before{content:'Vista 3D'}
+  #p2d::before{content:'Plano 2D'}
+  #pdes::before{content:'Despiece'}
+  #popt::before{content:'Planchas'}
+  #pcos::before{content:'Costeo'}
+  .scroll{height:auto;overflow:visible;padding:0}
+
+  .cvwrap{height:auto;background:none}
+  #cv2,#cv3{height:auto;max-height:240mm;object-fit:contain}
+  .bcv{height:auto!important}
+  .leg{background:#fff;backdrop-filter:none}
+
+  .stats{grid-template-columns:repeat(4,1fr)}
+  .tcard,.tscroll{overflow:visible}
+  .tcard>.hd{background:var(--panel)!important}
+  .pill,.pill.g,.pill.y,.pill.r{background:none;border:1px solid var(--line2);color:#000}
+  th{position:static}
+  tr,.board,.stats{break-inside:avoid}
 }

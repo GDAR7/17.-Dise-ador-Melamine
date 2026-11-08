@@ -57,16 +57,16 @@ function boardHtml(b, i, g) {
 
 function drawBoard(id, b, g) {
   const cv = document.getElementById(id); if (!cv) return;
-  const W = cv.clientWidth || 600;
+  const W = imprimiendo ? 700 : (cv.clientWidth || 600);
   const ar = g.BH / g.BW;
   const H = Math.round(W * ar);
-  const dpr = window.devicePixelRatio || 1;
+  const dpr = imprimiendo ? 3 : (window.devicePixelRatio || 1);
   cv.style.height = H + 'px';
   cv.width = W * dpr; cv.height = H * dpr;
   const ctx = cv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const sc = W / g.BW;
-  ctx.fillStyle = '#15171d'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = imprimiendo ? '#fff' : '#15171d'; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = '#3d4559'; ctx.lineWidth = 1; ctx.strokeRect(.5, .5, W - 1, H - 1);
 
   b.piezas.forEach(p => {
@@ -103,7 +103,7 @@ function drawBoard(id, b, g) {
       ctx.strokeRect(x + .5, y + .5, Math.max(0, w - 1), Math.max(0, h - 1)); ctx.setLineDash([]);
       const med = `${Math.round(r.w)} × ${Math.round(r.h)}`;
       const txt = `Retazo: ${med} mm`;
-      ctx.fillStyle = '#5fbf8f'; ctx.font = '600 10px Inter'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      ctx.fillStyle = imprimiendo ? '#1c7a4c' : '#5fbf8f'; ctx.font = '600 10px Inter'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
       if (w > ctx.measureText(txt).width + 10 && h > 16) ctx.fillText(txt, x + w / 2, y + h / 2);
       else if (w > ctx.measureText(med).width + 8 && h > 14) ctx.fillText(med, x + w / 2, y + h / 2);
       else if (h > ctx.measureText(med).width + 8 && w > 14) {
@@ -121,7 +121,7 @@ function drawBoard(id, b, g) {
     ctx.strokeStyle = 'rgba(95,191,143,.5)'; ctx.setLineDash([5, 4]);
     ctx.beginPath(); ctx.moveTo(0, uy); ctx.lineTo(W, uy); ctx.stroke(); ctx.setLineDash([]);
     if (H - uy > 18) {
-      ctx.fillStyle = '#5fbf8f'; ctx.font = '600 10px Inter';
+      ctx.fillStyle = imprimiendo ? '#1c7a4c' : '#5fbf8f'; ctx.font = '600 10px Inter';
       ctx.fillText(`Retazo aprovechable: ${Math.round(g.BH - b.usada)} × ${g.BW} mm`, 7, uy + 14);
     }
   }

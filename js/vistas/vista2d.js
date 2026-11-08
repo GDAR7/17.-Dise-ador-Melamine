@@ -35,7 +35,7 @@ function draw2() {
   };
 
   // fondo del interior
-  ctx.fillStyle = '#0d0f13';
+  ctx.fillStyle = imprimiendo ? '#fff' : '#0d0f13';
   ctx.fillRect(X(0), Y(oh), ow * sc, oh * sc);
 
   if (front) {
@@ -80,7 +80,7 @@ function draw2() {
   } else {
     // lateral
     rect(0, 0, D, H, shade(mc.color, .66));
-    ctx.fillStyle = '#0d0f13';
+    ctx.fillStyle = imprimiendo ? '#fff' : '#0d0f13';
     ctx.fillRect(X(0), Y(H - e), D * sc, (H - 2 * e - Z) * sc);
     rect(0, Z, D, e, shade(mc.color, .9));
     rect(0, H - e, D, e, shade(mc.color, .9));
@@ -95,7 +95,7 @@ function draw2() {
 
   if (!V2.cotas) return;
   // ---- Cotas ----
-  ctx.strokeStyle = '#f0a843'; ctx.fillStyle = '#f0a843';
+  ctx.strokeStyle = (imprimiendo ? '#8a5a00' : '#f0a843'); ctx.fillStyle = (imprimiendo ? '#8a5a00' : '#f0a843');
   ctx.lineWidth = 1; ctx.font = '600 11px "JetBrains Mono", monospace';
   const dim = (ax, ay, bx, by, label, side) => {
     ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
@@ -108,8 +108,8 @@ function draw2() {
     ctx.save();
     if (ay !== by) { ctx.translate(mx, my); ctx.rotate(-Math.PI / 2); ctx.translate(-mx, -my); }
     const tw = ctx.measureText(label).width;
-    ctx.fillStyle = '#12141a'; ctx.fillRect(mx - tw / 2 - 4, my - 8, tw + 8, 15);
-    ctx.fillStyle = '#f0a843'; ctx.textAlign = 'center'; ctx.fillText(label, mx, my + 4);
+    ctx.fillStyle = imprimiendo ? '#fff' : '#12141a'; ctx.fillRect(mx - tw / 2 - 4, my - 8, tw + 8, 15);
+    ctx.fillStyle = (imprimiendo ? '#8a5a00' : '#f0a843'); ctx.textAlign = 'center'; ctx.fillText(label, mx, my + 4);
     ctx.restore(); ctx.textAlign = 'left';
   };
   const yb2 = Y(0) + 32, xl = X(0) - 34;
