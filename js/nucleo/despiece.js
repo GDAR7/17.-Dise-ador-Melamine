@@ -14,7 +14,10 @@ function piezas(m) {
   // L = largo (lado mayor nominal), A = ancho; cL/cA = n° de cantos en cada dirección
   const add = (nom, L, A, q, cL, cA, mat, kind) => {
     if (q <= 0 || L <= 0 || A <= 0) return;
-    P.push({ nom, L: Math.round(L), A: Math.round(A), q: q * (+m.qty || 1), cL, cA, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
+    // Lados con tapacanto, con el largo en horizontal: L1 abajo, L2 arriba, A1 derecha, A2 izquierda.
+    // m.cantos guarda lo que eligió el usuario; cL y cA son solo el valor por defecto.
+    const lados = (m.cantos && m.cantos[nom]) || { L1: cL >= 1, L2: cL >= 2, A1: cA >= 1, A2: cA >= 2 };
+    P.push({ nom, L: Math.round(L), A: Math.round(A), q: q * (+m.qty || 1), cL: lados.L1 + lados.L2, cA: lados.A1 + lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
   };
 
   const Wi = W - 2 * e;              // ancho interior

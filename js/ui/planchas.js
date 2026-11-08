@@ -132,13 +132,14 @@ function drawBoard(id, b, g) {
 function dibujarCantos(ctx, p, x, y, w, h) {
   const m = 4; // separación respecto al borde de la pieza
   if (Math.min(w, h) < m * 3) return;
-  // El largo va en horizontal salvo que la pieza esté girada. Con un solo canto se marca abajo o a la derecha.
-  const [nHoriz, nVert] = p.rot ? [p.cA, p.cL] : [p.cL, p.cA];
+  // Una pieza girada lleva sus lados girados 90° en sentido antihorario.
+  const { L1, L2, A1, A2 } = p.lados;
+  const [abajo, arriba, der, izq] = p.rot ? [A2, A1, L1, L2] : [L1, L2, A1, A2];
   const lados = [];
-  if (nHoriz >= 1) lados.push([x + m, y + h - m, x + w - m, y + h - m]);
-  if (nHoriz >= 2) lados.push([x + m, y + m, x + w - m, y + m]);
-  if (nVert >= 1) lados.push([x + w - m, y + m, x + w - m, y + h - m]);
-  if (nVert >= 2) lados.push([x + m, y + m, x + m, y + h - m]);
+  if (abajo) lados.push([x + m, y + h - m, x + w - m, y + h - m]);
+  if (arriba) lados.push([x + m, y + m, x + w - m, y + m]);
+  if (der) lados.push([x + w - m, y + m, x + w - m, y + h - m]);
+  if (izq) lados.push([x + m, y + m, x + m, y + h - m]);
 
   const trazar = (color, grosor, guiones) => {
     ctx.strokeStyle = color; ctx.lineWidth = grosor; ctx.setLineDash(guiones);

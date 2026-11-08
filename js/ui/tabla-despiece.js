@@ -27,7 +27,7 @@ function renderDespiece() {
     <div class="stat acc"><div class="k">Tapacanto</div><div class="v">${nf(tc, 1)} <small>m</small></div></div>
     <div class="stat gr"><div class="k">Tipos de pieza</div><div class="v">${filas.length}</div></div>
   </div>
-  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. El fondo y el interior de cajones no llevan tapacanto.</div>`;
+  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. <b>Haz clic en un lado del dibujo de la columna Lados</b> para poner o quitar el tapacanto: el dibujo tiene el largo en horizontal, y los metros, el costo y el plano de corte se actualizan solos.</div>`;
 
   S.mods.forEach(m => {
     const fs = porMod[m.id]; if (!fs) return;
@@ -38,12 +38,13 @@ function renderDespiece() {
         <div class="sp"></div><span class="pill">${sub} piezas</span></div>
       <div class="tscroll"><table>
         <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Cant.</th>
-        <th class="n">C.L</th><th class="n">C.A</th><th>Material</th><th class="n">Canto m</th></tr></thead>
+        <th class="n">C.L</th><th class="n">C.A</th><th class="n">Lados</th><th>Material</th><th class="n">Canto m</th></tr></thead>
         <tbody>${fs.map(p => `<tr>
           <td class="nm">${esc(p.nom)}</td>
           <td class="n">${nf(p.L)}</td><td class="n">${nf(p.A)}</td>
           <td class="n">${p.q}</td>
           <td class="n">${p.cL || '–'}</td><td class="n">${p.cA || '–'}</td>
+          <td class="n">${selectorLados(p, filas.indexOf(p))}</td>
           <td style="font-size:11px">${esc(p.matNom)}</td>
           <td class="n">${nf(p.q * (p.cL * p.L + p.cA * p.A) / 1000, 2)}</td></tr>`).join('')}
         </tbody></table></div></div>`;
@@ -53,6 +54,16 @@ function renderDespiece() {
     <button class="btn" id="bCsv">⧉ Copiar despiece (CSV)</button>
     <button class="btn" id="bTxt">⧉ Copiar lista para el carpintero</button></div>`;
   box.innerHTML = h;
+
+  box.querySelectorAll('.lado').forEach(b => b.onclick = () => {
+    const { i, lado } = b.dataset;
+    const p = filas[i];
+    const m = S.mods.find(x => x.id === p.modId);
+    (m.cantos = m.cantos || {})[p.nom] = { ...p.lados, [lado]: !p.lados[lado] };
+    recalc();
+    const nuevo = box.querySelector(`.lado[data-i="${i}"][data-lado="${lado}"]`);
+    if (nuevo) nuevo.focus();
+  });
 
   $('#bCsv').onclick = () => {
     const rows = [['Modulo', 'Pieza', 'Largo_mm', 'Ancho_mm', 'Cantidad', 'Cantos_largo', 'Cantos_ancho', 'Material', 'Tapacanto_m']];
@@ -69,6 +80,16 @@ function renderDespiece() {
     t += `\nTapacanto total: ${tc.toFixed(1)} m\nÁrea: ${m2.toFixed(2)} m²\n`;
     copy(t, 'Lista copiada');
   };
+}
+
+const NOMBRES_LADO = { L2: 'Largo superior', L1: 'Largo inferior', A2: 'Ancho izquierdo', A1: 'Ancho derecho' };
+
+/* Dibujo de la pieza con sus cuatro lados clicables */
+function selectorLados(p, i) {
+  return `<div class="cantos">${Object.keys(NOMBRES_LADO).map(k => {
+    const titulo = `${NOMBRES_LADO[k]}: ${p.lados[k] ? 'con' : 'sin'} tapacanto`;
+    return `<button class="lado ${k}${p.lados[k] ? ' on' : ''}" data-i="${i}" data-lado="${k}" title="${titulo}" aria-label="${esc(p.nom)}. ${titulo}" aria-pressed="${!!p.lados[k]}"></button>`;
+  }).join('')}</div>`;
 }
 
 function copy(txt, msg) {
