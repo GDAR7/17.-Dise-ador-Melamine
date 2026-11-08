@@ -70,10 +70,23 @@ function drawBoard(id, b, g) {
   ctx.fillStyle = imprimiendo ? '#fff' : '#15171d'; ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = '#3d4559'; ctx.lineWidth = 1; ctx.strokeRect(.5, .5, W - 1, H - 1);
 
+  const tex = texturaDe(g.mat);
+  // Con textura se escribe con un halo claro, para que el texto se lea sobre cualquier imagen
+  const rotulo = (txt, tx, ty) => {
+    if (tex) { ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeText(txt, tx, ty); }
+    ctx.fillText(txt, tx, ty);
+  };
+
   b.piezas.forEach(p => {
     const x = p.x * sc, y = p.y * sc, w = p.w * sc, h = p.h * sc;
     ctx.fillStyle = shade(g.mat.color, .82);
     ctx.fillRect(x, y, w, h);
+    if (tex) {
+      // La imagen representa la plancha: cada pieza muestra la parte de la que realmente sale
+      const k = sc / pxPorMm(tex, g.mat);
+      ctx.beginPath(); ctx.rect(x, y, w, h);
+      rellenarTextura(ctx, tex, k, 0, 0, k, 0, 0);
+    }
     ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     dibujarCantos(ctx, p, x, y, w, h);
     // etiqueta
@@ -83,11 +96,11 @@ function drawBoard(id, b, g) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     if (h > 26 && w > 58) {
       ctx.font = '600 9.5px "JetBrains Mono", monospace';
-      ctx.fillText(lbl, x + w / 2, y + h / 2 - (h > 40 ? 6 : 0));
-      if (h > 40) { ctx.font = '500 9px Inter, sans-serif'; ctx.fillText(trunc(ctx, nmz, w - 8), x + w / 2, y + h / 2 + 7); }
+      rotulo(lbl, x + w / 2, y + h / 2 - (h > 40 ? 6 : 0));
+      if (h > 40) { ctx.font = '500 9px Inter, sans-serif'; rotulo(trunc(ctx, nmz, w - 8), x + w / 2, y + h / 2 + 7); }
     } else if (h > 12 && w > 42) {
       ctx.font = '600 8.5px "JetBrains Mono", monospace';
-      ctx.fillText(lbl, x + w / 2, y + h / 2);
+      rotulo(lbl, x + w / 2, y + h / 2);
     }
     if (p.rot) {
       ctx.fillStyle = 'rgba(91,157,217,.9)'; ctx.font = '700 8px Inter';

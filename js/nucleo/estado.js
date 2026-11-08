@@ -122,8 +122,16 @@ function deshacer() {
 /* ---------- PERSISTENCIA ---------- */
 function save() {
   registrarHistorial();
-  try { localStorage.setItem('melamina.v1', JSON.stringify(S)); } catch (e) { }
+  try {
+    localStorage.setItem('melamina.v1', JSON.stringify(S));
+    _avisoGuardado = false;
+  } catch (e) {
+    // Sin este aviso el trabajo dejaría de conservarse sin que nadie lo note
+    if (!_avisoGuardado) toast('El navegador no tiene espacio: usa Guardar para no perder cambios');
+    _avisoGuardado = true;
+  }
 }
+let _avisoGuardado = false;
 function load() {
   try {
     const r = localStorage.getItem('melamina.v1');

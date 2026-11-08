@@ -22,6 +22,7 @@ js/
     perforaciones.js    Posición de bisagras, correderas y soportes
     corte.js            Optimización de planchas
   vistas/
+    textura.js          Imágenes de melamina
     vista3d.js          Vista 3D
     vista2d.js          Plano 2D con cotas
   ui/

@@ -118,7 +118,11 @@ function draw3(cv = $('#cv3')) {
     const n = V3.all ? (+m.qty || 1) : 1;
     for (let i = 0; i < n; i++) {
       const g = geo(m, { puertas: V3.puertas || conSel, fondo: V3.fondo || conSel });
-      g.B.forEach(b => boxes.push({ ...b, x: b.x + ox, mod: m.id }));
+      const info = new Map(piezas(m).map(p => [p.nom, p]));
+      g.B.forEach(b => {
+        const pz = info.get(b.pieza), mat = pz && S.mats.find(x => x.id === pz.mat);
+        boxes.push({ ...b, x: b.x + ox, mod: m.id, pz, mat, tex: texturaDe(mat) });
+      });
       ox += g.W + (V3.all ? 20 : 0);
       maxH = Math.max(maxH, g.H); maxD = Math.max(maxD, g.D);
     }
@@ -157,20 +161,57 @@ function draw3(cv = $('#cv3')) {
   const faces = [];
   const C = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]];
   const FI = [
-    { i: [4, 5, 6, 7], l: 1.00 },  // frente
-    { i: [1, 0, 3, 2], l: 0.42 },  // atrás
-    { i: [5, 1, 2, 6], l: 0.70 },  // derecha
-    { i: [0, 4, 7, 3], l: 0.58 },  // izquierda
-    { i: [7, 6, 2, 3], l: 0.92 },  // arriba
-    { i: [0, 1, 5, 4], l: 0.34 }   // abajo
+    { i: [4, 5, 6, 7], l: 1.00, eje: 2 },  // frente
+    { i: [1, 0, 3, 2], l: 0.42, eje: 2 },  // atrás
+    { i: [5, 1, 2, 6], l: 0.70, eje: 0 },  // derecha
+    { i: [0, 4, 7, 3], l: 0.58, eje: 0 },  // izquierda
+    { i: [7, 6, 2, 3], l: 0.92, eje: 1 },  // arriba
+    { i: [0, 1, 5, 4], l: 0.34, eje: 1 }   // abajo
   ];
-  boxes.forEach(b => {
+
+  /* Datos para pintar la textura en una cara grande: la veta sigue el largo de la pieza */
+  function mapaTextura(b, ib, f) {
+    const dims = [b.w, b.h, b.d], fijo = dims.indexOf(Math.min(...dims));
+    if (!b.tex || f.eje !== fijo) return null;
+    const [e1, e2] = [0, 1, 2].filter(a => a !== fijo);
+    const directo = Math.abs(dims[e1] - b.pz.L) + Math.abs(dims[e2] - b.pz.A) <= Math.abs(dims[e1] - b.pz.A) + Math.abs(dims[e2] - b.pz.L);
+    return { b, fijo, lado: C[f.i[0]][fijo], ejeL: directo ? e1 : e2, ejeA: directo ? e2 : e1, desp: (ib * 347) % 2000 };
+  }
+
+  function pintarTextura(f) {
+    const { b, fijo, lado, ejeL, ejeA, desp } = f.mapa;
+    const dims = [b.w, b.h, b.d], org = [b.x, b.y, b.z], esc = pxPorMm(b.tex, b.mat);
+    const borde = Math.max(...f.pts.map((p, i) => { const q = f.pts[(i + 1) % 4]; return Math.hypot(p[0] - q[0], p[1] - q[1]); }));
+    const n = cl(Math.ceil(borde / 90), 1, 6);
+    const pantalla = [], imagen = [];
+    for (let i = 0; i <= n; i++) {
+      pantalla[i] = []; imagen[i] = [];
+      for (let j = 0; j <= n; j++) {
+        const p = [];
+        p[fijo] = org[fijo] + lado * dims[fijo];
+        p[ejeL] = org[ejeL] + dims[ejeL] * i / n;
+        p[ejeA] = org[ejeA] + dims[ejeA] * j / n;
+        pantalla[i][j] = pr(p);
+        imagen[i][j] = [(dims[ejeL] * i / n + desp) * esc, (dims[ejeA] * j / n + desp) * esc];
+      }
+    }
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const P = pantalla, Q = imagen;
+      trianguloTextura(ctx, b.tex, P[i][j], P[i + 1][j], P[i + 1][j + 1], Q[i][j], Q[i + 1][j], Q[i + 1][j + 1]);
+      trianguloTextura(ctx, b.tex, P[i][j], P[i + 1][j + 1], P[i][j + 1], Q[i][j], Q[i + 1][j + 1], Q[i][j + 1]);
+    }
+  }
+
+  boxes.forEach((b, ib) => {
     const V = C.map(c => pr([b.x + c[0] * b.w, b.y + c[1] * b.h, b.z + c[2] * b.d]));
     const sel = hayPiezaSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom;
+    const zCentro = V.reduce((s, p) => s + p[2], 0) / 8;
     FI.forEach(f => {
       const pts = f.i.map(k => V[k]);
       const z = pts.reduce((s, p) => s + p[2], 0) / 4;
-      faces.push({ pts, z, c: b.c, l: f.l, tag: b.tag, sel });
+      // Una cara más lejana que el centro de la pieza mira hacia atrás y no necesita textura
+      const mapa = z < zCentro ? mapaTextura(b, ib, f) : null;
+      faces.push({ pts, z, c: b.tex ? b.tex.color : b.c, l: f.l, tag: b.tag, sel, mapa });
     });
   });
   // La pieza seleccionada se pinta al final, para que se vea aunque esté dentro del mueble
@@ -186,16 +227,24 @@ function draw3(cv = $('#cv3')) {
     ctx.restore();
   }
 
-  faces.forEach(f => {
+  const trazarCara = f => {
     ctx.beginPath();
     ctx.moveTo(f.pts[0][0], f.pts[0][1]);
     for (let i = 1; i < 4; i++) ctx.lineTo(f.pts[i][0], f.pts[i][1]);
     ctx.closePath();
+  };
+  faces.forEach(f => {
+    trazarCara(f);
     const fantasma = hayPiezaSel && !f.sel;
     ctx.globalAlpha = fantasma ? 0.08 : 1;
     ctx.fillStyle = shade(f.sel ? COLOR_SELECCION : f.c, f.l);
     ctx.fill();
     ctx.globalAlpha = 1;
+    if (f.mapa && !hayPiezaSel) {
+      pintarTextura(f);
+      trazarCara(f);
+      if (f.l < 1) { ctx.fillStyle = `rgba(0,0,0,${1 - f.l})`; ctx.fill(); }
+    }
     ctx.strokeStyle = fantasma ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.30)'; ctx.lineWidth = 0.6; ctx.stroke();
   });
 

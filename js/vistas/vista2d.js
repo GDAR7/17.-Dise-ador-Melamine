@@ -6,6 +6,7 @@ const V2 = { vista: 'frontal', cotas: true, col: 0 };   // col: columna que se c
 
 /* Escribe sobre cada zona su nombre y su alto */
 function rotularZonas(ctx, m, e, X, Y) {
+  const conTextura = !!texturaDe(S.mats.find(x => x.id === m.matF));
   let x0 = 0;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `600 ${imprimiendo ? 8.5 : 10}px Inter, sans-serif`;
@@ -16,7 +17,9 @@ function rotularZonas(ctx, m, e, X, Y) {
       // Una zona abierta sin fondo deja ver el lienzo oscuro de la pantalla
       const hueco = z.tipo !== 'puerta' && z.tipo !== 'cajon';
       ctx.fillStyle = hueco && m.fondo === 'ninguno' && !imprimiendo ? '#9aa3b8' : 'rgba(20,16,10,.88)';
-      ctx.fillText(trunc(ctx, `${z.nom} ${b - a}`, X(W) - X(0) - 6), X(x0 + W / 2), (Y(a) + Y(b)) / 2);
+      const txt = trunc(ctx, `${z.nom} ${b - a}`, X(W) - X(0) - 6);
+      if (conTextura) { ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeText(txt, X(x0 + W / 2), (Y(a) + Y(b)) / 2); }
+      ctx.fillText(txt, X(x0 + W / 2), (Y(a) + Y(b)) / 2);
     });
     x0 += W;
   });
@@ -59,6 +62,16 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     ctx.strokeStyle = stroke || 'rgba(0,0,0,.45)'; ctx.lineWidth = 1;
     ctx.strokeRect(X(x), Y(y + bh), bw * sc, bh * sc);
   };
+  // Los frentes llevan la veta en vertical, a lo largo de su altura
+  const texFrente = (x, y, bw, bh) => {
+    const tex = texturaDe(mf);
+    if (!tex) return;
+    const k = sc / pxPorMm(tex, mf);
+    ctx.beginPath(); ctx.rect(X(x), Y(y + bh), bw * sc, bh * sc);
+    rellenarTextura(ctx, tex, 0, -k, k, 0, X(x), Y(y));
+    ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1;
+    ctx.strokeRect(X(x), Y(y + bh), bw * sc, bh * sc);
+  };
 
   // fondo del interior
   ctx.fillStyle = imprimiendo ? '#fff' : '#0d0f13';
@@ -71,6 +84,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     geo(m).B.filter(b => front || enCorte(b)).sort((a, b) => a.z - b.z).forEach(b => {
       const frente = b.tag === 'Puerta' || b.tag === 'Frente cajón';
       rect(front ? b.x : b.z, b.y, front ? b.w : b.d, b.h, shade(b.c, frente ? .97 : .8));
+      if (frente && front) texFrente(b.x, b.y, b.w, b.h);
     });
     if (front) rotularZonas(ctx, m, e, X, Y);
   } else if (front) {
@@ -96,6 +110,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     for (let i = 0; i < nc; i++) {
       const x = supe ? 0 : e + 2, bw = supe ? W : W - 2 * e - 4;
       rect(x, Z + i * hc + 1, bw, hc - 3, shade(mf.color, .97), 'rgba(0,0,0,.6)');
+      texFrente(x, Z + i * hc + 1, bw, hc - 3);
       // tirador
       ctx.fillStyle = 'rgba(0,0,0,.4)';
       ctx.fillRect(X(x + bw / 2 - 40), Y(Z + i * hc + hc / 2 + 4), 80 * sc, 8 * sc);
@@ -109,6 +124,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
       for (let i = 0; i < np && t.alto > 0; i++) {
         const x = xx + i * (pw + 3);
         rect(x, t.y, pw, t.alto, shade(mf.color, .97), 'rgba(0,0,0,.6)');
+        texFrente(x, t.y, pw, t.alto);
         ctx.fillStyle = 'rgba(0,0,0,.4)';
         const hx = i < np / 2 ? x + pw - 45 : x + 20;
         ctx.fillRect(X(hx), Y(t.y + t.alto / 2 + 45), 9 * sc, 90 * sc);

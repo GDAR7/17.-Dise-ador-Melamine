@@ -172,6 +172,20 @@ function renderParams() {
   };
 }
 
+const tieneTextura = m => typeof m.textura === 'string' && m.textura.startsWith('data:image/');
+let _materialTextura = null;
+
+$('#texIn').onchange = async e => {
+  const archivo = e.target.files[0], mat = S.mats.find(x => x.id === _materialTextura);
+  e.target.value = '';
+  if (!archivo || !mat) return;
+  try {
+    mat.textura = await prepararTextura(archivo);
+    renderParams(); recalc();
+    toast('Imagen aplicada');
+  } catch (x) { toast('No se pudo leer esa imagen'); }
+};
+
 function renderMats() {
   const el = $('#matlist'); if (!el) return;
   el.innerHTML = S.mats.map(m => `
@@ -188,6 +202,12 @@ function renderMats() {
         <div class="f"><label>Alto plancha</label><input type="number" data-f="fh" value="${m.fh}"></div>
       </div>
       <label class="chk"><input type="checkbox" data-f="veta" ${m.veta ? 'checked' : ''}> Tiene veta (no girar sus piezas)</label>
+      <div class="tex">
+        ${tieneTextura(m) ? `<img class="tex-img" src="${esc(m.textura)}" alt="Textura de ${esc(m.nom)}">` : ''}
+        <button class="btn" data-texcargar="${m.id}">⤒ ${tieneTextura(m) ? 'Cambiar imagen' : 'Cargar imagen'}</button>
+        ${tieneTextura(m) ? `<button class="btn" data-texquitar="${m.id}">Quitar</button>` : ''}
+      </div>
+      ${tieneTextura(m) ? `<div class="f"><label>La foto cubre, de largo (mm)</label><input type="number" min="1" data-f="texAncho" value="${m.texAncho || m.fw}"></div>` : ''}
     </div>`).join('');
   el.querySelectorAll('.mat').forEach(d => {
     const mat = S.mats.find(x => x.id === d.dataset.id);
@@ -199,6 +219,15 @@ function renderMats() {
         recalc();
       });
     });
+  });
+  el.querySelectorAll('[data-texcargar]').forEach(b => b.onclick = () => {
+    _materialTextura = b.dataset.texcargar;
+    $('#texIn').click();
+  });
+  el.querySelectorAll('[data-texquitar]').forEach(b => b.onclick = () => {
+    const mat = S.mats.find(x => x.id === b.dataset.texquitar);
+    delete mat.textura; delete mat.texAncho;
+    renderParams(); recalc();
   });
   el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
     const id = b.dataset.rm;
