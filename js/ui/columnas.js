@@ -49,6 +49,7 @@ function htmlColumnas(m) {
             <div class="zacc"><button data-acc="quitarCol" title="Quitar columna" aria-label="Quitar columna">×</button></div>
           </div>
           <div class="col-suma">${sumaColumna(m, c)}</div>
+          ${ci < m.columnas.length - 1 ? `<label class="chk"><input type="checkbox" data-cf="compartir" ${c.compartir ? 'checked' : ''}> Compartir lateral con la columna siguiente</label>` : ''}
           ${c.zonas.map((z, zi) => zonaHtml(z, zi, c.zonas.length)).join('')}
           <button class="btn" data-acc="agregarZona" style="width:100%;justify-content:center">＋ Agregar zona</button>
         </div>`).join('')}
@@ -70,7 +71,7 @@ function bindColumnas(m) {
     renderList();
   };
   const estructura = () => { sincronizarAncho(); renderParams(); recalc(); };
-  const valor = inp => (inp.type === 'number' ? (inp.value === '' ? 0 : +inp.value) : inp.value);
+  const valor = inp => (inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? (inp.value === '' ? 0 : +inp.value) : inp.value);
 
   $$('#params .columna').forEach(d => {
     const c = m.columnas[+d.dataset.col];

@@ -40,6 +40,39 @@ function rangoFondo(m, e) {
   return m.fondo === 'clavado' ? [Z, H] : [Z + e - 6, H - e + 6];
 }
 
+/* La columna i comparte su lateral derecho con la siguiente */
+const compartida = (cols, i) => !!(cols[i] && cols[i].compartir && cols[i + 1]);
+
+/* Espacio que ocupa el lateral izquierdo y ancho interior: un lateral compartido se reparte a medias entre dos columnas */
+function anchoInterior(cols, i, e) {
+  const izq = compartida(cols, i - 1) ? e / 2 : e, der = compartida(cols, i) ? e / 2 : e;
+  return { izq, Wi: (+cols[i].ancho || 0) - izq - der };
+}
+
+function unirTramos(a, b) {
+  const unidos = [];
+  [...a, ...b].sort((x, y) => x[0] - y[0]).forEach(([y0, y1]) => {
+    const ult = unidos[unidos.length - 1];
+    if (ult && y0 <= ult[1]) ult[1] = Math.max(ult[1], y1);
+    else unidos.push([y0, y1]);
+  });
+  return unidos;
+}
+
+/* Laterales que aporta la columna i: { base: nombre, xs: posiciones desde su borde izquierdo, tramos }.
+   El lateral compartido pertenece a la columna de la izquierda y se interrumpe solo donde ninguna de las dos lo necesita. */
+function lateralesColumna(m, i, e) {
+  const cols = m.columnas, c = cols[i], W = +c.ancho || 0, H = +m.alto;
+  const propios = tramosPanel(m, c, e, 0, H, CORTAN_LATERAL);
+  const conIzq = !compartida(cols, i - 1);
+  if (!compartida(cols, i)) return [{ base: 'Lateral', xs: conIzq ? [0, W - e] : [W - e], tramos: propios }];
+  const lados = [{ base: 'Lateral compartido', xs: [W - e / 2], tramos: unirTramos(propios, tramosPanel(m, cols[i + 1], e, 0, H, CORTAN_LATERAL)) }];
+  if (conIzq) lados.unshift({ base: 'Lateral', xs: [0], tramos: propios });
+  return lados;
+}
+
+const nombreTramo = (base, tramos, i) => (tramos.length > 1 ? `${base} tramo ${i + 1}` : base);
+
 /* Zonas de abajo hacia arriba con su tramo [a, b], su interior libre [ib, it] y si llevan entrepaño encima */
 function zonasColumna(m, c, e) {
   const H = +m.alto, Z = +m.zocalo || 0;
@@ -63,10 +96,11 @@ function zonasColumna(m, c, e) {
 
 function piezasColumnas(m, add, mc, mf, mb) {
   const e = mc.esp, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = +m.retr || 0;
-  (m.columnas || []).forEach(c => {
-    const W = +c.ancho || 0, Wi = W - 2 * e, pre = `${c.nom} · `;
-    const tramos = tramosPanel(m, c, e, 0, H, CORTAN_LATERAL);
-    tramos.forEach(([y0, y1], i) => add(pre + (tramos.length > 1 ? `Lateral tramo ${i + 1}` : 'Lateral'), y1 - y0, D, 2, 1, 0, mc, 'lat'));
+  (m.columnas || []).forEach((c, ci) => {
+    const W = +c.ancho || 0, { Wi } = anchoInterior(m.columnas, ci, e), pre = `${c.nom} · `;
+    lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
+      tramos.forEach(([y0, y1], i) => add(pre + nombreTramo(base, tramos, i), y1 - y0, D, xs.length, 1, 0, mc, 'lat'));
+    });
     add(pre + 'Techo', Wi, D, 1, 1, 0, mc, 'horiz');
     add(pre + 'Piso', Wi, D, 1, 1, 0, mc, 'horiz');
     if (Z > 0) {
@@ -122,13 +156,10 @@ function geoColumnas(m, opts = {}) {
   const box = (x, y, z, w, h, d, c, tag, pieza = tag) => B.push({ x, y, z, w, h, d, c, tag, pieza });
 
   let x0 = 0;
-  (m.columnas || []).forEach(c => {
-    const W = +c.ancho || 0, Wi = W - 2 * e, xi = x0 + e, pre = `${c.nom} · `;
-    const laterales = tramosPanel(m, c, e, 0, H, CORTAN_LATERAL);
-    laterales.forEach(([y0, y1], i) => {
-      const nom = pre + (laterales.length > 1 ? `Lateral tramo ${i + 1}` : 'Lateral');
-      box(x0, y0, 0, e, y1 - y0, D, cC, 'Lateral', nom);
-      box(x0 + W - e, y0, 0, e, y1 - y0, D, cC, 'Lateral', nom);
+  (m.columnas || []).forEach((c, ci) => {
+    const W = +c.ancho || 0, { izq, Wi } = anchoInterior(m.columnas, ci, e), xi = x0 + izq, pre = `${c.nom} · `;
+    lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
+      tramos.forEach(([y0, y1], i) => xs.forEach(px => box(x0 + px, y0, 0, e, y1 - y0, D, cC, 'Lateral', pre + nombreTramo(base, tramos, i))));
     });
     box(xi, Z, 0, Wi, e, D, cC, 'Piso', pre + 'Piso');
     box(xi, H - e, 0, Wi, e, D, cC, 'Techo', pre + 'Techo');
