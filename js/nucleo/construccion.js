@@ -23,12 +23,12 @@ function elementosConstruccion(m) {
         [noms.repisa, noms.puerta, ...noms.cajon].forEach(n => deZonas.add(n));
         return { z, zi, noms };
       });
-      crear(`c${ci}-cuerpo`, c.nom, 'Cuerpo', 'cuerpo', 1, todas.filter(p => p.nom.startsWith(pre) && !deZonas.has(p.nom)).map(p => p.nom));
+      crear(`c${ci}-cuerpo`, c.nom, 'Cuerpo', 'cuerpo', 1, todas.filter(p => p.nom.startsWith(pre) && !deZonas.has(p.nom)).map(p => p.nom), { col: ci });
       const bisagra = bisagraColumna(m.columnas, ci);
       propias.forEach(({ z, zi, noms }) => {
-        crear(`c${ci}-z${zi}-p`, c.nom, `${z.nom} · Puerta`, 'puerta', 1, [noms.puerta], { bisagra: bisagra.nombre, lado: bisagra.lado });
-        crear(`c${ci}-z${zi}-c`, c.nom, `${z.nom} · Cajón`, 'cajon', 1, noms.cajon);
-        if (porNom.has(noms.repisa)) crear(`c${ci}-z${zi}-r`, c.nom, `${z.nom} · Repisas`, 'repisa', +z.rep || 1, [noms.repisa]);
+        crear(`c${ci}-z${zi}-p`, c.nom, `${z.nom} · Puerta`, 'puerta', 1, [noms.puerta], { bisagra: bisagra.nombre, lado: bisagra.lado, col: ci });
+        crear(`c${ci}-z${zi}-c`, c.nom, `${z.nom} · Cajón`, 'cajon', 1, noms.cajon, { col: ci });
+        if (porNom.has(noms.repisa)) crear(`c${ci}-z${zi}-r`, c.nom, `${z.nom} · Repisas`, 'repisa', +z.rep || 1, [noms.repisa], { col: ci });
       });
     });
     return lista;

@@ -95,10 +95,13 @@
           <div class="det-lay">
             <div class="det-lista" id="detLista"></div>
             <div class="det-cuerpo">
-              <div class="cvwrap det-3d">
-                <canvas id="cvDet"></canvas>
-                <div class="cvbar"><button class="btn pri" id="bManual">🖨 Imprimir manual</button></div>
-                <label class="cvexp">Separar piezas <input type="range" id="rDet" min="0" max="100" value="45"></label>
+              <div class="det-vis">
+                <div class="cvwrap det-3d">
+                  <canvas id="cvDet"></canvas>
+                  <div class="cvbar"><button class="btn pri" id="bManual">🖨 Imprimir manual</button></div>
+                  <label class="cvexp">Separar piezas <input type="range" id="rDet" min="0" max="100" value="45"></label>
+                </div>
+                <div class="det-2d"><canvas id="cvDet2"></canvas></div>
               </div>
               <div class="scroll" id="detbox"></div>
             </div>
@@ -144,6 +147,7 @@
 <script src="js/vistas/textura.js"></script>
 <script src="js/vistas/vista3d.js"></script>
 <script src="js/vistas/vista2d.js"></script>
+<script src="js/vistas/detalle2d.js"></script>
 <script src="js/ui/lista-modulos.js"></script>
 <script src="js/ui/parametros.js"></script>
 <script src="js/ui/columnas.js"></script>

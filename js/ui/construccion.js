@@ -12,6 +12,7 @@ function renderConstruccion() {
     lista.innerHTML = '';
     box.innerHTML = emptyHtml('Sin elementos', 'Selecciona o crea un módulo para ver cómo se construye.');
     draw3($('#cvDet'));
+    dibujarDetalle2D($('#cvDet2'), null, null);
     return;
   }
   const elementos = elementosConstruccion(m);
@@ -23,9 +24,10 @@ function renderConstruccion() {
     `<button class="det-item${x.id === _detalleId ? ' on' : ''}" data-det="${esc(x.id)}">${esc(x.titulo)}${x.cant > 1 ? `<small>×${x.cant}</small>` : ''}</button>`).join('')).join('');
   lista.querySelectorAll('[data-det]').forEach(b => b.onclick = () => { _detalleId = b.dataset.det; renderConstruccion(); });
 
-  if (!el) { V3.detalle = null; box.innerHTML = emptyHtml('Sin elementos', 'Este mueble no tiene piezas.'); draw3($('#cvDet')); return; }
+  if (!el) { V3.detalle = null; box.innerHTML = emptyHtml('Sin elementos', 'Este mueble no tiene piezas.'); draw3($('#cvDet')); dibujarDetalle2D($('#cvDet2'), null, null); return; }
   V3.detalle = { mod: m, piezas: el.piezas, cant: el.cant, explode: _detalleSeparar };
   draw3($('#cvDet'));
+  dibujarDetalle2D($('#cvDet2'), m, el);
 
   const guia = guiaConstruccion(el);
   box.innerHTML = `<div class="tcard"><div class="hd"><h3>${esc(el.grupo)} · ${esc(el.titulo)}</h3><div class="sp"></div>
@@ -49,26 +51,28 @@ function htmlTablaElemento(el) {
 
 /* Manual con todos los elementos del mueble seleccionado */
 function htmlManual(m) {
-  const cv = $('#cvDet'), previo = V3.detalle;
+  const cv = $('#cvDet'), cv2 = $('#cvDet2');
   imprimiendo = true;
   const secciones = elementosConstruccion(m).map(el => {
     V3.detalle = { mod: m, piezas: el.piezas, cant: el.cant, explode: _detalleSeparar };
     draw3(cv);
+    dibujarDetalle2D(cv2, m, el);
     const guia = guiaConstruccion(el);
     return `<section class="man-el">
       <h2>${esc(el.grupo)} · ${esc(el.titulo)}${el.cant > 1 ? ` <small>× ${el.cant}</small>` : ''}</h2>
       <div class="man-fila">
         <img src="${cv.toDataURL('image/png')}" alt="${esc(el.titulo)} desarmado">
-        <div><h3>Herrajes por unidad</h3><ul>${guia.herrajes.map(h => `<li>${esc(h)}</li>`).join('')}</ul></div>
+        <img src="${cv2.toDataURL('image/png')}" alt="${esc(el.titulo)}: vistas frontal y lateral con medidas">
       </div>
+      <h3>Herrajes por unidad</h3>
+      <ul>${guia.herrajes.map(h => `<li>${esc(h)}</li>`).join('')}</ul>
       ${htmlTablaElemento(el)}
       <h3>Pasos de armado</h3>
       <ol>${guia.pasos.map(p => `<li>${esc(p)}</li>`).join('')}</ol>
     </section>`;
   });
   imprimiendo = false;
-  V3.detalle = previo;
-  draw3(cv);
+  renderConstruccion();
   return `<div class="manual"><h1>${esc(m.nom)}</h1><p>${m.ancho} × ${m.alto} × ${m.prof} mm · Guía orientativa: confirma medidas y montaje con la ficha de tus herrajes.</p>${secciones.join('')}</div>`;
 }
 

@@ -27,6 +27,7 @@ js/
     textura.js          Imágenes de melamina
     vista3d.js          Vista 3D
     vista2d.js          Plano 2D con cotas
+    detalle2d.js        Vistas acotadas de cada elemento
   ui/
     lista-modulos.js    Lista de módulos y plantillas
     parametros.js       Panel de parámetros

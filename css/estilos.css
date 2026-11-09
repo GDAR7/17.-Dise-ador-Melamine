@@ -260,7 +260,9 @@ tbody tr.grp:hover td{background:var(--panel2)}
 .det-item.on{background:#3a2f18;border-color:var(--accd);color:var(--acc2)}
 .det-item small{font-size:10.5px;color:var(--txt3)}
 .det-cuerpo{flex:1;min-width:0;display:flex;flex-direction:column}
-.det-3d{height:44%;flex-shrink:0;border-bottom:1px solid var(--line)}
+.det-vis{display:flex;height:44%;flex-shrink:0;border-bottom:1px solid var(--line)}
+.det-3d{flex:1;min-width:0}
+.det-2d{flex:1;min-width:0;border-left:1px solid var(--line);background:var(--bg)}
 .det-3d canvas{cursor:grab}
 .det-3d .cvexp{bottom:10px}
 .det-cuerpo #detbox{flex:1;height:auto;min-height:0}
@@ -271,6 +273,10 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .det-lay{flex-direction:column}
   .det-lista{width:100%;height:120px;border-right:0;border-bottom:1px solid var(--line)}
   .det-guia{grid-template-columns:1fr}
+}
+@media (max-width:700px){
+  .det-vis{flex-direction:column;height:520px}
+  .det-2d{border-left:0;border-top:1px solid var(--line)}
 }
 
 /* ---------- PERFORACIONES ---------- */
@@ -449,7 +455,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .man-el h2 small{font-weight:500;color:#333}
   .man-el h3{font-size:12px;margin:8px 0 3px}
   .man-fila{display:flex;gap:6mm;align-items:flex-start}
-  .man-fila img{width:95mm;height:auto}
+  .man-fila img{width:50%;min-width:0;height:auto}
   .man-el ul,.man-el ol{font-size:11.5px;padding-left:18px}
   #p3d,#p2d{break-inside:avoid}
   #pdes,#popt,#pcos,#pper{break-before:page}
