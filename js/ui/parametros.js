@@ -21,32 +21,51 @@ $$('#ptabs button').forEach(b => b.onclick = () => {
   $('#params').scrollTop = 0;
 });
 
-function actualizarAvisoPuertas(m) {
-  const aviso = $('#avPuertas');
-  if (aviso) aviso.hidden = !puertasSeCruzan(m);
+/* Puertas y divisiones se agregan por niveles de la misma forma */
+const GRUPOS_NIVEL = [
+  { clave: 'puertasExtra', fila: 'pg', aviso: '#avPuertas', boton: '#bAddPuerta', grupos: gruposPuertas, lleno: 'Todos los niveles ya tienen puertas: limita antes con Desde y Hasta' },
+  { clave: 'divisionesExtra', fila: 'dg', aviso: '#avDiv', boton: '#bAddDiv', grupos: gruposDivisiones, lleno: 'Todos los niveles ya tienen divisiones: limita antes con Desde y Hasta' }
+];
+
+function filasGrupo(lista, attr, nombre) {
+  return (lista || []).map((g, i) => `<div class="row" data-${attr}="${i}">
+    <div class="f"><label title="Cantidad">${nombre} ${g.num}</label><input type="number" min="0" max="6" data-pf="n" value="${g.n}"></div>
+    <div class="f"><label>Desde repisa</label><input type="number" min="0" data-pf="desde" value="${g.desde}"></div>
+    <div class="f"><label>Hasta repisa</label><input type="number" min="0" data-pf="hasta" value="${g.hasta}"></div>
+    <div class="zacc"><button data-pgquitar aria-label="Quitar ${nombre} ${g.num}" title="Quitar">×</button></div>
+  </div>`).join('');
 }
 
-function bindPuertas(m) {
-  $$('#params [data-pg]').forEach(fila => {
-    const i = +fila.dataset.pg, g = m.puertasExtra[i];
-    fila.querySelectorAll('[data-pf]').forEach(inp => inp.addEventListener('input', () => {
-      g[inp.dataset.pf] = +inp.value || 0;
-      actualizarAvisoPuertas(m);
-      recalc();
-    }));
-    fila.querySelector('[data-pgquitar]').onclick = () => {
-      m.puertasExtra.splice(i, 1);
+function actualizarAvisosNivel(m) {
+  GRUPOS_NIVEL.forEach(c => {
+    const aviso = $(c.aviso);
+    if (aviso) aviso.hidden = !gruposSeCruzan(m, c.grupos(m));
+  });
+}
+
+function bindGruposNivel(m) {
+  GRUPOS_NIVEL.forEach(c => {
+    $$(`#params [data-${c.fila}]`).forEach(fila => {
+      const i = +fila.dataset[c.fila], g = m[c.clave][i];
+      fila.querySelectorAll('[data-pf]').forEach(inp => inp.addEventListener('input', () => {
+        g[inp.dataset.pf] = +inp.value || 0;
+        actualizarAvisosNivel(m);
+        recalc();
+      }));
+      fila.querySelector('[data-pgquitar]').onclick = () => {
+        m[c.clave].splice(i, 1);
+        renderParams(); recalc();
+      };
+    });
+    $(c.boton).onclick = () => {
+      const nivel = nivelLibre(m, c.grupos(m)), nr = +m.repisas || 0;
+      if (nivel === null) { toast(c.lleno); return; }
+      m[c.clave] = m[c.clave] || [];
+      const num = m[c.clave].reduce((max, g) => Math.max(max, g.num), 1) + 1;
+      m[c.clave].push({ num, n: 1, desde: nivel, hasta: nivel + 1 > nr ? 0 : nivel + 1 });
       renderParams(); recalc();
     };
   });
-  $('#bAddPuerta').onclick = () => {
-    const nivel = nivelLibrePuertas(m), nr = +m.repisas || 0;
-    if (nivel === null) { toast('Todos los niveles ya tienen puertas: limita antes con Desde y Hasta'); return; }
-    m.puertasExtra = m.puertasExtra || [];
-    const num = m.puertasExtra.reduce((max, g) => Math.max(max, g.num), 1) + 1;
-    m.puertasExtra.push({ num, n: 1, desde: nivel, hasta: nivel + 1 > nr ? 0 : nivel + 1 });
-    renderParams(); recalc();
-  };
 }
 
 function renderParams() {
@@ -102,8 +121,13 @@ function renderParams() {
         <div class="f"><label>Repisas por vano</label><input type="number" min="0" data-k="repisas" value="${m.repisas}"></div>
         <div class="f"><label>Divisiones verticales</label><input type="number" min="0" data-k="divs" value="${m.divs}"></div>
       </div>
-      <div class="row"><div class="f"><label>Divisiones: del techo hasta la repisa n.º (se cuenta desde arriba · 0 = completas)</label>
-        <input type="number" min="0" data-k="divHasta" value="${m.divHasta || 0}"></div></div>
+      <div class="row">
+        <div class="f"><label>Divisiones desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="divDesde" value="${m.divDesde || 0}"></div>
+        <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="divHasta" value="${m.divHasta || 0}"></div>
+      </div>
+      ${filasGrupo(m.divisionesExtra, 'dg', 'División')}
+      <div class="pg-aviso" id="avDiv" ${gruposSeCruzan(m, gruposDivisiones(m)) ? '' : 'hidden'}>Dos grupos de divisiones ocupan el mismo nivel: revisa sus repisas.</div>
+      <button class="btn" id="bAddDiv" style="width:100%;justify-content:center;margin-bottom:8px">＋ Agregar divisiones en otro nivel</button>
       <div class="row"><div class="f"><label>Fondo del mueble</label><select data-k="fondo">
         <option value="clavado" ${m.fondo === 'clavado' ? 'selected' : ''}>Clavado / atornillado por detrás</option>
         <option value="ranurado" ${m.fondo === 'ranurado' ? 'selected' : ''}>Ranurado (encajado)</option>
@@ -122,13 +146,8 @@ function renderParams() {
         <div class="f"><label>Puertas desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="puertaDesde" value="${m.puertaDesde || 0}"></div>
         <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="puertaHasta" value="${m.puertaHasta || 0}"></div>
       </div>
-      ${(m.puertasExtra || []).map((g, i) => `<div class="row" data-pg="${i}">
-        <div class="f"><label>Puerta ${g.num}: cant.</label><input type="number" min="0" max="6" data-pf="n" value="${g.n}"></div>
-        <div class="f"><label>Desde repisa</label><input type="number" min="0" data-pf="desde" value="${g.desde}"></div>
-        <div class="f"><label>Hasta repisa</label><input type="number" min="0" data-pf="hasta" value="${g.hasta}"></div>
-        <div class="zacc"><button data-pgquitar aria-label="Quitar puerta ${g.num}" title="Quitar">×</button></div>
-      </div>`).join('')}
-      <div class="pg-aviso" id="avPuertas" ${puertasSeCruzan(m) ? '' : 'hidden'}>Dos grupos de puertas ocupan el mismo nivel: revisa sus repisas.</div>
+      ${filasGrupo(m.puertasExtra, 'pg', 'Puerta')}
+      <div class="pg-aviso" id="avPuertas" ${gruposSeCruzan(m, gruposPuertas(m)) ? '' : 'hidden'}>Dos grupos de puertas ocupan el mismo nivel: revisa sus repisas.</div>
       <button class="btn" id="bAddPuerta" style="width:100%;justify-content:center;margin-bottom:8px">＋ Agregar puertas en otro nivel</button>
       <div class="row"><div class="f"><label>Alto de cada cajón</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
       <div class="f"><label>Montaje de frentes</label>
@@ -205,10 +224,10 @@ function renderParams() {
       if (inp.type === 'checkbox') mm[k] = inp.checked;
       else if (inp.type === 'number') mm[k] = inp.value === '' ? 0 : +inp.value;
       else mm[k] = inp.value;
-      if (k === 'tipo') { Object.assign(mm, { divHasta: 0, puertaDesde: 0, puertaHasta: 0, puertasExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
+      if (k === 'tipo') { Object.assign(mm, { divDesde: 0, divHasta: 0, divisionesExtra: [], puertaDesde: 0, puertaHasta: 0, puertasExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
       if (mm.tipo === 'columnas' && (k === 'alto' || k === 'zocalo')) actualizarSumas(mm);
-      actualizarAvisoPuertas(mm);
+      actualizarAvisosNivel(mm);
       recalc();
     });
   });
@@ -217,7 +236,7 @@ function renderParams() {
     mm[b.dataset.seg] = b.dataset.v; renderParams(); recalc();
   });
   if (m && m.tipo === 'columnas') bindColumnas(m);
-  if (m && m.tipo !== 'columnas') bindPuertas(m);
+  if (m && m.tipo !== 'columnas') bindGruposNivel(m);
   /* bind config */
   $$('#params [data-c]').forEach(inp => {
     const k = inp.dataset.c;

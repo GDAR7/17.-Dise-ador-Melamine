@@ -93,15 +93,9 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     rect(W - e, 0, e, H, shade(mc.color, .72));
     rect(e, Z, W - 2 * e, e, shade(mc.color, .9));
     rect(e, H - e, W - 2 * e, e, shade(mc.color, .9));
-    const nd = +m.divs || 0, Wi = W - 2 * e, vanos = nd + 1, av = (Wi - nd * e) / vanos;
-    const nr = +m.repisas || 0, ya = Z + e, yb = H - e, j = apoyoDivision(m);
-    const yDiv = j ? yRepisa(m, e, j) + e : ya;
-    for (let i = 1; i <= nd; i++) rect(e + i * av + (i - 1) * e, yDiv, e, yb - yDiv, shade(mc.color, .78));
-    for (let i = 1; i <= nr; i++) {
-      const y = ya + (yb - ya) * i / (nr + 1) - e / 2;
-      if (i <= j) { rect(e, y, Wi, e, shade(mc.color, .86)); continue; }
-      for (let v = 0; v < vanos; v++) rect(e + v * (av + e), y, av, e, shade(mc.color, .86));
-    }
+    const interior = interiorMueble(m, e);
+    interior.divisiones.forEach(v => rect(v.x, v.y, e, v.alto, shade(mc.color, .78)));
+    interior.repisas.forEach(r => rect(r.x, r.y, r.ancho, e, shade(mc.color, .86)));
     if (Z > 0) rect(e, 0, W - 2 * e, Z, shade(mc.color, .6));
     if (m.encimera) rect(0, H, W, ef, shade(mf.color, 1));
     // frentes

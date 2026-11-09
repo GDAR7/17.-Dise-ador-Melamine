@@ -26,28 +26,21 @@ function piezas(m) {
   if (m.tipo === 'columnas') { piezasColumnas(m, add, mc, mf, mb); return P; }
 
   const Wi = W - 2 * e;              // ancho interior
-  const Hi = H - 2 * e - Z;          // alto interior libre
 
   // --- Caja ---
   add('Lateral', H, D, 2, 1, 0, mc, 'lat');
   add('Techo', Wi, D, 1, 1, 0, mc, 'horiz');
   add('Piso', Wi, D, 1, 1, 0, mc, 'horiz');
 
-  // --- Divisiones verticales ---
-  const nd = +m.divs || 0;
-  const nr = +m.repisas || 0;
-  const j = apoyoDivision(m);
-  if (nd > 0) add('División vertical', j ? H - e - yRepisa(m, e, j) - e : Hi, D, nd, 1, 0, mc, 'div');
-
-  // Ancho de cada vano (los interiores pierden espesor de división)
-  const vanos = nd + 1;
-  const anchoVano = (Wi - nd * e) / vanos;
-
-  // --- Repisas ---
-  // La repisa donde se apoyan las divisiones y las de debajo van de lado a lado
-  const enteras = j;
-  add('Repisa', anchoVano, D - (+m.retr || 0), (nr - enteras) * vanos, 1, 0, mc, 'rep');
-  add('Repisa entera', Wi, D - (+m.retr || 0), enteras, 1, 0, mc, 'rep');
+  // --- Divisiones verticales y repisas ---
+  const contar = (lista, medida) => {
+    const grupos = new Map();
+    lista.forEach(x => grupos.set(x.nom, { medida: medida(x), q: (grupos.has(x.nom) ? grupos.get(x.nom).q : 0) + 1 }));
+    return [...grupos];
+  };
+  const interior = interiorMueble(m, e);
+  contar(interior.divisiones, v => v.alto).forEach(([nom, g]) => add(nom, g.medida, D, g.q, 1, 0, mc, 'div'));
+  contar(interior.repisas, r => r.ancho).forEach(([nom, g]) => add(nom, g.medida, D - (+m.retr || 0), g.q, 1, 0, mc, 'rep'));
 
   // --- Zócalo ---
   if (Z > 0) {
@@ -108,10 +101,30 @@ function repisaValida(m, v) {
   return n >= 1 && n <= (+m.repisas || 0) ? n : 0;
 }
 
-/* Repisa, contada desde abajo, donde se apoyan las divisiones que bajan del techo. 0 = llegan al piso */
-function apoyoDivision(m) {
-  const k = (+m.divs || 0) > 0 ? repisaValida(m, m.divHasta) : 0;
-  return k ? (+m.repisas || 0) - k + 1 : 0;
+/* Grupos de divisiones verticales. num es fijo por la misma razón que en las puertas */
+function gruposDivisiones(m) {
+  const extra = (m.divisionesExtra || []).map(g => ({ id: `div${g.num}`, num: g.num, nomD: `División vertical ${g.num}`, nomR: `Repisa ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta }));
+  return [{ id: 'div', nomD: 'División vertical', nomR: 'Repisa', n: +m.divs || 0, desde: m.divDesde, hasta: m.divHasta }, ...extra].filter(g => g.n > 0);
+}
+
+/* Posición de divisiones y repisas. Una repisa solo se parte si una división la atraviesa; si no, va de lado a lado.
+   Es la única fuente de estas medidas: el despiece, el 3D y el 2D leen de aquí. */
+function interiorMueble(m, e) {
+  const H = +m.alto, Z = +m.zocalo || 0, Wi = +m.ancho - 2 * e, nr = +m.repisas || 0;
+  const y = n => yRepisa(m, e, nr - n + 1), grupos = gruposDivisiones(m);
+  const anchoVano = g => (Wi - g.n * e) / (g.n + 1);
+  const divisiones = [], repisas = [];
+  grupos.forEach(g => {
+    const { d, h } = limitesNivel(m, g), sup = d ? y(d) : H - e, inf = h ? y(h) + e : Z + e, av = anchoVano(g);
+    for (let i = 1; i <= g.n; i++) divisiones.push({ nom: g.nomD, x: e + i * av + (i - 1) * e, y: inf, alto: sup - inf });
+  });
+  for (let n = 1; n <= nr; n++) {
+    const g = grupos.find(x => { const [a, b] = nivelesGrupo(m, x); return a <= n - 1 && n <= b; });
+    if (!g) { repisas.push({ nom: grupos.length ? 'Repisa entera' : 'Repisa', x: e, y: y(n), ancho: Wi }); continue; }
+    const av = anchoVano(g);
+    for (let v = 0; v <= g.n; v++) repisas.push({ nom: g.nomR, x: e + v * (av + e), y: y(n), ancho: av });
+  }
+  return { divisiones, repisas };
 }
 
 /* Grupos de puertas del mueble. num es fijo: los lados y herrajes elegidos no se mezclan al quitar un grupo */
@@ -121,21 +134,21 @@ function gruposPuertas(m) {
 }
 
 /* Repisas límite ya validadas: d arriba y h abajo, con 0 = techo o piso */
-function limitesPuertas(m, g) {
+function limitesNivel(m, g) {
   const d = repisaValida(m, g.desde), h = repisaValida(m, g.hasta);
   return d && h && d >= h ? { d: 0, h: 0 } : { d, h };   // rango imposible: se ignora
 }
 
 /* Niveles que ocupa un grupo, de 0 (bajo el techo) a nr (sobre el piso), ambos incluidos */
-function nivelesPuertas(m, g) {
-  const { d, h } = limitesPuertas(m, g);
+function nivelesGrupo(m, g) {
+  const { d, h } = limitesNivel(m, g);
   return [d, h ? h - 1 : (+m.repisas || 0)];
 }
 
-function puertasSeCruzan(m) {
+function gruposSeCruzan(m, grupos) {
   const usados = new Set();
-  return gruposPuertas(m).some(g => {
-    const [a, b] = nivelesPuertas(m, g);
+  return grupos.some(g => {
+    const [a, b] = nivelesGrupo(m, g);
     for (let i = a; i <= b; i++) {
       if (usados.has(i)) return true;
       usados.add(i);
@@ -145,13 +158,13 @@ function puertasSeCruzan(m) {
 }
 
 /* Nivel para un grupo nuevo: junto al último creado o, si no se puede, el primero libre. null si no queda ninguno */
-function nivelLibrePuertas(m) {
-  const nr = +m.repisas || 0, grupos = gruposPuertas(m), ocupados = new Set();
+function nivelLibre(m, grupos) {
+  const nr = +m.repisas || 0, ocupados = new Set();
   grupos.forEach(g => {
-    const [a, b] = nivelesPuertas(m, g);
+    const [a, b] = nivelesGrupo(m, g);
     for (let i = a; i <= b; i++) ocupados.add(i);
   });
-  const ult = grupos.length ? nivelesPuertas(m, grupos[grupos.length - 1]) : [];
+  const ult = grupos.length ? nivelesGrupo(m, grupos[grupos.length - 1]) : [];
   const libre = [ult[0] - 1, ult[1] + 1, ...Array.from({ length: nr + 1 }, (_, i) => i)].find(i => i >= 0 && i <= nr && !ocupados.has(i));
   return libre === undefined ? null : libre;
 }
@@ -159,9 +172,9 @@ function nivelLibrePuertas(m) {
 /* Tramo vertical de un grupo de puertas. abajo y arriba son los límites si cubre todo el alto */
 function tramoPuertas(m, e, abajo, arriba, g) {
   const nr = +m.repisas || 0, supe = m.tipoP === 'superpuesta';
-  const { d, h } = limitesPuertas(m, g);
+  const { d, h } = limitesNivel(m, g);
   const y = n => yRepisa(m, e, nr - n + 1);
-  const otros = gruposPuertas(m).filter(o => o.id !== g.id).map(o => limitesPuertas(m, o));
+  const otros = gruposPuertas(m).filter(o => o.id !== g.id).map(o => limitesNivel(m, o));
   // Superpuesta: tapa el canto de la repisa límite o, si otra puerta llega a la misma repisa, solo la mitad con 3 mm de luz entre ambas.
   // Embutida: queda entre repisas con 2 mm de holgura.
   const techoSupe = n => (otros.some(o => o.h === n) ? y(n) + e / 2 - 1.5 : y(n) + e);

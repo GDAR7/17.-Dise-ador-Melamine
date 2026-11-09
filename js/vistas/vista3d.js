@@ -19,26 +19,10 @@ function geo(m, opts = {}) {
   box(e, Z, 0, W - 2 * e, e, D, cC, 'Piso');
   box(e, H - e, 0, W - 2 * e, e, D, cC, 'Techo');
 
-  const nd = +m.divs || 0;
   const Wi = W - 2 * e;
-  const vanos = nd + 1;
-  const av = (Wi - nd * e) / vanos;
-  const nr = +m.repisas || 0;
-  const y0 = Z + e, y1 = H - e, j = apoyoDivision(m);
-  const yDiv = j ? yRepisa(m, e, j) + e : y0;
-  for (let i = 1; i <= nd; i++) {
-    const x = e + i * av + (i - 1) * e;
-    box(x, yDiv, 0, e, y1 - yDiv, D, cC, 'División', 'División vertical');
-  }
-
-  for (let i = 1; i <= nr; i++) {
-    const y = y0 + (y1 - y0) * i / (nr + 1) - e / 2;
-    if (i <= j) { box(e, y, 0, Wi, e, D - (+m.retr || 0), cC, 'Repisa', 'Repisa entera'); continue; }
-    for (let v = 0; v < vanos; v++) {
-      const x = e + v * (av + e);
-      box(x, y, 0, av, e, D - (+m.retr || 0), cC, 'Repisa');
-    }
-  }
+  const interior = interiorMueble(m, e);
+  interior.divisiones.forEach(v => box(v.x, v.y, 0, e, v.alto, D, cC, 'División', v.nom));
+  interior.repisas.forEach(r => box(r.x, r.y, 0, r.ancho, e, D - (+m.retr || 0), cC, 'Repisa', r.nom));
 
   if (Z > 0) {
     box(e, 0, D - e, W - 2 * e, Z, e, cC, 'Zócalo', 'Zócalo frontal');

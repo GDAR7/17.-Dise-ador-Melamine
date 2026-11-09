@@ -35,8 +35,8 @@ function elementosConstruccion(m) {
   }
 
   const nc = +m.cajones || 0;
-  crear('cuerpo', m.nom, 'Cuerpo', 'cuerpo', 1, ['Lateral', 'Techo', 'Piso', 'División vertical', 'Zócalo frontal', 'Zócalo posterior', 'Fondo', 'Fondo (ranurado)', 'Encimera']);
-  [['Repisa', 'Repisas'], ['Repisa entera', 'Repisas enteras']].forEach(([nom, titulo]) => {
+  crear('cuerpo', m.nom, 'Cuerpo', 'cuerpo', 1, ['Lateral', 'Techo', 'Piso', ...gruposDivisiones(m).map(g => g.nomD), 'Zócalo frontal', 'Zócalo posterior', 'Fondo', 'Fondo (ranurado)', 'Encimera']);
+  [['Repisa', 'Repisas'], ...gruposDivisiones(m).filter(g => g.num).map(g => [g.nomR, `Repisas ${g.num}`]), ['Repisa entera', 'Repisas enteras']].forEach(([nom, titulo]) => {
     const p = porNom.get(nom);
     if (p) crear(nom, m.nom, titulo, 'repisa', p.q / qty, [nom]);
   });
