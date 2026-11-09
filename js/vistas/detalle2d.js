@@ -27,7 +27,17 @@ function puntosElemento(cajas) {
   return [...ys].sort((a, b) => a - b);
 }
 
-function dibujarDetalle2D(cv, m, el) {
+/* Ancho acotado: el de la columna, aunque su lateral compartido sobresalga medio espesor hacia la vecina */
+function extensionDetalle(m, el, cajas) {
+  if (el.col == null) {
+    const x0 = Math.min(...cajas.map(b => b.x));
+    return { x0, ancho: Math.max(...cajas.map(b => b.x + b.w)) - x0 };
+  }
+  return { x0: m.columnas.slice(0, el.col).reduce((s, c) => s + (+c.ancho || 0), 0), ancho: +m.columnas[el.col].ancho || 0 };
+}
+
+/* piezaSel: nombre de la pieza marcada en la tabla, que se pinta encima de todo */
+function dibujarDetalle2D(cv, m, el, piezaSel = null) {
   const ctx = cv.getContext('2d');
   const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
   const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
@@ -42,8 +52,7 @@ function dibujarDetalle2D(cv, m, el) {
     : { panel: '#454b5c', fondo: '#262b3a', borde: '#7c869c', sel: '#1e9bff', txt: '#c7cdd9', cota: '#f0a843', base: '#12141a' };
   const cajas = cajasDetalle(m, el);
   if (!cajas.length) return;
-  const x0 = Math.min(...cajas.map(b => b.x)), z0 = 0;
-  const anchoT = Math.max(...cajas.map(b => b.x + b.w)) - x0;
+  const { x0, ancho: anchoT } = extensionDetalle(m, el, cajas), z0 = 0;
   // La profundidad acotada es la del cuerpo: los frentes sobresalen por delante y el fondo clavado por detrás
   const fondoT = Math.max(...cajas.filter(b => !['Puerta', 'Frente cajón'].includes(b.tag)).map(b => b.z + b.d));
   const altoT = Math.max(...cajas.map(b => b.y + b.h));
@@ -77,10 +86,11 @@ function dibujarDetalle2D(cv, m, el) {
     ctx.fillText(frontal ? 'Frontal' : 'Lateral', ox + vw / 2, 13);
 
     // Sin las piezas que taparían el interior, salvo que sean el elemento elegido
-    const visibles = cajas.filter(b => b.propia || (!['Puerta', 'Frente cajón', 'Cajón'].includes(b.tag) && (frontal || b.tag !== 'Lateral')));
-    visibles.sort((a, b) => (a.propia - b.propia) || (a.z - b.z)).forEach(b => {
+    const marcada = b => b.pieza === piezaSel;
+    const visibles = cajas.filter(b => marcada(b) || b.propia || (!['Puerta', 'Frente cajón', 'Cajón'].includes(b.tag) && (frontal || b.tag !== 'Lateral')));
+    visibles.sort((a, b) => (marcada(a) - marcada(b)) || (a.propia - b.propia) || (a.z - b.z)).forEach(b => {
       const px = X(frontal ? b.x : b.z), pw = (frontal ? b.w : b.d) * sc, py = Y(b.y + b.h), ph = b.h * sc;
-      ctx.fillStyle = b.propia ? C.sel : b.tag === 'Fondo' ? C.fondo : C.panel;
+      ctx.fillStyle = marcada(b) ? COLOR_PIEZA : b.propia ? C.sel : b.tag === 'Fondo' ? C.fondo : C.panel;
       ctx.fillRect(px, py, pw, ph);
       ctx.strokeStyle = C.borde; ctx.lineWidth = 0.7;
       ctx.strokeRect(px, py, pw, ph);

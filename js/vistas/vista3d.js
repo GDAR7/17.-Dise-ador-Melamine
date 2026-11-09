@@ -95,6 +95,7 @@ function cajaCajon(box, x, y, zFin, ancho, alto, prof, e, eb, cC, cB, nombres) {
    RENDER 3D
    ============================================================ */
 const COLOR_SELECCION = '#1e9bff';
+const COLOR_PIEZA = '#ffd000';   // pieza marcada en la tabla de la pestaña Construcción
 // explode: separación de piezas de 0 a 1. sel: pieza resaltada { modId, nom }
 const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo: true, drag: null, explode: 0, sel: null };
 
@@ -148,7 +149,8 @@ function draw3(cv = $('#cv3')) {
     b.y += (b.y + b.h / 2 - cy0) * k;
     b.z += (b.z + b.d / 2 - cz0) * k * 2;
   });
-  const hayPiezaSel = conSel && boxes.some(b => b.mod === V3.sel.modId && b.pieza === V3.sel.nom);
+  const esSel = b => (det ? b.pieza === det.sel : conSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom);
+  const hayPiezaSel = boxes.some(esSel);
 
   // escala
   const span = Math.max(totW, maxH, maxD) * 1.45 * (1 + k);
@@ -216,7 +218,7 @@ function draw3(cv = $('#cv3')) {
 
   boxes.forEach((b, ib) => {
     const V = C.map(c => pr([b.x + c[0] * b.w, b.y + c[1] * b.h, b.z + c[2] * b.d]));
-    const sel = hayPiezaSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom;
+    const sel = esSel(b);
     const zCentro = V.reduce((s, p) => s + p[2], 0) / 8;
     FI.forEach(f => {
       const pts = f.i.map(k => V[k]);
@@ -248,8 +250,9 @@ function draw3(cv = $('#cv3')) {
   faces.forEach(f => {
     trazarCara(f);
     const fantasma = hayPiezaSel && !f.sel;
-    ctx.globalAlpha = fantasma ? 0.08 : 1;
-    ctx.fillStyle = shade(f.sel ? COLOR_SELECCION : f.c, f.l);
+    ctx.globalAlpha = fantasma ? (det ? 0.2 : 0.08) : 1;
+    // La pieza marcada en Construcción casi no lleva sombra: debe verse amarilla desde cualquier ángulo
+    ctx.fillStyle = f.sel && det ? shade(COLOR_PIEZA, Math.max(f.l, 0.85)) : shade(f.sel ? COLOR_SELECCION : f.c, f.l);
     ctx.fill();
     ctx.globalAlpha = 1;
     if (f.mapa && !hayPiezaSel) {
