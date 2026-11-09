@@ -21,7 +21,7 @@ function geo(m, opts = {}) {
 
   const Wi = W - 2 * e;
   const interior = interiorMueble(m, e);
-  interior.divisiones.forEach(v => box(v.x, v.y, 0, e, v.alto, D, cC, 'División', v.nom));
+  interior.divisiones.forEach(v => box(v.x, v.y, 0, e, v.alto, v.prof, cC, 'División', v.nom));
   interior.repisas.forEach(r => box(r.x, r.y, 0, r.ancho, e, r.prof, cC, 'Repisa', r.nom));
 
   if (Z > 0) {

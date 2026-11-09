@@ -39,7 +39,7 @@ function piezas(m) {
     return [...grupos.values()];
   };
   const interior = interiorMueble(m, e);
-  contar(interior.divisiones).forEach(({ x, q }) => add(x.nom, x.alto, D, q, 1, 0, mc, 'div'));
+  contar(interior.divisiones).forEach(({ x, q }) => add(x.nom, x.alto, x.prof, q, 1, 0, mc, 'div'));
   contar(interior.repisas).forEach(({ x, q }) => add(x.nom, x.ancho, x.prof, q, 1, 0, mc, 'rep'));
 
   // --- Zócalo ---
@@ -115,10 +115,17 @@ function interiorMueble(m, e) {
   const nombre = (n, base) => base + (limites.has(n) ? ' de cierre' : prof(n) < D - retr ? ' corta' : '');
 
   const anchoVano = g => (Wi - g.n * e) / (g.n + 1);
+  // Las divisiones pueden alinearse con el retiro de las repisas; detrás de una puerta metida en el mueble se acortan para que cierre
+  const profDivision = g => {
+    const base = m.retiroDiv === 'igual' ? D - retr : D;
+    const [a, b] = nivelesGrupo(m, g);
+    const choca = zFrente < D && puertas.some(p => { const [c, f] = nivelesGrupo(m, p); return c <= b && a <= f; });
+    return choca ? Math.min(base, zFrente - 2) : base;
+  };
   const divisiones = [], repisas = [];
   grupos.forEach(g => {
     const { d, h } = limitesNivel(m, g), sup = d ? y(d) : H - e, inf = h ? y(h) + e : Z + e, av = anchoVano(g);
-    for (let i = 1; i <= g.n; i++) divisiones.push({ nom: g.nomD, x: e + i * av + (i - 1) * e, y: inf, alto: sup - inf });
+    for (let i = 1; i <= g.n; i++) divisiones.push({ nom: g.nomD, x: e + i * av + (i - 1) * e, y: inf, alto: sup - inf, prof: profDivision(g) });
   });
   for (let n = 1; n <= nr; n++) {
     const g = grupos.find(x => { const [a, b] = nivelesGrupo(m, x); return a <= n - 1 && n <= b; });

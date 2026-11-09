@@ -29,6 +29,11 @@ function htmlRetiro(m) {
       <button data-seg="retiroRepisa" data-v="ras" title="Misma profundidad que laterales y divisiones" class="${ras ? 'on' : ''}">Al ras de las verticales</button>
     </div>
     ${ras ? '' : `<label style="margin-top:7px">Retiro (mm)</label><input type="number" min="0" data-k="retr" value="${m.retr}">`}
+    ${ras || m.tipo === 'columnas' ? '' : `<label style="margin-top:7px">Frente de las divisiones</label>
+    <div class="seg">
+      <button data-seg="retiroDiv" data-v="frente" title="Misma profundidad que los laterales" class="${m.retiroDiv === 'igual' ? '' : 'on'}">Al frente del mueble</button>
+      <button data-seg="retiroDiv" data-v="igual" title="Con el mismo retiro que las repisas" class="${m.retiroDiv === 'igual' ? 'on' : ''}">Alineadas con repisas</button>
+    </div>`}
   </div>`;
 }
 
