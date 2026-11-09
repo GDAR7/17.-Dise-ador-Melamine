@@ -17,6 +17,7 @@ function recalc() {
   if (activePane === 'pdet') renderConstruccion();
   if (activePane === 'pcer') renderCerrajeria();
   marcarSeleccion();
+  if (renderActivo()) cerrarRender();   // el diseño cambió: la imagen ya no lo representa
   save();
 }
 function refresh() { renderList(); renderParams(); recalc(); }
@@ -36,7 +37,7 @@ $$('#tabs .tab').forEach(t => t.onclick = () => {
 });
 
 /* botones de vista */
-$('#b3fit').onclick = () => { V3.yaw = -0.52; V3.pitch = 0.28; V3.zoom = 1; draw3(); };
+$('#b3fit').onclick = () => { V3.yaw = -0.52; V3.pitch = PITCH_INICIAL; V3.zoom = 1; draw3(); };
 $('#b3door').onclick = e => { V3.puertas = !V3.puertas; e.currentTarget.classList.toggle('on', V3.puertas); draw3(); };
 $('#b3back').onclick = e => { V3.fondo = !V3.fondo; e.currentTarget.classList.toggle('on', V3.fondo); draw3(); };
 $('#b3all').onclick = e => { V3.all = !V3.all; e.currentTarget.classList.toggle('on', V3.all); draw3(); };

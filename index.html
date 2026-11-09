@@ -73,9 +73,23 @@
               <button class="btn on" id="b3door">Puertas</button>
               <button class="btn on" id="b3back">Fondo</button>
               <button class="btn" id="b3all">Todo el proyecto</button>
+              <button class="btn pri" id="bRender">✨ Renderizar</button>
               <button class="btn on" id="b3sel" hidden></button>
             </div>
             <label class="cvexp">Separar piezas <input type="range" id="r3exp" min="0" max="100" value="0"></label>
+            <div class="render-box" id="renderBox" hidden>
+              <canvas id="cvRender"></canvas>
+              <div class="cvbar">
+                <button class="btn" id="bRenderCerrar">✕ Volver al 3D</button>
+                <select id="sRender" aria-label="Calidad del render">
+                  <option value="borrador">Borrador</option>
+                  <option value="normal" selected>Normal</option>
+                  <option value="alta">Alta</option>
+                </select>
+                <button class="btn pri" id="bRenderPng">⤓ Guardar imagen</button>
+              </div>
+              <div class="cvhint" id="renderEstado" role="status"></div>
+            </div>
             <div class="cvhint">Arrastra para girar · Rueda o pinza para zoom</div>
             <div class="leg" id="leg3"></div>
           </div>
@@ -161,6 +175,7 @@
 <script src="js/vistas/vista3d.js"></script>
 <script src="js/vistas/vista2d.js"></script>
 <script src="js/vistas/detalle2d.js"></script>
+<script src="js/vistas/render.js"></script>
 <script src="js/ui/lista-modulos.js"></script>
 <script src="js/ui/parametros.js"></script>
 <script src="js/ui/columnas.js"></script>

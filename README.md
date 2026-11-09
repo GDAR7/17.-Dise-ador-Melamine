@@ -27,6 +27,7 @@ js/
   vistas/
     textura.js          Imágenes de melamina
     vista3d.js          Vista 3D
+    render.js           Render realista por trazado de rayos
     vista2d.js          Plano 2D con cotas
     detalle2d.js        Vistas acotadas de cada elemento
   ui/

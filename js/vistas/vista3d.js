@@ -74,7 +74,8 @@ function cajaCajon(box, x, y, zFin, ancho, alto, prof, e, eb, cC, cB, nombres) {
 const COLOR_SELECCION = '#1e9bff';
 const COLOR_PIEZA = '#ffd000';   // pieza marcada en la tabla de la pestaña Construcción
 // explode: separación de piezas de 0 a 1. sel: pieza resaltada { modId, nom }
-const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo: true, drag: null, explode: 0, sel: null };
+const PITCH_INICIAL = -0.16;   // negativo: se mira desde arriba, a la altura de una persona
+const V3 = { yaw: -0.52, pitch: PITCH_INICIAL, zoom: 1, all: false, puertas: true, fondo: true, drag: null, explode: 0, sel: null };
 
 /* Gira un punto alrededor de la bisagra (eje vertical) o del borde superior (pistón) */
 function girarPunto(g, [x, y, z]) {
@@ -106,27 +107,13 @@ function aplicarApertura(boxes, s) {
   }
 }
 
-function draw3(cv = $('#cv3')) {
-  const ctx = cv.getContext('2d');
-  const esPrincipal = cv.id === 'cv3';
-  const det = cv.id === 'cvDet' ? V3.detalle : null;   // vista de un solo elemento, en la pestaña Construcción
-  const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
-  const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
-  if (!w || !h) return;
-  cv.width = w * dpr; cv.height = h * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-
-  const mods = det ? [det.mod] : V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
-  if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); if (esPrincipal) $('#leg3').innerHTML = ''; return; }
-
-  // Ensamblar escena (módulos lado a lado). Con una pieza seleccionada se muestran todas, para poder ubicarla.
-  const conSel = !!V3.sel && !imprimiendo && !det;
+/* Junta las cajas de los módulos, lado a lado, ya con la separación de piezas aplicada */
+function armarEscena(mods, det, opts) {
   let boxes = [], ox = 0, maxH = 0, maxD = 0;
   mods.forEach(m => {
     const n = V3.all && !det ? (+m.qty || 1) : 1;
     for (let i = 0; i < n; i++) {
-      const g = geo(m, { puertas: V3.puertas || conSel || !!det || cv.id === 'cvCer', fondo: V3.fondo || conSel || !!det });
+      const g = geo(m, opts);
       const info = new Map(piezas(m).map(p => [p.nom, p]));
       g.B.forEach(b => {
         const pz = info.get(b.pieza), mat = pz && S.mats.find(x => x.id === pz.mat);
@@ -140,7 +127,7 @@ function draw3(cv = $('#cv3')) {
   if (det) {
     // Solo una unidad del elemento, llevada al origen para que se encuadre sola
     boxes = filtrarDetalle(boxes, det);
-    if (!boxes.length) { msgCv(ctx, w, h, 'Sin piezas para mostrar'); return; }
+    if (!boxes.length) return null;
     const x0 = Math.min(...boxes.map(b => b.x)), y0 = Math.min(...boxes.map(b => b.y)), z0 = Math.min(...boxes.map(b => b.z));
     boxes.forEach(b => { b.x -= x0; b.y -= y0; b.z -= z0; });
     totW = Math.max(...boxes.map(b => b.x + b.w));
@@ -156,6 +143,36 @@ function draw3(cv = $('#cv3')) {
     b.y += (b.y + b.h / 2 - cy0) * k;
     b.z += (b.z + b.d / 2 - cz0) * k * 2;
   });
+  return { boxes, totW, maxH, maxD, cx0, cy0, cz0, k };
+}
+
+/* Ejes de una pieza para su textura: la cara grande y la veta a lo largo de la pieza */
+function ejesTextura(b) {
+  const dims = [b.w, b.h, b.d], fijo = dims.indexOf(Math.min(...dims));
+  const [e1, e2] = [0, 1, 2].filter(a => a !== fijo);
+  const directo = Math.abs(dims[e1] - b.pz.L) + Math.abs(dims[e2] - b.pz.A) <= Math.abs(dims[e1] - b.pz.A) + Math.abs(dims[e2] - b.pz.L);
+  return { fijo, ejeL: directo ? e1 : e2, ejeA: directo ? e2 : e1 };
+}
+
+function draw3(cv = $('#cv3')) {
+  const ctx = cv.getContext('2d');
+  const esPrincipal = cv.id === 'cv3';
+  const det = cv.id === 'cvDet' ? V3.detalle : null;   // vista de un solo elemento, en la pestaña Construcción
+  const dpr = imprimiendo ? IMP.dpr : (window.devicePixelRatio || 1);
+  const w = imprimiendo ? IMP.w : cv.clientWidth, h = imprimiendo ? IMP.h : cv.clientHeight;
+  if (!w || !h) return;
+  cv.width = w * dpr; cv.height = h * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const mods = det ? [det.mod] : V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
+  if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); if (esPrincipal) $('#leg3').innerHTML = ''; return; }
+
+  // Con una pieza seleccionada se muestran todas, para poder ubicarla
+  const conSel = !!V3.sel && !imprimiendo && !det;
+  const escena = armarEscena(mods, det, { puertas: V3.puertas || conSel || !!det || cv.id === 'cvCer', fondo: V3.fondo || conSel || !!det });
+  if (!escena) { msgCv(ctx, w, h, 'Sin piezas para mostrar'); return; }
+  const { boxes, totW, maxH, maxD, cx0, cy0, cz0, k } = escena;
   if (cv.id === 'cvCer' && V3.abrir) aplicarApertura(boxes, V3.abrir);
   const esSel = b => (det ? b.pieza === det.sel : conSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom);
   const hayPiezaSel = boxes.some(esSel);
@@ -194,11 +211,10 @@ function draw3(cv = $('#cv3')) {
 
   /* Datos para pintar la textura en una cara grande: la veta sigue el largo de la pieza */
   function mapaTextura(b, ib, f) {
-    const dims = [b.w, b.h, b.d], fijo = dims.indexOf(Math.min(...dims));
-    if (!b.tex || f.eje !== fijo) return null;
-    const [e1, e2] = [0, 1, 2].filter(a => a !== fijo);
-    const directo = Math.abs(dims[e1] - b.pz.L) + Math.abs(dims[e2] - b.pz.A) <= Math.abs(dims[e1] - b.pz.A) + Math.abs(dims[e2] - b.pz.L);
-    return { b, fijo, lado: C[f.i[0]][fijo], ejeL: directo ? e1 : e2, ejeA: directo ? e2 : e1, desp: (ib * 347) % 2000 };
+    if (!b.tex) return null;
+    const ejes = ejesTextura(b);
+    if (f.eje !== ejes.fijo) return null;
+    return { b, ...ejes, lado: C[f.i[0]][ejes.fijo], desp: (ib * 347) % 2000 };
   }
 
   function pintarTextura(f) {

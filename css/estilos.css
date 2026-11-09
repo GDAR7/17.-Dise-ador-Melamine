@@ -319,7 +319,8 @@ tbody tr.grp:hover td{background:var(--panel2)}
 .plano rect{fill:var(--panel2);stroke:var(--line2);stroke-width:1}
 .plano circle{fill:none;stroke:#e5383b;stroke-width:1.4}
 .plano line{stroke:var(--blue);stroke-width:1.6;stroke-dasharray:6 3}
-#s2col{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:11.5px;font-weight:600;font-family:inherit}
+.render-box{position:absolute;inset:0;z-index:8;background:#101217}
+#s2col,#sRender{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 8px;font-size:11.5px;font-weight:600;font-family:inherit}
 
 /* ---------- SELECTOR DE TAPACANTO ---------- */
 .cantos{--g:10px;position:relative;width:56px;height:30px;margin-left:auto;background:var(--panel2);border-radius:2px}
@@ -462,7 +463,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
   /* quitar el layout de pantalla completa para que el contenido pase de página */
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
   .pane{display:block!important;height:auto}
-  #pdet{display:none!important}
+  #pdet,.render-box{display:none!important}
 
   body.imp-esp #app{display:none!important}
   body.imp-esp #impresion{display:block;color:#000}
