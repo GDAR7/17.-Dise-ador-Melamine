@@ -78,6 +78,9 @@ function piezas(m) {
   return P;
 }
 
+/* Cuánto más cortas que las verticales son las repisas. Al elegir "al ras" se conserva el valor por si se vuelve al retiro */
+const retiroRepisa = m => (m.retiroRepisa === 'ras' ? 0 : +m.retr || 0);
+
 /* Altura de la cara inferior de la repisa i, contada desde abajo */
 function yRepisa(m, e, i) {
   const ya = (+m.zocalo || 0) + e, yb = +m.alto - e;
@@ -99,7 +102,7 @@ function gruposDivisiones(m) {
 /* Posición de divisiones y repisas. Una repisa solo se parte si una división la atraviesa; si no, va de lado a lado.
    Es la única fuente de estas medidas: el despiece, el 3D y el 2D leen de aquí. */
 function interiorMueble(m, e) {
-  const H = +m.alto, Z = +m.zocalo || 0, Wi = +m.ancho - 2 * e, nr = +m.repisas || 0, D = +m.prof, retr = +m.retr || 0;
+  const H = +m.alto, Z = +m.zocalo || 0, Wi = +m.ancho - 2 * e, nr = +m.repisas || 0, D = +m.prof, retr = retiroRepisa(m);
   const y = n => yRepisa(m, e, nr - n + 1), grupos = gruposDivisiones(m);
 
   // La repisa donde termina una puerta llega hasta el frente y cierra ese espacio.

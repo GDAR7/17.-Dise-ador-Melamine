@@ -102,7 +102,7 @@ function zonasColumna(m, c, e) {
 }
 
 function piezasColumnas(m, add, mc, mf, mb) {
-  const e = mc.esp, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = +m.retr || 0;
+  const e = mc.esp, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = retiroRepisa(m);
   (m.columnas || []).forEach((c, ci) => {
     const W = +c.ancho || 0, { Wi } = anchoInterior(m.columnas, ci, e), pre = `${c.nom} · `;
     lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
@@ -141,7 +141,7 @@ function geoColumnas(m, opts = {}) {
   const mf = S.mats.find(x => x.id === m.matF) || mc;
   const mb = S.mats.find(x => x.id === m.matB) || mc;
   const e = mc.esp, ef = mf.esp, eb = mb.esp, cC = mc.color, cF = mf.color, cB = mb.color;
-  const H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = +m.retr || 0;
+  const H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = retiroRepisa(m);
   const B = [];
   // pieza: el mismo nombre que le da piezasColumnas, para poder resaltarla desde el despiece
   let col = 0;

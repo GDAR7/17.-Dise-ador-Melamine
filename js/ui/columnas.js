@@ -39,6 +39,7 @@ function htmlColumnas(m) {
   return `
     <div class="fgroup">
       <h4>Columnas y zonas</h4>
+      ${htmlRetiro(m)}
       <div class="row"><div class="f"><label>Fondo del mueble</label><select data-k="fondo">
         <option value="clavado" ${m.fondo === 'clavado' ? 'selected' : ''}>Clavado / atornillado por detrás</option>
         <option value="ranurado" ${m.fondo === 'ranurado' ? 'selected' : ''}>Ranurado (encajado)</option>

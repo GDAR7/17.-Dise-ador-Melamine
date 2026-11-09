@@ -21,6 +21,17 @@ $$('#ptabs button').forEach(b => b.onclick = () => {
   $('#params').scrollTop = 0;
 });
 
+function htmlRetiro(m) {
+  const ras = m.retiroRepisa === 'ras';
+  return `<div class="f" style="margin-bottom:8px"><label>Frente de las repisas</label>
+    <div class="seg">
+      <button data-seg="retiroRepisa" data-v="con" title="Más cortas que las verticales" class="${ras ? '' : 'on'}">Con retiro</button>
+      <button data-seg="retiroRepisa" data-v="ras" title="Misma profundidad que laterales y divisiones" class="${ras ? 'on' : ''}">Al ras de las verticales</button>
+    </div>
+    ${ras ? '' : `<label style="margin-top:7px">Retiro (mm)</label><input type="number" min="0" data-k="retr" value="${m.retr}">`}
+  </div>`;
+}
+
 /* Puertas y divisiones se agregan por niveles de la misma forma */
 const GRUPOS_NIVEL = [
   { clave: 'puertasExtra', fila: 'pg', aviso: '#avPuertas', boton: '#bAddPuerta', grupos: gruposPuertas, lleno: 'Todos los niveles ya tienen puertas: limita antes con Desde y Hasta' },
@@ -98,7 +109,6 @@ function renderParams() {
       </div>
       <div class="row">
         <div class="f"><label>Alto de zócalo</label><input type="number" data-k="zocalo" value="${m.zocalo}"></div>
-        <div class="f"><label>Retranqueo repisa</label><input type="number" data-k="retr" value="${m.retr}"></div>
       </div>
     </div>
 
@@ -121,6 +131,7 @@ function renderParams() {
         <div class="f"><label>Repisas por vano</label><input type="number" min="0" data-k="repisas" value="${m.repisas}"></div>
         <div class="f"><label>Divisiones verticales</label><input type="number" min="0" data-k="divs" value="${m.divs}"></div>
       </div>
+      ${htmlRetiro(m)}
       <div class="row">
         <div class="f"><label>Divisiones desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="divDesde" value="${m.divDesde || 0}"></div>
         <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="divHasta" value="${m.divHasta || 0}"></div>

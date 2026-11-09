@@ -50,7 +50,7 @@ function planoLateral(titulo, H, D, cant, alturas, correderas, retr, profCaja, c
 
 function perforaciones(m) {
   const e = (S.mats.find(x => x.id === m.matC) || S.mats[0]).esp;
-  const D = +m.prof, retr = +m.retr || 0, Z = +m.zocalo || 0, H = +m.alto;
+  const D = +m.prof, retr = retiroRepisa(m), Z = +m.zocalo || 0, H = +m.alto;
   const todas = piezas(m), profCaja = Math.max(200, D - 60);
   const altoCaja = h => Math.max(80, h - 40);
 
