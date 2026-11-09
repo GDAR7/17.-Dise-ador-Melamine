@@ -70,8 +70,7 @@ function perforaciones(m) {
   }
 
   const planos = [];
-  const puerta = todas.find(p => p.kind === 'puerta');
-  if (puerta) planos.push(planoPuerta(puerta, modeloBisagra(m, puerta.nom, m.tipoP === 'embutida' ? 'Embutida' : 'Recta'), 'de las bisagras'));
+  todas.filter(p => p.kind === 'puerta').forEach(puerta => planos.push(planoPuerta(puerta, modeloBisagra(m, puerta.nom, m.tipoP === 'embutida' ? 'Embutida' : 'Recta'), 'de las bisagras')));
   const nr = +m.repisas || 0, nc = +m.cajones || 0, hc = +m.altoCaj || 170;
   const alturas = Array.from({ length: nr }, (_, i) => yRepisa(m, e, i + 1));
   const correderas = Array.from({ length: nc }, (_, i) => Z + i * hc + 15 + altoCaja(hc) / 2);

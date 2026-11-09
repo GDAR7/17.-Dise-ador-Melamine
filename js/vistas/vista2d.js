@@ -105,7 +105,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     if (Z > 0) rect(e, 0, W - 2 * e, Z, shade(mc.color, .6));
     if (m.encimera) rect(0, H, W, ef, shade(mf.color, 1));
     // frentes
-    const nc = +m.cajones || 0, hc = +m.altoCaj || 170, np = +m.puertas || 0;
+    const nc = +m.cajones || 0, hc = +m.altoCaj || 170;
     const supe = m.tipoP === 'superpuesta';
     ctx.globalAlpha = .93;
     for (let i = 0; i < nc; i++) {
@@ -116,12 +116,13 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
       ctx.fillStyle = 'rgba(0,0,0,.4)';
       ctx.fillRect(X(x + bw / 2 - 40), Y(Z + i * hc + hc / 2 + 4), 80 * sc, 8 * sc);
     }
-    if (np > 0) {
+    gruposPuertas(m).forEach(g => {
+      const np = g.n;
       const yB = Z + nc * hc;
       const hT = (supe ? H - (m.encimera ? 0 : 0) : H - e) - yB - 2;
       const wT = supe ? W : W - 2 * e - 4, xx = supe ? 0 : e + 2;
       const pw = (wT - 3 * (np - 1)) / np;
-      const t = tramoPuertas(m, e, yB + 1, yB + 1 + hT);
+      const t = tramoPuertas(m, e, yB + 1, yB + 1 + hT, g);
       for (let i = 0; i < np && t.alto > 0; i++) {
         const x = xx + i * (pw + 3);
         rect(x, t.y, pw, t.alto, shade(mf.color, .97), 'rgba(0,0,0,.6)');
@@ -130,7 +131,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
         const hx = i < np / 2 ? x + pw - 45 : x + 20;
         ctx.fillRect(X(hx), Y(t.y + t.alto / 2 + 45), 9 * sc, 90 * sc);
       }
-    }
+    });
     ctx.globalAlpha = 1;
   } else {
     // lateral

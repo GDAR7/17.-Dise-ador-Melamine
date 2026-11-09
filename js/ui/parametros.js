@@ -21,6 +21,34 @@ $$('#ptabs button').forEach(b => b.onclick = () => {
   $('#params').scrollTop = 0;
 });
 
+function actualizarAvisoPuertas(m) {
+  const aviso = $('#avPuertas');
+  if (aviso) aviso.hidden = !puertasSeCruzan(m);
+}
+
+function bindPuertas(m) {
+  $$('#params [data-pg]').forEach(fila => {
+    const i = +fila.dataset.pg, g = m.puertasExtra[i];
+    fila.querySelectorAll('[data-pf]').forEach(inp => inp.addEventListener('input', () => {
+      g[inp.dataset.pf] = +inp.value || 0;
+      actualizarAvisoPuertas(m);
+      recalc();
+    }));
+    fila.querySelector('[data-pgquitar]').onclick = () => {
+      m.puertasExtra.splice(i, 1);
+      renderParams(); recalc();
+    };
+  });
+  $('#bAddPuerta').onclick = () => {
+    const nivel = nivelLibrePuertas(m), nr = +m.repisas || 0;
+    if (nivel === null) { toast('Todos los niveles ya tienen puertas: limita antes con Desde y Hasta'); return; }
+    m.puertasExtra = m.puertasExtra || [];
+    const num = m.puertasExtra.reduce((max, g) => Math.max(max, g.num), 1) + 1;
+    m.puertasExtra.push({ num, n: 1, desde: nivel, hasta: nivel + 1 > nr ? 0 : nivel + 1 });
+    renderParams(); recalc();
+  };
+}
+
 function renderParams() {
   const m = S.mods.find(x => x.id === S.sel);
   const matOpts = (sel, filtro) => S.mats.filter(filtro || (() => true))
@@ -94,6 +122,14 @@ function renderParams() {
         <div class="f"><label>Puertas desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="puertaDesde" value="${m.puertaDesde || 0}"></div>
         <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="puertaHasta" value="${m.puertaHasta || 0}"></div>
       </div>
+      ${(m.puertasExtra || []).map((g, i) => `<div class="row" data-pg="${i}">
+        <div class="f"><label>Puerta ${g.num}: cant.</label><input type="number" min="0" max="6" data-pf="n" value="${g.n}"></div>
+        <div class="f"><label>Desde repisa</label><input type="number" min="0" data-pf="desde" value="${g.desde}"></div>
+        <div class="f"><label>Hasta repisa</label><input type="number" min="0" data-pf="hasta" value="${g.hasta}"></div>
+        <div class="zacc"><button data-pgquitar aria-label="Quitar puerta ${g.num}" title="Quitar">×</button></div>
+      </div>`).join('')}
+      <div class="pg-aviso" id="avPuertas" ${puertasSeCruzan(m) ? '' : 'hidden'}>Dos grupos de puertas ocupan el mismo nivel: revisa sus repisas.</div>
+      <button class="btn" id="bAddPuerta" style="width:100%;justify-content:center;margin-bottom:8px">＋ Agregar puertas en otro nivel</button>
       <div class="row"><div class="f"><label>Alto de cada cajón</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
       <div class="f"><label>Montaje de frentes</label>
         <div class="seg">
@@ -169,9 +205,10 @@ function renderParams() {
       if (inp.type === 'checkbox') mm[k] = inp.checked;
       else if (inp.type === 'number') mm[k] = inp.value === '' ? 0 : +inp.value;
       else mm[k] = inp.value;
-      if (k === 'tipo') { Object.assign(mm, { divHasta: 0, puertaDesde: 0, puertaHasta: 0 }, PRESETS[inp.value] || {}); renderParams(); }
+      if (k === 'tipo') { Object.assign(mm, { divHasta: 0, puertaDesde: 0, puertaHasta: 0, puertasExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
       if (mm.tipo === 'columnas' && (k === 'alto' || k === 'zocalo')) actualizarSumas(mm);
+      actualizarAvisoPuertas(mm);
       recalc();
     });
   });
@@ -180,6 +217,7 @@ function renderParams() {
     mm[b.dataset.seg] = b.dataset.v; renderParams(); recalc();
   });
   if (m && m.tipo === 'columnas') bindColumnas(m);
+  if (m && m.tipo !== 'columnas') bindPuertas(m);
   /* bind config */
   $$('#params [data-c]').forEach(inp => {
     const k = inp.dataset.c;

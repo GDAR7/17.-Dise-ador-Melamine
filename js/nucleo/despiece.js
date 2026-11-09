@@ -63,8 +63,8 @@ function piezas(m) {
   if (m.encimera) add('Encimera', W, D + 25, 1, 1, 2, mf, 'enc');
 
   // --- Puertas ---
-  const np = +m.puertas || 0;
-  if (np > 0) {
+  gruposPuertas(m).forEach(g => {
+    const np = g.n;
     let pa, ph;
     const altoFrentes = (+m.cajones || 0) * (+m.altoCaj || 0);
     if (m.tipoP === 'superpuesta') {
@@ -75,9 +75,9 @@ function piezas(m) {
       ph = H - 2 * e - Z - altoFrentes - 4;
     }
     const arribaP = m.tipoP === 'superpuesta' ? H - 1 - (m.encimera ? ef : 0) : H - e - 2;
-    ph = tramoPuertas(m, e, arribaP - ph, arribaP).alto;
-    add('Puerta', ph, pa, np, 2, 2, mf, 'puerta');
-  }
+    ph = tramoPuertas(m, e, arribaP - ph, arribaP, g).alto;
+    add(g.nom, ph, pa, np, 2, 2, mf, 'puerta');
+  });
 
   // --- Cajones ---
   const nc = +m.cajones || 0;
@@ -114,15 +114,60 @@ function apoyoDivision(m) {
   return k ? (+m.repisas || 0) - k + 1 : 0;
 }
 
-/* Tramo vertical de las puertas según las repisas elegidas. abajo y arriba son los límites si cubren todo */
-function tramoPuertas(m, e, abajo, arriba) {
+/* Grupos de puertas del mueble. num es fijo: los lados y herrajes elegidos no se mezclan al quitar un grupo */
+function gruposPuertas(m) {
+  const extra = (m.puertasExtra || []).map(g => ({ id: `puerta${g.num}`, nom: `Puerta ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta }));
+  return [{ id: 'puerta', nom: 'Puerta', n: +m.puertas || 0, desde: m.puertaDesde, hasta: m.puertaHasta }, ...extra].filter(g => g.n > 0);
+}
+
+/* Repisas límite ya validadas: d arriba y h abajo, con 0 = techo o piso */
+function limitesPuertas(m, g) {
+  const d = repisaValida(m, g.desde), h = repisaValida(m, g.hasta);
+  return d && h && d >= h ? { d: 0, h: 0 } : { d, h };   // rango imposible: se ignora
+}
+
+/* Niveles que ocupa un grupo, de 0 (bajo el techo) a nr (sobre el piso), ambos incluidos */
+function nivelesPuertas(m, g) {
+  const { d, h } = limitesPuertas(m, g);
+  return [d, h ? h - 1 : (+m.repisas || 0)];
+}
+
+function puertasSeCruzan(m) {
+  const usados = new Set();
+  return gruposPuertas(m).some(g => {
+    const [a, b] = nivelesPuertas(m, g);
+    for (let i = a; i <= b; i++) {
+      if (usados.has(i)) return true;
+      usados.add(i);
+    }
+    return false;
+  });
+}
+
+/* Nivel para un grupo nuevo: junto al último creado o, si no se puede, el primero libre. null si no queda ninguno */
+function nivelLibrePuertas(m) {
+  const nr = +m.repisas || 0, grupos = gruposPuertas(m), ocupados = new Set();
+  grupos.forEach(g => {
+    const [a, b] = nivelesPuertas(m, g);
+    for (let i = a; i <= b; i++) ocupados.add(i);
+  });
+  const ult = grupos.length ? nivelesPuertas(m, grupos[grupos.length - 1]) : [];
+  const libre = [ult[0] - 1, ult[1] + 1, ...Array.from({ length: nr + 1 }, (_, i) => i)].find(i => i >= 0 && i <= nr && !ocupados.has(i));
+  return libre === undefined ? null : libre;
+}
+
+/* Tramo vertical de un grupo de puertas. abajo y arriba son los límites si cubre todo el alto */
+function tramoPuertas(m, e, abajo, arriba, g) {
   const nr = +m.repisas || 0, supe = m.tipoP === 'superpuesta';
-  let d = repisaValida(m, m.puertaDesde), h = repisaValida(m, m.puertaHasta);
-  if (d && h && d >= h) d = h = 0;     // rango imposible: se ignora
+  const { d, h } = limitesPuertas(m, g);
   const y = n => yRepisa(m, e, nr - n + 1);
-  // Superpuesta: tapa el canto de la repisa límite. Embutida: queda entre repisas con 2 mm de holgura.
-  const techo = d ? y(d) + (supe ? e : -2) : arriba;
-  const base = h ? Math.max(abajo, y(h) + (supe ? 0 : e + 2)) : abajo;
+  const otros = gruposPuertas(m).filter(o => o.id !== g.id).map(o => limitesPuertas(m, o));
+  // Superpuesta: tapa el canto de la repisa límite o, si otra puerta llega a la misma repisa, solo la mitad con 3 mm de luz entre ambas.
+  // Embutida: queda entre repisas con 2 mm de holgura.
+  const techoSupe = n => (otros.some(o => o.h === n) ? y(n) + e / 2 - 1.5 : y(n) + e);
+  const baseSupe = n => (otros.some(o => o.d === n) ? y(n) + e / 2 + 1.5 : y(n));
+  const techo = d ? (supe ? techoSupe(d) : y(d) - 2) : arriba;
+  const base = h ? Math.max(abajo, supe ? baseSupe(h) : y(h) + e + 2) : abajo;
   return { y: base, alto: techo - base };
 }
 

@@ -34,13 +34,13 @@ function elementosConstruccion(m) {
     return lista;
   }
 
-  const np = +m.puertas || 0, nc = +m.cajones || 0;
+  const nc = +m.cajones || 0;
   crear('cuerpo', m.nom, 'Cuerpo', 'cuerpo', 1, ['Lateral', 'Techo', 'Piso', 'División vertical', 'Zócalo frontal', 'Zócalo posterior', 'Fondo', 'Fondo (ranurado)', 'Encimera']);
   [['Repisa', 'Repisas'], ['Repisa entera', 'Repisas enteras']].forEach(([nom, titulo]) => {
     const p = porNom.get(nom);
     if (p) crear(nom, m.nom, titulo, 'repisa', p.q / qty, [nom]);
   });
-  crear('puerta', m.nom, 'Puerta', 'puerta', np, ['Puerta'], { bisagra: m.tipoP === 'embutida' ? 'Embutida' : 'Recta', lado: 'de las bisagras' });
+  gruposPuertas(m).forEach(g => crear(g.id, m.nom, g.nom, 'puerta', g.n, [g.nom], { bisagra: m.tipoP === 'embutida' ? 'Embutida' : 'Recta', lado: 'de las bisagras' }));
   crear('cajon', m.nom, 'Cajón', 'cajon', nc, ['Frente de cajón', 'Lateral de cajón', 'Frontal/Trasera cajón', 'Fondo de cajón']);
   return lista;
 }

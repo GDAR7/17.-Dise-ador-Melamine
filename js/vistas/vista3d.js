@@ -53,7 +53,6 @@ function geo(m, opts = {}) {
   if (m.encimera) box(0, H, -0, W, ef, D + 25, cF, 'Encimera');
 
   const nc = +m.cajones || 0, hc = +m.altoCaj || 170;
-  const np = +m.puertas || 0;
   const zf = m.tipoP === 'superpuesta' ? D : D - ef;
   const supe = m.tipoP === 'superpuesta';
 
@@ -68,15 +67,16 @@ function geo(m, opts = {}) {
         { lateral: 'Lateral de cajón', frontal: 'Frontal/Trasera cajón', fondo: 'Fondo de cajón' });
     }
     // puertas arriba
-    if (np > 0) {
+    gruposPuertas(m).forEach(g => {
+      const np = g.n;
       const yBase = Z + nc * hc;
       const hTot = (supe ? H - (m.encimera ? ef : 0) : H - e) - yBase - 2;
       const wTot = supe ? W : Wi - 4;
       const x0 = supe ? 0 : e + 2;
       const pw = (wTot - 3 * (np - 1)) / np;
-      const t = tramoPuertas(m, e, yBase + 1, yBase + 1 + hTot);
-      if (t.alto > 0) for (let i = 0; i < np; i++) box(x0 + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta');
-    }
+      const t = tramoPuertas(m, e, yBase + 1, yBase + 1 + hTot, g);
+      if (t.alto > 0) for (let i = 0; i < np; i++) box(x0 + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta', g.nom);
+    });
   }
   return { B, W, H, D: D + (m.encimera ? 25 : 0) };
 }
