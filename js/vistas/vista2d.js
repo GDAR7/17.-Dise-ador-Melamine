@@ -68,7 +68,8 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     if (!tex) return;
     const k = sc / pxPorMm(tex, mf);
     ctx.beginPath(); ctx.rect(X(x), Y(y + bh), bw * sc, bh * sc);
-    rellenarTextura(ctx, tex, 0, -k, k, 0, X(x), Y(y));
+    if (mf.texGirar) rellenarTextura(ctx, tex, k, 0, 0, k, X(x), Y(y));
+    else rellenarTextura(ctx, tex, 0, -k, k, 0, X(x), Y(y));
     ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1;
     ctx.strokeRect(X(x), Y(y + bh), bw * sc, bh * sc);
   };

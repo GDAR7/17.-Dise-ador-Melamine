@@ -205,7 +205,8 @@ function renderMats() {
       <div class="tex">
         ${tieneTextura(m) ? `<img class="tex-img" src="${esc(m.textura)}" alt="Textura de ${esc(m.nom)}">` : ''}
         <button class="btn" data-texcargar="${m.id}">⤒ ${tieneTextura(m) ? 'Cambiar imagen' : 'Cargar imagen'}</button>
-        ${tieneTextura(m) ? `<button class="btn" data-texquitar="${m.id}">Quitar</button>` : ''}
+        ${tieneTextura(m) ? `<button class="btn${m.texGirar ? ' on' : ''}" data-texgirar="${m.id}">⟳ Girar veta 90°</button>
+        <button class="btn" data-texquitar="${m.id}">Quitar</button>` : ''}
       </div>
       ${tieneTextura(m) ? `<div class="f"><label>La foto cubre, de largo (mm)</label><input type="number" min="1" data-f="texAncho" value="${m.texAncho || m.fw}"></div>` : ''}
     </div>`).join('');
@@ -226,7 +227,12 @@ function renderMats() {
   });
   el.querySelectorAll('[data-texquitar]').forEach(b => b.onclick = () => {
     const mat = S.mats.find(x => x.id === b.dataset.texquitar);
-    delete mat.textura; delete mat.texAncho;
+    delete mat.textura; delete mat.texAncho; delete mat.texGirar;
+    renderParams(); recalc();
+  });
+  el.querySelectorAll('[data-texgirar]').forEach(b => b.onclick = () => {
+    const mat = S.mats.find(x => x.id === b.dataset.texgirar);
+    mat.texGirar = !mat.texGirar;
     renderParams(); recalc();
   });
   el.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {

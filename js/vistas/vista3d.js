@@ -203,7 +203,8 @@ function draw3(cv = $('#cv3')) {
         p[ejeL] = org[ejeL] + dims[ejeL] * i / n;
         p[ejeA] = org[ejeA] + dims[ejeA] * j / n;
         pantalla[i][j] = pr(p);
-        imagen[i][j] = [(dims[ejeL] * i / n + desp) * esc, (dims[ejeA] * j / n + desp) * esc];
+        const u = (dims[ejeL] * i / n + desp) * esc, v = (dims[ejeA] * j / n + desp) * esc;
+        imagen[i][j] = b.mat.texGirar ? [v, u] : [u, v];
       }
     }
     for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {

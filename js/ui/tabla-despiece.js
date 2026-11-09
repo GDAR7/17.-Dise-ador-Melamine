@@ -52,7 +52,9 @@ function renderDespiece() {
 
   h += `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
     <button class="btn" id="bCsv">⧉ Copiar despiece (CSV)</button>
-    <button class="btn" id="bTxt">⧉ Copiar lista para el carpintero</button></div>`;
+    <button class="btn" id="bTxt">⧉ Copiar lista para el carpintero</button>
+    <button class="btn" id="bXlsx">⤓ Exportar a Excel</button>
+    <button class="btn" id="bEtq">🖨 Imprimir etiquetas</button></div>`;
   box.innerHTML = h;
 
   box.querySelectorAll('tbody tr').forEach(tr => tr.onclick = e => {
@@ -69,6 +71,8 @@ function renderDespiece() {
     if (nuevo) nuevo.focus();
   });
 
+  $('#bXlsx').onclick = exportarExcel;
+  $('#bEtq').onclick = () => imprimirEspecial(htmlEtiquetas());
   $('#bCsv').onclick = () => {
     const rows = [['Modulo', 'Pieza', 'Largo_mm', 'Ancho_mm', 'Cantidad', 'Cantos_largo', 'Cantos_ancho', 'Material', 'Tapacanto_m']];
     filas.forEach(p => rows.push([p.mod, p.nom, p.L, p.A, p.q, p.cL, p.cA, p.matNom, (p.q * (p.cL * p.L + p.cA * p.A) / 1000).toFixed(2)]));

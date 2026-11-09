@@ -353,6 +353,9 @@ tbody tr.grp:hover td{background:var(--panel2)}
 }
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ---------- IMPRESIONES ESPECIALES (etiquetas y manual) ---------- */
+#impresion{display:none}
+
 /* ---------- MOBILE ---------- */
 #mtabs{display:none;background:var(--bg2);border-top:1px solid var(--line);flex-shrink:0}
 #mtabs button{
@@ -395,6 +398,28 @@ tbody tr.grp:hover td{background:var(--panel2)}
   #app,main,#center,#view{display:block!important;position:static!important;height:auto;overflow:visible}
   .pane{display:block!important;height:auto}
   #pdet{display:none!important}
+
+  body.imp-esp #app{display:none!important}
+  body.imp-esp #impresion{display:block;color:#000}
+  .etq-grid{display:grid;grid-template-columns:1fr 1fr;gap:3mm}
+  .etq{height:36mm;border:1px dashed #777;border-radius:2mm;padding:2.5mm 3mm;display:flex;flex-direction:column;break-inside:avoid;overflow:hidden}
+  .etq-sup{display:flex;justify-content:space-between;font-size:9px;color:#333}
+  .etq-nom{font-size:12px;font-weight:700;line-height:1.2;margin-top:1mm}
+  .etq-med{font-size:17px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:auto}
+  .etq-med small{font-size:9px}
+  .etq-inf{display:flex;justify-content:space-between;align-items:flex-end;font-size:9px;line-height:1.25}
+  .etq-lados{flex-shrink:0}
+  .etq-lados line{stroke:#bbb;stroke-width:1}
+  .etq-lados line.on{stroke:#000;stroke-width:2.2;stroke-dasharray:3 2}
+  .manual h1{font-size:20px;margin-bottom:2px}
+  .manual>p{font-size:11px;color:#333;margin-bottom:10px}
+  .man-el{break-inside:avoid;padding-top:4mm;margin-bottom:6mm;border-top:1px solid #999}
+  .man-el h2{font-size:15px;margin-bottom:6px}
+  .man-el h2 small{font-weight:500;color:#333}
+  .man-el h3{font-size:12px;margin:8px 0 3px}
+  .man-fila{display:flex;gap:6mm;align-items:flex-start}
+  .man-fila img{width:95mm;height:auto}
+  .man-el ul,.man-el ol{font-size:11.5px;padding-left:18px}
   #p3d,#p2d{break-inside:avoid}
   #pdes,#popt,#pcos,#pper{break-before:page}
   .perf{break-inside:avoid}

@@ -53,14 +53,9 @@ $('#bNew').onclick = () => {
 };
 $('#bSave').onclick = () => {
   const sugerido = S.mods.length === 1 ? S.mods[0].nom : S.proyecto;
-  const nombre = prompt('Nombre del archivo:', sugerido);
-  if (!nombre || !nombre.trim()) return;
-  const archivo = nombre.trim().replace(/[\\/:*?"<>|]/g, '-').replace(/\.json$/i, '') + '.json';
-  const url = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url; a.download = archivo;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const archivo = nombreArchivo(sugerido, 'json');
+  if (!archivo) return;
+  descargar(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }), archivo);
   toast(`Guardado como ${archivo}`);
 };
 let agregarAlAbrir = false;
@@ -92,6 +87,7 @@ $('#bPrint').onclick = () => window.print();
 
 /* impresión: solo la pestaña abierta está dibujada, así que se generan todas antes de imprimir */
 addEventListener('beforeprint', () => {
+  if (document.body.classList.contains('imp-esp')) return;
   imprimiendo = true;
   renderDespiece();
   renderOpt();
@@ -102,6 +98,7 @@ addEventListener('beforeprint', () => {
   draw2($('#cv2b'), 'lateral');
 });
 addEventListener('afterprint', () => {
+  if (document.body.classList.contains('imp-esp')) { terminarImpresionEspecial(); return; }
   imprimiendo = false;
   recalc();
 });

@@ -85,7 +85,8 @@ function drawBoard(id, b, g) {
       // La imagen representa la plancha: cada pieza muestra la parte de la que realmente sale
       const k = sc / pxPorMm(tex, g.mat);
       ctx.beginPath(); ctx.rect(x, y, w, h);
-      rellenarTextura(ctx, tex, k, 0, 0, k, 0, 0);
+      if (g.mat.texGirar) rellenarTextura(ctx, tex, 0, k, k, 0, 0, 0);
+      else rellenarTextura(ctx, tex, k, 0, 0, k, 0, 0);
     }
     ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h);
     dibujarCantos(ctx, p, x, y, w, h);

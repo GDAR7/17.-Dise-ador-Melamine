@@ -77,7 +77,7 @@ function guiaConstruccion(el) {
   if (el.tipo === 'puerta') {
     const p = el.piezas[0], n = alturasBisagra(p.L).length;
     return {
-      herrajes: [`${n} bisagras ${el.bisagra.toLowerCase()}`, '1 tirador'],
+      herrajes: [`${n} bisagras (${el.bisagra.toLowerCase()})`, '1 tirador'],
       pasos: [
         `Perfora ${n} cazoletas Ø${CAZOLETA.diametro} a ${CAZOLETA.aCanto} mm del canto ${el.lado}, a ${alturasBisagra(p.L).join(', ')} mm del canto inferior.`,
         'Atornilla las bisagras a la puerta.',
