@@ -46,8 +46,22 @@ aside{
 #rightp{
   width:310px;flex-shrink:0;background:var(--bg2);
   border-left:1px solid var(--line);
-  overflow-y:auto;min-height:0;
+  display:flex;flex-direction:column;min-height:0;
 }
+#params{flex:1;min-height:0;overflow-y:auto}
+#ptabs{display:flex;flex-shrink:0;background:var(--panel);border-top:1px solid var(--line)}
+#ptabs button{
+  flex:1;min-width:0;background:none;border:0;border-top:2px solid transparent;padding:6px 1px;
+  color:var(--txt3);font-size:9.5px;font-weight:600;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+#ptabs button span{font-size:14px;line-height:1.1}
+#ptabs button:hover{color:var(--txt)}
+#ptabs button.on{color:var(--acc);border-top-color:var(--acc);background:var(--bg2)}
+.col-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px}
+.col-chip{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:4px 10px;color:var(--txt2);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
+.col-chip:hover{color:var(--txt);border-color:var(--line2)}
+.col-chip.on{background:#3a2f18;border-color:var(--accd);color:var(--acc2)}
 .ptitle{
   padding:9px 13px;font-size:10.5px;font-weight:700;letter-spacing:.9px;
   text-transform:uppercase;color:var(--txt3);
@@ -388,7 +402,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
     position:absolute;inset:0;width:100%;z-index:20;border:0;display:none;
   }
   aside.mshow,#rightp.mshow{display:flex;flex-direction:column}
-  #rightp.mshow{display:block}
+  #rightp.mshow{display:flex}
   #center{position:absolute;inset:0;display:none}
   #center.mshow{display:flex}
   #mtabs{display:flex}

@@ -2,6 +2,25 @@
 /* ============================================================
    UI — PANEL DE PARÁMETROS
    ============================================================ */
+/* Pestañas inferiores del panel. La elegida es una preferencia de pantalla, no parte del proyecto */
+let _grupoParams = (() => { try { return localStorage.getItem('melamina.ptab') || 'mueble'; } catch (e) { return 'mueble'; } })();
+
+function mostrarGrupoParametros() {
+  $$('#params .ptab').forEach(d => { d.hidden = d.dataset.ptab !== _grupoParams; });
+  $$('#ptabs button').forEach(b => {
+    const on = b.dataset.ptab === _grupoParams;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+
+$$('#ptabs button').forEach(b => b.onclick = () => {
+  _grupoParams = b.dataset.ptab;
+  try { localStorage.setItem('melamina.ptab', _grupoParams); } catch (e) { }
+  mostrarGrupoParametros();
+  $('#params').scrollTop = 0;
+});
+
 function renderParams() {
   const m = S.mods.find(x => x.id === S.sel);
   const matOpts = (sel, filtro) => S.mats.filter(filtro || (() => true))
@@ -11,6 +30,7 @@ function renderParams() {
 
   if (m) {
     html += `
+    <div class="ptab" data-ptab="mueble">
     <div class="fgroup">
       <h4>Identificación</h4>
       <div class="row"><div class="f" style="flex:2"><label>Nombre del módulo</label>
@@ -45,6 +65,8 @@ function renderParams() {
         <select data-k="matB">${matOpts(m.matB)}</select></div></div>
     </div>
 
+    </div>
+    <div class="ptab" data-ptab="interior">
     ${m.tipo === 'columnas' ? htmlColumnas(m) : `
     <div class="fgroup">
       <h4>Interior</h4>
@@ -79,20 +101,24 @@ function renderParams() {
           <button data-seg="tipoP" data-v="embutida" class="${m.tipoP === 'embutida' ? 'on' : ''}">Embutida</button>
         </div>
       </div>
-    </div>`}`;
+    </div>`}
+    </div>`;
   } else {
-    html += `<div style="padding:20px 14px;color:var(--txt3);font-size:12px;text-align:center">
-      Crea un módulo para editar sus parámetros.</div>`;
+    const aviso = '<div style="padding:20px 14px;color:var(--txt3);font-size:12px;text-align:center">Crea un módulo para editar sus parámetros.</div>';
+    html += `<div class="ptab" data-ptab="mueble">${aviso}</div><div class="ptab" data-ptab="interior">${aviso}</div>`;
   }
 
   /* --- Materiales / planchas --- */
   html += `
+  <div class="ptab" data-ptab="materiales">
   <div class="fgroup">
     <h4>Planchas y materiales</h4>
     <div id="matlist"></div>
     <button class="btn" id="bAddMat" style="width:100%;justify-content:center;margin-top:6px">＋ Agregar material</button>
   </div>
 
+  </div>
+  <div class="ptab" data-ptab="cantos">
   <div class="fgroup">
     <h4>Corte y tapacanto</h4>
     <div class="row">
@@ -113,20 +139,26 @@ function renderParams() {
     <label class="chk"><input type="checkbox" data-c="rotar" ${S.cfg.rotar ? 'checked' : ''}> Permitir girar piezas (ignorar veta)</label>
   </div>
 
+  </div>
+  <div class="ptab" data-ptab="herrajes">
   <div class="fgroup">
     <h4>Herrajes y precios</h4>
     <div id="hwlist"></div>
     <button class="btn" id="bAddHw" style="width:100%;justify-content:center;margin-top:6px">＋ Agregar herraje</button>
   </div>
 
+  </div>
+  <div class="ptab" data-ptab="proyecto">
   <div class="fgroup">
     <h4>Proyecto</h4>
     <div class="row"><div class="f"><label>Nombre del proyecto</label>
       <input type="text" data-p="proyecto" value="${esc(S.proyecto)}"></div></div>
     <button class="btn" id="bReset" style="width:100%;justify-content:center;color:var(--red)">Borrar todo y empezar de cero</button>
+  </div>
   </div>`;
 
   $('#params').innerHTML = html;
+  mostrarGrupoParametros();
 
   /* bind módulo */
   $$('#params [data-k]').forEach(inp => {

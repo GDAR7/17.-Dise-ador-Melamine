@@ -13,7 +13,10 @@ function sumaColumna(m, c) {
     : `<span class="mal">Zonas: ${nf(suma)} de ${nf(disp)} mm · ${dif > 0 ? 'faltan' : 'sobran'} ${nf(Math.abs(dif))} mm</span>`;
 }
 
+let _colActiva = 0;   // columna que se está editando: solo se muestra una para evitar scroll
+
 function htmlColumnas(m) {
+  _colActiva = Math.min(_colActiva, m.columnas.length - 1);
   const zonaHtml = (z, zi, n) => `
     <div class="zona" data-zon="${zi}">
       <div class="row">
@@ -41,8 +44,9 @@ function htmlColumnas(m) {
         <option value="ranurado" ${m.fondo === 'ranurado' ? 'selected' : ''}>Ranurado (encajado)</option>
         <option value="ninguno" ${m.fondo === 'ninguno' ? 'selected' : ''}>Sin fondo</option>
       </select></div></div>
+      <div class="col-chips">${m.columnas.map((c, ci) => `<button class="col-chip${ci === _colActiva ? ' on' : ''}" data-colsel="${ci}">${esc(c.nom)}</button>`).join('')}</div>
       ${m.columnas.map((c, ci) => `
-        <div class="columna" data-col="${ci}">
+        <div class="columna" data-col="${ci}" ${ci === _colActiva ? '' : 'hidden'}>
           <div class="row">
             <div class="f" style="flex:2"><label>Columna ${ci + 1}</label><input type="text" data-cf="nom" value="${esc(c.nom)}"></div>
             <div class="f"><label>Ancho mm</label><input type="number" min="1" data-cf="ancho" value="${c.ancho}"></div>
@@ -73,10 +77,18 @@ function bindColumnas(m) {
   const estructura = () => { sincronizarAncho(); renderParams(); recalc(); };
   const valor = inp => (inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? (inp.value === '' ? 0 : +inp.value) : inp.value);
 
+  $$('#params [data-colsel]').forEach(b => b.onclick = () => {
+    _colActiva = +b.dataset.colsel;
+    $$('#params [data-colsel]').forEach(x => x.classList.toggle('on', x === b));
+    $$('#params .columna').forEach(d => { d.hidden = +d.dataset.col !== _colActiva; });
+    $('#params').scrollTop = 0;
+  });
+
   $$('#params .columna').forEach(d => {
     const c = m.columnas[+d.dataset.col];
     d.querySelectorAll('[data-cf]').forEach(inp => inp.addEventListener('input', () => {
       c[inp.dataset.cf] = valor(inp);
+      if (inp.dataset.cf === 'nom') $(`#params [data-colsel="${d.dataset.col}"]`).textContent = c.nom;
       sincronizarAncho();
       recalc();
     }));
@@ -104,6 +116,7 @@ function bindColumnas(m) {
   });
   $('#params [data-acc=agregarCol]').onclick = () => {
     m.columnas.push({ nom: `Columna ${m.columnas.length + 1}`, ancho: 600, zonas: [{ nom: 'Zona 1', alto: +m.alto - (+m.zocalo || 0), tipo: 'puerta', rep: 0 }] });
+    _colActiva = m.columnas.length - 1;
     estructura();
   };
 }
