@@ -21,6 +21,13 @@ $$('#ptabs button').forEach(b => b.onclick = () => {
   $('#params').scrollTop = 0;
 });
 
+/* Al ras de los laterales o con el retiro de las repisas. attr es el atributo que guarda la elección */
+function botonesRetiro(valor, attr) {
+  const con = valor === 'igual';
+  return `<button ${attr}="frente" title="Misma profundidad que los laterales" class="${con ? '' : 'on'}">Al ras</button>
+    <button ${attr}="igual" title="Con el mismo retiro que las repisas" class="${con ? 'on' : ''}">Con retiro</button>`;
+}
+
 function htmlRetiro(m) {
   const ras = m.retiroRepisa === 'ras';
   return `<div class="f" style="margin-bottom:8px"><label>Frente de las repisas</label>
@@ -29,26 +36,26 @@ function htmlRetiro(m) {
       <button data-seg="retiroRepisa" data-v="ras" title="Misma profundidad que laterales y divisiones" class="${ras ? 'on' : ''}">Al ras de las verticales</button>
     </div>
     ${ras ? '' : `<label style="margin-top:7px">Retiro (mm)</label><input type="number" min="0" data-k="retr" value="${m.retr}">`}
-    ${ras || m.tipo === 'columnas' ? '' : `<label style="margin-top:7px">Frente de las divisiones</label>
-    <div class="seg">
-      <button data-seg="retiroDiv" data-v="frente" title="Misma profundidad que los laterales" class="${m.retiroDiv === 'igual' ? '' : 'on'}">Al frente del mueble</button>
-      <button data-seg="retiroDiv" data-v="igual" title="Con el mismo retiro que las repisas" class="${m.retiroDiv === 'igual' ? 'on' : ''}">Alineadas con repisas</button>
-    </div>`}
+    ${ras || m.tipo === 'columnas' ? '' : `<label style="margin-top:7px">Frente de la división principal</label>
+    <div class="seg">${botonesRetiro(m.retiroDiv, 'data-seg="retiroDiv" data-v')}</div>`}
   </div>`;
 }
 
 /* Puertas y divisiones se agregan por niveles de la misma forma */
 const GRUPOS_NIVEL = [
   { clave: 'puertasExtra', fila: 'pg', aviso: '#avPuertas', boton: '#bAddPuerta', grupos: gruposPuertas, lleno: 'Todos los niveles ya tienen puertas: limita antes con Desde y Hasta' },
-  { clave: 'divisionesExtra', fila: 'dg', aviso: '#avDiv', boton: '#bAddDiv', grupos: gruposDivisiones, lleno: 'Todos los niveles ya tienen divisiones: limita antes con Desde y Hasta' }
+  { clave: 'divisionesExtra', fila: 'dg', aviso: '#avDiv', boton: '#bAddDiv', grupos: gruposDivisiones, nuevo: m => ({ retiro: m.retiroDiv === 'igual' ? 'igual' : 'frente' }), lleno: 'Todos los niveles ya tienen divisiones: limita antes con Desde y Hasta' }
 ];
 
-function filasGrupo(lista, attr, nombre) {
-  return (lista || []).map((g, i) => `<div class="row" data-${attr}="${i}">
-    <div class="f"><label title="Cantidad">${nombre} ${g.num}</label><input type="number" min="0" max="6" data-pf="n" value="${g.n}"></div>
-    <div class="f"><label>Desde repisa</label><input type="number" min="0" data-pf="desde" value="${g.desde}"></div>
-    <div class="f"><label>Hasta repisa</label><input type="number" min="0" data-pf="hasta" value="${g.hasta}"></div>
-    <div class="zacc"><button data-pgquitar aria-label="Quitar ${nombre} ${g.num}" title="Quitar">×</button></div>
+function filasGrupo(lista, attr, nombre, extra = () => '') {
+  return (lista || []).map((g, i) => `<div data-${attr}="${i}" style="margin-bottom:8px">
+    <div class="row">
+      <div class="f"><label title="Cantidad">${nombre} ${g.num}</label><input type="number" min="0" max="6" data-pf="n" value="${g.n}"></div>
+      <div class="f"><label>Desde repisa</label><input type="number" min="0" data-pf="desde" value="${g.desde}"></div>
+      <div class="f"><label>Hasta repisa</label><input type="number" min="0" data-pf="hasta" value="${g.hasta}"></div>
+      <div class="zacc"><button data-pgquitar aria-label="Quitar ${nombre} ${g.num}" title="Quitar">×</button></div>
+    </div>
+    ${extra(g)}
   </div>`).join('');
 }
 
@@ -68,6 +75,10 @@ function bindGruposNivel(m) {
         actualizarAvisosNivel(m);
         recalc();
       }));
+      fila.querySelectorAll('[data-pfv]').forEach(b => b.onclick = () => {
+        g.retiro = b.dataset.pfv;
+        renderParams(); recalc();
+      });
       fila.querySelector('[data-pgquitar]').onclick = () => {
         m[c.clave].splice(i, 1);
         renderParams(); recalc();
@@ -78,7 +89,7 @@ function bindGruposNivel(m) {
       if (nivel === null) { toast(c.lleno); return; }
       m[c.clave] = m[c.clave] || [];
       const num = m[c.clave].reduce((max, g) => Math.max(max, g.num), 1) + 1;
-      m[c.clave].push({ num, n: 1, desde: nivel, hasta: nivel + 1 > nr ? 0 : nivel + 1 });
+      m[c.clave].push({ num, n: 1, desde: nivel, hasta: nivel + 1 > nr ? 0 : nivel + 1, ...(c.nuevo ? c.nuevo(m) : {}) });
       renderParams(); recalc();
     };
   });
@@ -141,7 +152,7 @@ function renderParams() {
         <div class="f"><label>Divisiones desde repisa n.º (0 = techo)</label><input type="number" min="0" data-k="divDesde" value="${m.divDesde || 0}"></div>
         <div class="f"><label>Hasta repisa n.º (0 = piso)</label><input type="number" min="0" data-k="divHasta" value="${m.divHasta || 0}"></div>
       </div>
-      ${filasGrupo(m.divisionesExtra, 'dg', 'División')}
+      ${filasGrupo(m.divisionesExtra, 'dg', 'División', g => (m.retiroRepisa === 'ras' ? '' : `<div class="seg">${botonesRetiro(g.retiro || m.retiroDiv, 'data-pfv')}</div>`))}
       <div class="pg-aviso" id="avDiv" ${gruposSeCruzan(m, gruposDivisiones(m)) ? '' : 'hidden'}>Dos grupos de divisiones ocupan el mismo nivel: revisa sus repisas.</div>
       <button class="btn" id="bAddDiv" style="width:100%;justify-content:center;margin-bottom:8px">＋ Agregar divisiones en otro nivel</button>
       <div class="row"><div class="f"><label>Fondo del mueble</label><select data-k="fondo">

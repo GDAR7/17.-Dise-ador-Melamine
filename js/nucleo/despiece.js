@@ -95,8 +95,8 @@ function repisaValida(m, v) {
 
 /* Grupos de divisiones verticales. num es fijo por la misma razón que en las puertas */
 function gruposDivisiones(m) {
-  const extra = (m.divisionesExtra || []).map(g => ({ id: `div${g.num}`, num: g.num, nomD: `División vertical ${g.num}`, nomR: `Repisa ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta }));
-  return [{ id: 'div', nomD: 'División vertical', nomR: 'Repisa', n: +m.divs || 0, desde: m.divDesde, hasta: m.divHasta }, ...extra].filter(g => g.n > 0);
+  const extra = (m.divisionesExtra || []).map(g => ({ id: `div${g.num}`, num: g.num, nomD: `División vertical ${g.num}`, nomR: `Repisa ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta, retiro: g.retiro || m.retiroDiv }));
+  return [{ id: 'div', nomD: 'División vertical', nomR: 'Repisa', n: +m.divs || 0, desde: m.divDesde, hasta: m.divHasta, retiro: m.retiroDiv }, ...extra].filter(g => g.n > 0);
 }
 
 /* Posición de divisiones y repisas. Una repisa solo se parte si una división la atraviesa; si no, va de lado a lado.
@@ -115,9 +115,9 @@ function interiorMueble(m, e) {
   const nombre = (n, base) => base + (limites.has(n) ? ' de cierre' : prof(n) < D - retr ? ' corta' : '');
 
   const anchoVano = g => (Wi - g.n * e) / (g.n + 1);
-  // Las divisiones pueden alinearse con el retiro de las repisas; detrás de una puerta metida en el mueble se acortan para que cierre
+  // Cada grupo de divisiones va al ras o con el retiro de las repisas; detrás de una puerta metida en el mueble se acortan para que cierre
   const profDivision = g => {
-    const base = m.retiroDiv === 'igual' ? D - retr : D;
+    const base = g.retiro === 'igual' ? D - retr : D;
     const [a, b] = nivelesGrupo(m, g);
     const choca = zFrente < D && puertas.some(p => { const [c, f] = nivelesGrupo(m, p); return c <= b && a <= f; });
     return choca ? Math.min(base, zFrente - 2) : base;
