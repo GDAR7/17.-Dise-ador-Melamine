@@ -9,7 +9,7 @@ function elementosConstruccion(m) {
   const qty = +m.qty || 1, lista = [];
   const crear = (id, grupo, titulo, tipo, unidades, noms, extra = {}) => {
     const ps = noms.map(n => porNom.get(n)).filter(Boolean);
-    if (ps.length) lista.push({ id, grupo, titulo, tipo, cant: unidades * qty, piezas: ps, ...extra });
+    if (ps.length) lista.push({ id, grupo, titulo, tipo, cant: unidades * qty, piezas: ps, mod: m, ...extra });
   };
 
   if (m.tipo === 'columnas') {
@@ -60,10 +60,11 @@ function filtrarDetalle(boxes, det) {
 /* Herrajes y pasos de armado de un elemento */
 function guiaConstruccion(el) {
   const busca = t => el.piezas.find(p => p.nom.includes(t));
+  const herrajes = lineasElemento(el).map(textoLinea);
   if (el.tipo === 'cajon') {
     const lat = busca('Lateral'), fro = busca('Frontal');
     return {
-      herrajes: ['1 par de correderas', '1 tirador', 'Tornillos para las uniones de la caja y el frente'],
+      herrajes,
       pasos: [
         `Une el frontal y la trasera (${nf(fro.L)} mm) entre los dos laterales (${nf(lat.L)} mm).`,
         'Coloca el fondo por debajo y clávalo; úsalo para dejar la caja a escuadra, comparando las dos diagonales.',
@@ -77,7 +78,7 @@ function guiaConstruccion(el) {
   if (el.tipo === 'puerta') {
     const p = el.piezas[0], n = alturasBisagra(p.L).length;
     return {
-      herrajes: [`${n} bisagras (${el.bisagra.toLowerCase()})`, '1 tirador'],
+      herrajes,
       pasos: [
         `Perfora ${n} cazoletas Ø${CAZOLETA.diametro} a ${CAZOLETA.aCanto} mm del canto ${el.lado}, a ${alturasBisagra(p.L).join(', ')} mm del canto inferior.`,
         'Atornilla las bisagras a la puerta.',
@@ -89,7 +90,7 @@ function guiaConstruccion(el) {
   }
   if (el.tipo === 'repisa') {
     return {
-      herrajes: ['4 soportes por repisa'],
+      herrajes,
       pasos: [
         'Perfora los soportes en los laterales, en las alturas indicadas en Perforaciones.',
         'Pon el tapacanto en el lado que quedará al frente.',
@@ -98,7 +99,7 @@ function guiaConstruccion(el) {
     };
   }
   return {
-    herrajes: ['Tornillos y tarugos para las uniones', 'Niveladores, si lleva zócalo'],
+    herrajes: clavosFondo(el) ? [...herrajes, `${nf(clavosFondo(el))} × clavos para el fondo`] : herrajes,
     pasos: [
       'Antes de armar, haz en los laterales las perforaciones de soportes y correderas.',
       'Une el piso y el techo entre los laterales, y luego los entrepaños.',

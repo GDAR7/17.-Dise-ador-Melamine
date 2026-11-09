@@ -21,6 +21,7 @@ js/
     columnas.js         Muebles por columnas y zonas
     perforaciones.js    Posición de bisagras, correderas y soportes
     construccion.js     Elementos del mueble y pasos de armado
+    cerrajeria.js       Herrajes y tornillos por elemento
     excel.js            Creación de archivos .xlsx
     corte.js            Optimización de planchas
   vistas/
@@ -36,6 +37,7 @@ js/
     planchas.js         Pestaña Planchas
     costeo.js           Pestaña Costeo
     perforaciones.js    Pestaña Perforaciones
+    cerrajeria.js       Pestaña Cerrajería y catálogo
     salidas.js          Descargas, Excel, etiquetas e impresiones especiales
     construccion.js     Pestaña Construcción y manual imprimible
   app.js                Pestañas, botones e inicio

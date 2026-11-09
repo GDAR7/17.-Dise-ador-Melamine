@@ -285,6 +285,23 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .det-2d{border-left:0;border-top:1px solid var(--line)}
 }
 
+/* ---------- CERRAJERÍA ---------- */
+.cat-bloque{margin-bottom:16px}
+.cat-tit{font-size:13px;font-weight:700;margin-bottom:9px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:10px}
+.cat{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:11px}
+.cat h4{font-size:12.5px}
+.cat-ayuda{font-size:10.5px;color:var(--txt3);margin-bottom:8px}
+.cat-cab,.cat-fila{display:grid;grid-template-columns:18px 1fr 62px 50px 18px;gap:5px;align-items:center}
+.cat-cab{font-size:9.5px;font-weight:700;color:var(--txt3);margin-bottom:3px}
+.cat-fila{margin-bottom:5px}
+.cat-fila input[type=radio]{accent-color:var(--acc);cursor:pointer}
+.cat-fila input[type=text],.cat-fila input[type=number]{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 6px;color:var(--txt);font-size:11.5px;font-family:inherit;outline:none}
+.cat-fila input:focus{border-color:var(--acc)}
+.cat-fila .rm{background:none;border:0;color:var(--txt3);cursor:pointer;font-size:14px}
+.cat-fila .rm:hover{color:var(--red)}
+.cat-add{width:100%;justify-content:center;margin-top:3px}
+
 /* ---------- PERFORACIONES ---------- */
 .perf{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:12px}
 .perf .bh{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -464,7 +481,9 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .man-fila img{width:50%;min-width:0;height:auto}
   .man-el ul,.man-el ol{font-size:11.5px;padding-left:18px}
   #p3d,#p2d{break-inside:avoid}
-  #pdes,#popt,#pcos,#pper{break-before:page}
+  #pdes,#popt,#pcos,#pper,#pcer{break-before:page}
+  .cat-bloque{display:none}
+  #pcer::before{content:'Cerrajería'}
   .perf{break-inside:avoid}
   .pane::before{display:block;font-size:18px;font-weight:700;margin-bottom:10px}
   #p3d::before{content:'Vista 3D'}

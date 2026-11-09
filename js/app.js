@@ -15,6 +15,7 @@ function recalc() {
   if (activePane === 'pcos') renderCosteo();
   if (activePane === 'pper') renderPerforaciones();
   if (activePane === 'pdet') renderConstruccion();
+  if (activePane === 'pcer') renderCerrajeria();
   marcarSeleccion();
   save();
 }
@@ -93,6 +94,7 @@ addEventListener('beforeprint', () => {
   renderOpt();
   renderCosteo();
   renderPerforaciones();
+  renderCerrajeria();
   draw3();
   draw2($('#cv2'), 'frontal');
   draw2($('#cv2b'), 'lateral');

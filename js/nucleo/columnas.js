@@ -136,23 +136,6 @@ function piezasColumnas(m, add, mc, mf, mb) {
   });
 }
 
-function herrajesColumnas(m) {
-  const e = (S.mats.find(x => x.id === m.matC) || S.mats[0]).esp;
-  const r = { bis: 0, bisSemi: 0, cor: 0, tir: 0, tor: 0, sop: 0, reg: 0 };
-  (m.columnas || []).forEach((c, ci) => {
-    const bisagra = bisagraColumna(m.columnas, ci);
-    r.tor += 16;
-    if ((+m.zocalo || 0) > 0) r.reg += 4;
-    zonasColumna(m, c, e).forEach(({ z, a, b, panel }) => {
-      if (panel) r.tor += 8;
-      if (z.tipo === 'puerta') { r[bisagra.clave] += b - a > 1600 ? 3 : 2; r.tir++; r.tor += 4; }
-      if (z.tipo === 'cajon') { r.cor++; r.tir++; r.tor += 6; }
-      if (admiteRepisas(z)) { r.sop += (+z.rep || 0) * 4; r.tor += (+z.rep || 0) * 4; }
-    });
-  });
-  return r;
-}
-
 function geoColumnas(m, opts = {}) {
   const mc = S.mats.find(x => x.id === m.matC) || S.mats[0];
   const mf = S.mats.find(x => x.id === m.matF) || mc;

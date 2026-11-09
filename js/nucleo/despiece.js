@@ -130,32 +130,6 @@ function todasPiezas() {
   return S.mods.flatMap(m => piezas(m));
 }
 
-/* ---------- HERRAJES ---------- */
-function herrajesCalc() {
-  let bis = 0, bisSemi = 0, bisEmb = 0, cor = 0, tir = 0, tor = 0, sop = 0, reg = 0;
-  S.mods.forEach(m => {
-    const q = +m.qty || 1;
-    if (m.tipo === 'columnas') {
-      const r = herrajesColumnas(m);
-      bis += q * r.bis; bisSemi += q * r.bisSemi; cor += q * r.cor; tir += q * r.tir; tor += q * r.tor; sop += q * r.sop; reg += q * r.reg;
-      return;
-    }
-    const np = +m.puertas || 0, nc = +m.cajones || 0, nr = +m.repisas || 0, nd = +m.divs || 0;
-    const alto = +m.alto;
-    const puerta = (+m.puertaDesde || +m.puertaHasta) ? piezas(m).find(p => p.kind === 'puerta') : null;
-    const nBis = q * np * ((puerta ? puerta.L : alto) > 1600 ? 3 : 2);
-    if (m.tipoP === 'embutida') bisEmb += nBis; else bis += nBis;
-    cor += q * nc;
-    tir += q * (np + nc);
-    const j = apoyoDivision(m);
-    sop += q * (j + (nr - j) * (nd + 1)) * 4;
-    tor += q * (16 + nr * 4 + nd * 8 + np * 4 + nc * 6);
-    reg += q * ((+m.zocalo || 0) > 0 ? 4 : 0);
-  });
-  const map = { bisagra: bis, bisagraSemi: bisSemi, bisagraEmb: bisEmb, corredera: cor, tirador: tir, tornillo: tor, soporte: sop, regaton: reg };
-  return S.herrajes.map(h => ({ ...h, cant: map[h.por] != null ? map[h.por] : 0 }));
-}
-
 /* ---------- TAPACANTO ---------- */
 function descuentoCanto(lado) {
   if (!lado) return 0;

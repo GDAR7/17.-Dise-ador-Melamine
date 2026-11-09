@@ -83,8 +83,23 @@ function agregarProyecto(p) {
   return nuevos;
 }
 
+/* Modelos alternativos del catálogo. Se agregan una sola vez, para no reponer los que el usuario quite */
+function agregarCatalogoBase(st) {
+  if (st.catalogoV1) return;
+  st.catalogoV1 = true;
+  const riel = st.herrajes.find(h => h.nom === 'Corredera telescópica 45 cm');
+  if (riel) riel.nom = 'Corredera telescópica';    // el largo ahora depende de cada cajón
+  [['bisagra', 'Bisagra cierre suave'], ['corredera', 'Corredera cierre suave'], ['corredera', 'Corredera oculta'],
+   ['tirador', 'Manija de barra'], ['tirador', 'Perfil uñero'], ['tirador', 'Botón']].forEach(([por, nom]) => {
+    const base = st.herrajes.find(h => h.por === por);
+    st.herrajes.push({ id: uid(), nom, precio: base ? base.precio : 1, por, activo: false });
+  });
+  if (!st.herrajes.some(h => h.por === 'tornilloH')) st.herrajes.push({ id: uid(), nom: 'Tornillo para herraje 3.5 × 16', precio: 0.1, por: 'tornilloH' });
+}
+
 /* Los proyectos guardados antes de existir estos tipos de bisagra las reciben con el precio de la normal */
 function asegurarHerrajes(st) {
+  agregarCatalogoBase(st);
   const base = st.herrajes.find(h => h.por === 'bisagra');
   [['bisagraSemi', 'Bisagra semicodo'], ['bisagraEmb', 'Bisagra embutida']].forEach(([por, nom]) => {
     if (!st.herrajes.some(h => h.por === por)) st.herrajes.push({ id: uid(), nom, precio: base ? base.precio : 4.5, por });

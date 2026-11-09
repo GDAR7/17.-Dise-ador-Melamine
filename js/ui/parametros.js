@@ -204,7 +204,7 @@ function renderParams() {
   };
   $('#bReset').onclick = () => {
     if (!confirm('¿Borrar todo el proyecto y empezar de cero?')) return;
-    S = defState(); S.sel = null; refresh(); toast('Proyecto reiniciado');
+    S = defState(); asegurarHerrajes(S); S.sel = null; refresh(); toast('Proyecto reiniciado');
   };
 }
 
