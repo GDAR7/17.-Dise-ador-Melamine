@@ -63,12 +63,7 @@ function renderDespiece() {
 
   box.querySelectorAll('.lado').forEach(b => b.onclick = () => {
     const { i, lado } = b.dataset;
-    const p = filas[i];
-    const m = S.mods.find(x => x.id === p.modId);
-    // Cada clic avanza: sin canto → delgado → grueso → sin canto
-    const actual = p.lados[lado], siguiente = !actual ? true : actual === 'g' ? false : 'g';
-    (m.cantos = m.cantos || {})[p.nom] = { ...p.lados, [lado]: siguiente };
-    recalc();
+    cambiarLado(filas[i], lado);
     const nuevo = box.querySelector(`.lado[data-i="${i}"][data-lado="${lado}"]`);
     if (nuevo) nuevo.focus();
   });
@@ -92,6 +87,14 @@ function renderDespiece() {
   };
 }
 
+/* Cada clic avanza el lado: sin canto → delgado → grueso → sin canto */
+function cambiarLado(p, lado) {
+  const m = S.mods.find(x => x.id === p.modId);
+  const actual = p.lados[lado], siguiente = !actual ? true : actual === 'g' ? false : 'g';
+  (m.cantos = m.cantos || {})[p.nom] = { ...p.lados, [lado]: siguiente };
+  recalc();
+}
+
 /* Resalta en 3D la pieza de la fila elegida; un segundo clic la deselecciona */
 function seleccionarPieza(p) {
   const misma = V3.sel && V3.sel.modId === p.modId && V3.sel.nom === p.nom;
@@ -110,6 +113,7 @@ function marcarSeleccion() {
   chip.textContent = V3.sel ? `✕ ${V3.sel.nom}` : '';
   $('#isoTit').textContent = V3.sel ? V3.sel.nom : 'Haz clic en una pieza de la tabla para ubicarla';
   draw3($('#cvIso'));
+  draw3($('#cvCer'));
 }
 
 const NOMBRES_LADO = { L2: 'Largo superior', L1: 'Largo inferior', A2: 'Ancho izquierdo', A1: 'Ancho derecho' };

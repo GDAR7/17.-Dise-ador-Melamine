@@ -9,6 +9,12 @@
 const CAZOLETA = { diametro: 35, aCanto: 22.5, aExtremo: 100 };
 const PIN = { diametro: 5, aCanto: 37 };
 
+/* Tipo a mostrar: la bisagra elegida en Cerrajería o, si no hay, la que corresponde al montaje */
+function modeloBisagra(m, nomPieza, porDefecto) {
+  const h = herrajeElegido(m, nomPieza);
+  return h && h.por.startsWith('bisagra') ? h.nom.replace(/^Bisagra\s+/i, '') : porDefecto;
+}
+
 function alturasBisagra(alto) {
   const { aExtremo } = CAZOLETA;
   return alto > 1600 ? [aExtremo, Math.round(alto / 2), alto - aExtremo] : [aExtremo, alto - aExtremo];
@@ -52,7 +58,7 @@ function perforaciones(m) {
       const alturas = [], correderas = [];
       zonas.forEach(({ z, a, b, ib, it }) => {
         const p = z.tipo === 'puerta' && todas.find(x => x.nom === `${c.nom} · ${z.nom} · Puerta`);
-        if (p) planos.push(planoPuerta(p, bisagra.nombre, bisagra.lado));
+        if (p) planos.push(planoPuerta(p, modeloBisagra(m, p.nom, bisagra.nombre), bisagra.lado));
         if (admiteRepisas(z)) for (let i = 1, n = +z.rep || 0; i <= n; i++) alturas.push(ib + (it - ib) * i / (n + 1) - e / 2);
         if (z.tipo === 'cajon') correderas.push(a + 15 + altoCaja(b - a) / 2);
       });
@@ -65,7 +71,7 @@ function perforaciones(m) {
 
   const planos = [];
   const puerta = todas.find(p => p.kind === 'puerta');
-  if (puerta) planos.push(planoPuerta(puerta, m.tipoP === 'embutida' ? 'Embutida' : 'Recta', 'de las bisagras'));
+  if (puerta) planos.push(planoPuerta(puerta, modeloBisagra(m, puerta.nom, m.tipoP === 'embutida' ? 'Embutida' : 'Recta'), 'de las bisagras'));
   const nr = +m.repisas || 0, nc = +m.cajones || 0, hc = +m.altoCaj || 170;
   const alturas = Array.from({ length: nr }, (_, i) => yRepisa(m, e, i + 1));
   const correderas = Array.from({ length: nc }, (_, i) => Z + i * hc + 15 + altoCaja(hc) / 2);

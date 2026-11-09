@@ -99,6 +99,36 @@ const COLOR_PIEZA = '#ffd000';   // pieza marcada en la tabla de la pestaña Con
 // explode: separación de piezas de 0 a 1. sel: pieza resaltada { modId, nom }
 const V3 = { yaw: -0.52, pitch: 0.28, zoom: 1, all: false, puertas: true, fondo: true, drag: null, explode: 0, sel: null };
 
+/* Gira un punto alrededor de la bisagra (eje vertical) o del borde superior (pistón) */
+function girarPunto(g, [x, y, z]) {
+  const c = Math.cos(g.a), s = Math.sin(g.a);
+  if (g.eje === 'y') {
+    const dx = x - g.px, dz = z - g.pz;
+    return [g.px + dx * c - dz * s, y, g.pz + dx * s + dz * c];
+  }
+  const dy = y - g.py, dz = z - g.pz;
+  return [x, g.py + dy * c + dz * s, g.pz - dy * s + dz * c];
+}
+
+const APERTURA_PUERTA = 1.75, APERTURA_PISTON = 1.4;   // radianes con la pieza totalmente abierta
+
+/* Coloca las piezas del elemento según el avance de la simulación (t de 0 a 1) */
+function aplicarApertura(boxes, s) {
+  const propias = boxes.filter(b => b.mod === s.modId && s.piezas.includes(b.pieza));
+  if (!propias.length) return;
+  if (s.modo === 'corredera') {
+    const frente = propias.find(b => b.tag === 'Frente cajón') || propias[0];
+    propias.filter(b => b.y >= frente.y - 1 && b.y < frente.y + frente.h).forEach(b => { b.z += s.t * s.recorrido; });
+  } else if (s.modo === 'piston') {
+    propias.forEach(b => { b.giro = { eje: 'x', py: b.y + b.h, pz: b.z, a: s.t * APERTURA_PISTON }; });
+  } else {
+    propias.forEach(b => {
+      const izq = s.lado ? s.lado === 'izquierdo' : b.x + b.w / 2 < s.centro;
+      b.giro = { eje: 'y', px: izq ? b.x : b.x + b.w, pz: b.z, a: (izq ? 1 : -1) * s.t * APERTURA_PUERTA };
+    });
+  }
+}
+
 function draw3(cv = $('#cv3')) {
   const ctx = cv.getContext('2d');
   const esPrincipal = cv.id === 'cv3';
@@ -119,7 +149,7 @@ function draw3(cv = $('#cv3')) {
   mods.forEach(m => {
     const n = V3.all && !det ? (+m.qty || 1) : 1;
     for (let i = 0; i < n; i++) {
-      const g = geo(m, { puertas: V3.puertas || conSel || !!det, fondo: V3.fondo || conSel || !!det });
+      const g = geo(m, { puertas: V3.puertas || conSel || !!det || cv.id === 'cvCer', fondo: V3.fondo || conSel || !!det });
       const info = new Map(piezas(m).map(p => [p.nom, p]));
       g.B.forEach(b => {
         const pz = info.get(b.pieza), mat = pz && S.mats.find(x => x.id === pz.mat);
@@ -149,6 +179,7 @@ function draw3(cv = $('#cv3')) {
     b.y += (b.y + b.h / 2 - cy0) * k;
     b.z += (b.z + b.d / 2 - cz0) * k * 2;
   });
+  if (cv.id === 'cvCer' && V3.abrir) aplicarApertura(boxes, V3.abrir);
   const esSel = b => (det ? b.pieza === det.sel : conSel && b.mod === V3.sel.modId && b.pieza === V3.sel.nom);
   const hayPiezaSel = boxes.some(esSel);
 
@@ -169,6 +200,8 @@ function draw3(cv = $('#cv3')) {
     const k = F / (F + z2 + span * 0.1);
     return [w / 2 + x1 * sc * k, h / 2 - y2 * sc * k, z2];
   }
+
+  const prCaja = (b, p) => pr(b.giro ? girarPunto(b.giro, p) : p);
 
   // Caras
   const faces = [];
@@ -204,7 +237,7 @@ function draw3(cv = $('#cv3')) {
         p[fijo] = org[fijo] + lado * dims[fijo];
         p[ejeL] = org[ejeL] + dims[ejeL] * i / n;
         p[ejeA] = org[ejeA] + dims[ejeA] * j / n;
-        pantalla[i][j] = pr(p);
+        pantalla[i][j] = prCaja(b, p);
         const u = (dims[ejeL] * i / n + desp) * esc, v = (dims[ejeA] * j / n + desp) * esc;
         imagen[i][j] = b.mat.texGirar ? [v, u] : [u, v];
       }
@@ -217,7 +250,7 @@ function draw3(cv = $('#cv3')) {
   }
 
   boxes.forEach((b, ib) => {
-    const V = C.map(c => pr([b.x + c[0] * b.w, b.y + c[1] * b.h, b.z + c[2] * b.d]));
+    const V = C.map(c => prCaja(b, [b.x + c[0] * b.w, b.y + c[1] * b.h, b.z + c[2] * b.d]));
     const sel = esSel(b);
     const zCentro = V.reduce((s, p) => s + p[2], 0) / 8;
     FI.forEach(f => {
@@ -293,7 +326,7 @@ function msgCv(ctx, w, h, t) {
 }
 
 /* ---------- interacción 3D ---------- */
-[$('#cv3'), $('#cvIso'), $('#cvDet')].forEach(cv => {
+[$('#cv3'), $('#cvIso'), $('#cvDet'), $('#cvCer')].forEach(cv => {
   let last = null, pinch = null;
   const pos = e => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : { x: e.clientX, y: e.clientY };
   const down = e => { last = pos(e); };

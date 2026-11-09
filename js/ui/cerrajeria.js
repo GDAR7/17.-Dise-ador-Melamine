@@ -25,9 +25,88 @@ function htmlCatalogo() {
   </div>`).join('')}</div>`;
 }
 
+let _cerFila = null;      // { modId, nom } de la fila marcada
+let _animApertura = 0;
+
+const elementoDePieza = (m, nom) => elementosConstruccion(m).find(e => e.piezas.some(p => p.nom === nom));
+const piezaConHerraje = (el, p) => !!el && (el.tipo === 'puerta' || (el.tipo === 'cajon' && p.kind === 'frente'));
+
+function comboHerraje(m, p, el, i) {
+  if (!piezaConHerraje(el, p)) return '<span style="color:var(--txt3)">—</span>';
+  const auto = herrajeActivo(el.tipo === 'puerta' ? (POR_BISAGRA[el.bisagra] || 'bisagra') : 'corredera');
+  const elegido = herrajeElegido(m, p.nom);
+  return `<select class="cer-combo" data-combo="${i}" aria-label="Herraje de ${esc(p.nom)}">
+    <option value="">Catálogo: ${esc(auto ? auto.nom : 'sin modelo')}</option>
+    ${herrajesParaPieza(el.tipo).map(h => `<option value="${h.id}" ${elegido === h ? 'selected' : ''}>${esc(h.nom)}</option>`).join('')}
+  </select>`;
+}
+
+function htmlTablasPiezas() {
+  let i = -1;
+  return S.mods.map(m => `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Lados</th><th>Herraje</th></tr></thead>
+      <tbody>${piezas(m).map(p => {
+        i++;
+        const marcada = _cerFila && _cerFila.modId === m.id && _cerFila.nom === p.nom;
+        return `<tr data-i="${i}"${marcada ? ' class="sel"' : ''}><td class="nm">${esc(p.nom)}</td><td class="n">${nf(p.L)}</td><td class="n">${nf(p.A)}</td>
+          <td class="n">${selectorLados(p, i)}</td><td>${comboHerraje(m, p, elementoDePieza(m, p.nom), i)}</td></tr>`;
+      }).join('')}</tbody>
+    </table></div></div>`).join('');
+}
+
+/* Abre y cierra el elemento en la vista isométrica, según el herraje que lleva */
+function simularApertura(p) {
+  const m = S.mods.find(x => x.id === p.modId), el = m && elementoDePieza(m, p.nom);
+  if (!piezaConHerraje(el, p)) return;
+  const h = herrajeElegido(m, p.nom);
+  const lat = el.piezas.find(x => x.nom.includes('Lateral'));
+  V3.sel = null;
+  V3.abrir = {
+    modId: m.id, t: 0,
+    piezas: el.tipo === 'cajon' ? el.piezas.map(x => x.nom) : [p.nom],
+    modo: el.tipo === 'cajon' ? 'corredera' : h && /pist[oó]n/i.test(h.nom) ? 'piston' : 'bisagra',
+    lado: el.col == null ? null : el.lado,
+    centro: +m.ancho / 2,
+    recorrido: lat ? (largoRiel(lat.L) || lat.L) * 0.9 : 0
+  };
+  const suave = !!(h && /suave/i.test(h.nom));
+  const reducir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ABRIR = 800, QUIETO = 500, CERRAR = suave ? 1700 : 800, TOTAL = ABRIR + QUIETO + CERRAR;
+  const curva = x => x * x * (3 - 2 * x);
+  const inicio = performance.now();
+  cancelAnimationFrame(_animApertura);
+  const paso = ahora => {
+    if (!V3.abrir) return;
+    const e = ahora - inicio;
+    V3.abrir.t = reducir ? 1 : e < ABRIR ? curva(e / ABRIR) : e < ABRIR + QUIETO ? 1 : curva(1 - (e - ABRIR - QUIETO) / CERRAR);
+    draw3($('#cvCer'));
+    if (e < (reducir ? 1500 : TOTAL)) _animApertura = requestAnimationFrame(paso);
+    else { V3.abrir = null; draw3($('#cvCer')); }
+  };
+  _animApertura = requestAnimationFrame(paso);
+}
+
+function actualizarPanelCerrajeria(filas) {
+  const p = _cerFila && filas.find(x => x.modId === _cerFila.modId && x.nom === _cerFila.nom);
+  if (_cerFila && !p) _cerFila = null;
+  const m = p && S.mods.find(x => x.id === p.modId);
+  const puede = !!p && piezaConHerraje(elementoDePieza(m, p.nom), p);
+  $('#cerTit').textContent = p ? p.nom : 'Haz clic en una pieza; las puertas y cajones se abren';
+  const b = $('#bSim');
+  b.disabled = !puede;
+  b.onclick = () => { if (puede) simularApertura(p); };
+}
+
 function renderCerrajeria() {
   const box = $('#cerbox');
-  if (!S.mods.length) { box.innerHTML = emptyHtml('Sin cerrajería', 'Crea un módulo para calcular sus herrajes.'); return; }
+  if (!S.mods.length) {
+    box.innerHTML = emptyHtml('Sin cerrajería', 'Crea un módulo para calcular sus herrajes.');
+    _cerFila = null;
+    actualizarPanelCerrajeria([]);
+    draw3($('#cvCer'));
+    return;
+  }
   const M = S.cfg.moneda, compras = herrajesCalc().filter(h => h.cant > 0);
   const elementos = S.mods.map(m => ({ m, els: elementosConstruccion(m) }));
 
@@ -48,6 +127,7 @@ function renderCerrajeria() {
       <div class="stat acc"><div class="k">Costo</div><div class="v">${M} ${nf(subtotal, 0)}</div></div>
     </div>
     <div class="note"><b>Cantidades aproximadas.</b> Los tornillos varían según el modelo; ajusta cuántos lleva cada herraje en el catálogo y compra un margen. Los precios del catálogo son de ejemplo: cámbialos por los tuyos.</div>
+    ${htmlTablasPiezas()}
     <div class="tcard"><div class="hd"><h3>Lista de compra</h3></div><div class="tscroll"><table>
       <thead><tr><th>Herraje</th><th class="n">Cantidad</th><th class="n">P. unit.</th><th class="n">Parcial</th></tr></thead>
       <tbody>${compras.map(h => `<tr><td class="nm">${esc(h.nom)}</td><td class="n">${nf(h.cant)}</td><td class="n">${nf(h.precio, 2)}</td><td class="n">${M} ${nf(h.cant * h.precio, 2)}</td></tr>`).join('')}
@@ -60,6 +140,32 @@ function renderCerrajeria() {
       <tbody>${els.map(el => `<tr><td class="nm">${esc(el.grupo === m.nom ? el.titulo : `${el.grupo} · ${el.titulo}`)}</td><td class="n">${el.cant}</td>
         <td style="font-size:11.5px">${lineasElemento(el).map(l => esc(textoLinea(l))).join(' · ') || '—'}</td></tr>`).join('')}</tbody>
     </table></div></div>`).join('')}`;
+
+  const filas = S.mods.flatMap(m => piezas(m));
+  actualizarPanelCerrajeria(filas);
+  draw3($('#cvCer'));
+  box.querySelectorAll('tr[data-i]').forEach(tr => tr.onclick = e => {
+    if (e.target.closest('select, .lado')) return;
+    const p = filas[tr.dataset.i], m = S.mods.find(x => x.id === p.modId);
+    const misma = _cerFila && _cerFila.modId === p.modId && _cerFila.nom === p.nom;
+    _cerFila = misma ? null : { modId: p.modId, nom: p.nom };
+    box.querySelectorAll('tr.sel').forEach(x => x.classList.remove('sel'));
+    if (!misma) tr.classList.add('sel');
+    if (!misma && S.sel !== p.modId) { S.sel = p.modId; renderList(); renderParams(); }
+    actualizarPanelCerrajeria(filas);
+    if (!misma && piezaConHerraje(elementoDePieza(m, p.nom), p)) simularApertura(p);
+    else { V3.abrir = null; V3.sel = misma ? null : { modId: p.modId, nom: p.nom }; marcarSeleccion(); }
+  });
+  box.querySelectorAll('.lado').forEach(b => b.onclick = () => cambiarLado(filas[b.dataset.i], b.dataset.lado));
+  box.querySelectorAll('[data-combo]').forEach(sel => sel.onchange = () => {
+    const p = filas[sel.dataset.combo], m = S.mods.find(x => x.id === p.modId);
+    m.herrajesPieza = m.herrajesPieza || {};
+    if (sel.value) m.herrajesPieza[p.nom] = sel.value; else delete m.herrajesPieza[p.nom];
+    _cerFila = { modId: p.modId, nom: p.nom };
+    if (S.sel !== p.modId) { S.sel = p.modId; renderList(); renderParams(); }
+    recalc();
+    simularApertura(p);
+  });
 
   box.querySelectorAll('.cat-fila').forEach(f => {
     const h = S.herrajes.find(x => x.id === f.dataset.h);

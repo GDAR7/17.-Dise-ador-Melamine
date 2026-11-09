@@ -239,7 +239,12 @@ tbody tr.grp:hover td{background:var(--panel2)}
 
 /* ---------- DESPIECE CON VISTA ISOMÉTRICA ---------- */
 .des-lay{display:flex;height:100%}
-.des-lay #desbox{flex:1;min-width:0}
+.des-lay #desbox,.des-lay #cerbox{flex:1;min-width:0}
+.cer-sim{margin:8px 12px 10px;justify-content:center;flex-shrink:0}
+.cer-sim:disabled{opacity:.45;cursor:not-allowed}
+#cerbox tbody tr[data-i]{cursor:pointer}
+#cerbox tbody tr.sel td{background:rgba(30,155,255,.2)}
+.cer-combo{width:100%;min-width:150px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 6px;color:var(--txt);font:inherit;font-size:11.5px}
 .des-iso{width:340px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--bg)}
 .des-iso-tit{padding:9px 12px;font-size:11.5px;font-weight:600;color:var(--txt2);border-bottom:1px solid var(--line)}
 .des-iso canvas{flex:1;min-height:0;cursor:grab}
@@ -247,7 +252,7 @@ tbody tr.grp:hover td{background:var(--panel2)}
 #desbox tbody tr.sel td{background:rgba(30,155,255,.2)}
 @media (max-width:1500px){
   .des-lay{flex-direction:column}
-  .des-lay #desbox{height:auto;min-height:0}
+  .des-lay #desbox,.des-lay #cerbox{height:auto;min-height:0}
   .des-iso{order:-1;width:100%;height:240px;border-left:0;border-bottom:1px solid var(--line)}
 }
 
