@@ -4,7 +4,7 @@
    ============================================================ */
 function renderCosteo() {
   const box = $('#cosbox');
-  if (!S.mods.length) { box.innerHTML = emptyHtml('Sin costeo', 'Crea un módulo para calcular el presupuesto.'); return; }
+  if (!modsVisibles().length) { box.innerHTML = emptyHtml('Sin costeo', 'Crea un módulo para calcular el presupuesto.'); return; }
   const M = S.cfg.moneda;
   const grupos = optimizarTodo();
   const pctMerma = +S.cfg.merma || 0;
@@ -27,7 +27,7 @@ function renderCosteo() {
   const subHw = hw.reduce((s, h) => s + h.cant * h.precio, 0);
 
   const total = subPl + subTc + subHw;
-  const nUnid = S.mods.reduce((s, m) => s + (+m.qty || 1), 0);
+  const nUnid = modsVisibles().reduce((s, m) => s + (+m.qty || 1), 0);
 
   let h = `<div class="stats">
     <div class="stat acc"><div class="k">Costo de materiales</div><div class="v">${M} ${nf(total, 0)}</div></div>
@@ -66,7 +66,7 @@ function renderCosteo() {
   <div class="tcard"><div class="hd"><h3>Resumen por módulo</h3></div>
     <div class="tscroll"><table>
       <thead><tr><th>Módulo</th><th class="n">Cant.</th><th class="n">Medidas</th><th class="n">Área melamina</th><th class="n">Tapacanto</th><th class="n">% del costo</th></tr></thead>
-      <tbody>${S.mods.map(m => {
+      <tbody>${modsVisibles().map(m => {
         const ps = piezas(m);
         const a = ps.reduce((s, p) => s + p.q * p.L * p.A, 0) / 1e6;
         const t = ps.reduce((s, p) => s + p.q * (p.cL * p.L + p.cA * p.A), 0) / 1000;

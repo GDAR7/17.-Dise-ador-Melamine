@@ -43,7 +43,7 @@ function comboHerraje(m, p, el, i) {
 
 function htmlTablasPiezas() {
   let i = -1;
-  return S.mods.map(m => `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
+  return modsVisibles().map(m => `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
     <div class="tscroll"><table>
       <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Lados</th><th>Herraje</th></tr></thead>
       <tbody>${piezas(m).map(p => {
@@ -100,7 +100,7 @@ function actualizarPanelCerrajeria(filas) {
 
 function renderCerrajeria() {
   const box = $('#cerbox');
-  if (!S.mods.length) {
+  if (!modsVisibles().length) {
     box.innerHTML = emptyHtml('Sin cerrajería', 'Crea un módulo para calcular sus herrajes.');
     _cerFila = null;
     actualizarPanelCerrajeria([]);
@@ -108,7 +108,7 @@ function renderCerrajeria() {
     return;
   }
   const M = S.cfg.moneda, compras = herrajesCalc().filter(h => h.cant > 0);
-  const elementos = S.mods.map(m => ({ m, els: elementosConstruccion(m) }));
+  const elementos = modsVisibles().map(m => ({ m, els: elementosConstruccion(m) }));
 
   const rieles = {};
   elementos.forEach(({ els }) => els.forEach(el => lineasElemento(el).forEach(l => {
@@ -141,7 +141,7 @@ function renderCerrajeria() {
         <td style="font-size:11.5px">${lineasElemento(el).map(l => esc(textoLinea(l))).join(' · ') || '—'}</td></tr>`).join('')}</tbody>
     </table></div></div>`).join('')}`;
 
-  const filas = S.mods.flatMap(m => piezas(m));
+  const filas = modsVisibles().flatMap(m => piezas(m));
   actualizarPanelCerrajeria(filas);
   draw3($('#cvCer'));
   box.querySelectorAll('tr[data-i]').forEach(tr => tr.onclick = e => {

@@ -64,6 +64,16 @@ const PRESETS = {
   columnas:   { nom: 'Repostero por columnas', ancho: 1800, alto: 2400, prof: 580, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 100, puertas: 0, cajones: 0, encimera: false, get columnas() { return columnasEjemplo(); } }
 };
 
+/* Muebles que cuentan en dibujos, despiece, cortes y costos */
+const modsVisibles = () => S.mods.filter(m => !m.oculto);
+
+/* El mueble seleccionado siempre es uno visible: un oculto no se dibuja ni se edita */
+function asegurarSeleccion() {
+  if (S.mods.some(m => m.id === S.sel && !m.oculto)) return;
+  const primero = modsVisibles()[0];
+  S.sel = primero ? primero.id : null;
+}
+
 /* Suma al proyecto los muebles de otro archivo. Un material igual (nombre, espesor y plancha)
    se unifica con el existente para que sus piezas se optimicen en las mismas planchas. */
 function agregarProyecto(p) {

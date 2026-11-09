@@ -12,9 +12,9 @@ function svgPlano(p) {
 
 function renderPerforaciones() {
   const box = $('#perbox');
-  if (!S.mods.length) { box.innerHTML = emptyHtml('Sin perforaciones', 'Crea un módulo para ver sus perforaciones.'); return; }
+  if (!modsVisibles().length) { box.innerHTML = emptyHtml('Sin perforaciones', 'Crea un módulo para ver sus perforaciones.'); return; }
   box.innerHTML = `<div class="note"><b>Medidas orientativas.</b> Son las habituales del oficio; confirma siempre con la ficha de tus herrajes. En cada plano el largo de la pieza va en horizontal, con el extremo inferior a la izquierda. En los laterales, el canto trasero queda arriba.</div>`
-    + S.mods.map(m => {
+    + modsVisibles().map(m => {
       const planos = perforaciones(m);
       return `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
         <div style="padding:12px">${planos.length ? planos.map(p => `<div class="perf">

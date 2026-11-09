@@ -165,7 +165,7 @@ function draw3(cv = $('#cv3')) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, w, h);
 
-  const mods = det ? [det.mod] : V3.all ? S.mods : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
+  const mods = det ? [det.mod] : V3.all ? modsVisibles() : (S.sel ? [S.mods.find(m => m.id === S.sel)].filter(Boolean) : []);
   if (!mods.length) { msgCv(ctx, w, h, 'Selecciona o crea un módulo'); if (esPrincipal) $('#leg3').innerHTML = ''; return; }
 
   // Con una pieza seleccionada se muestran todas, para poder ubicarla
@@ -294,7 +294,7 @@ function draw3(cv = $('#cv3')) {
   ctx.fillStyle = imprimiendo ? '#333' : '#9aa3b8';
   const mm = mods[0];
   const txt = V3.all
-    ? `Proyecto · ${S.mods.length} módulo(s) · ${S.mods.reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`
+    ? `Proyecto · ${modsVisibles().length} módulo(s) · ${modsVisibles().reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`
     : `${mm.nom} · ${mm.ancho} × ${mm.alto} × ${mm.prof} mm`;
   if (!det) ctx.fillText(txt, 12, h - 44);
 

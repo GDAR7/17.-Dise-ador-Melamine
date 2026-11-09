@@ -200,7 +200,7 @@ function imagenDeTextura(t) {
 
 /* Datos que necesita cada hilo, con el mismo encuadre de la Vista 3D */
 function datosRender(rw, rh, f, ancho, alto) {
-  const mods = V3.all ? S.mods : S.mods.filter(m => m.id === S.sel);
+  const mods = V3.all ? modsVisibles() : S.mods.filter(m => m.id === S.sel);
   const esc = armarEscena(mods, null, { puertas: V3.puertas, fondo: V3.fondo });
   if (!esc || !esc.boxes.length) return null;
   const span = Math.max(esc.totW, esc.maxH, esc.maxD) * 1.45 * (1 + esc.k);

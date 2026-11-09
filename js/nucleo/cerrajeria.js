@@ -88,7 +88,7 @@ const textoLinea = l => `${nf(l.cant)} × ${l.nom}${l.extra ? ` (${l.extra})` : 
 
 function herrajesCalc() {
   const suma = {};
-  S.mods.forEach(m => elementosConstruccion(m).forEach(el => lineasElemento(el).forEach(l => {
+  modsVisibles().forEach(m => elementosConstruccion(m).forEach(el => lineasElemento(el).forEach(l => {
     suma[l.hid] = (suma[l.hid] || 0) + l.cant * el.cant;
   })));
   return S.herrajes.map(h => ({ ...h, cant: suma[h.id] || 0 }));

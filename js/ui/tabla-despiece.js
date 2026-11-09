@@ -130,5 +130,6 @@ function copy(txt, msg) {
   navigator.clipboard.writeText(txt).then(() => toast(msg)).catch(() => toast('No se pudo copiar'));
 }
 function emptyHtml(t, p) {
+  if (S.mods.length && !modsVisibles().length) p = 'Todos los muebles están ocultos: actívalos con el ojo de la lista.';
   return `<div class="empty"><div class="big">▦</div><h3>${t}</h3><p>${p}</p></div>`;
 }

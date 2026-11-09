@@ -20,7 +20,7 @@ function recalc() {
   if (renderActivo()) cerrarRender();   // el diseño cambió: la imagen ya no lo representa
   save();
 }
-function refresh() { renderList(); renderParams(); recalc(); }
+function refresh() { asegurarSeleccion(); renderList(); renderParams(); recalc(); }
 
 $$('#tabs .tab').forEach(t => t.onclick = () => {
   $$('#tabs .tab').forEach(x => x.classList.remove('on'));

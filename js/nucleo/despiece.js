@@ -216,7 +216,7 @@ function tramoPuertas(m, e, abajo, arriba, g) {
 }
 
 function todasPiezas() {
-  return S.mods.flatMap(m => piezas(m));
+  return modsVisibles().flatMap(m => piezas(m));
 }
 
 /* ---------- TAPACANTO ---------- */
