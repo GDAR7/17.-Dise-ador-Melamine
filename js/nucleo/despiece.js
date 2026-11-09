@@ -33,14 +33,14 @@ function piezas(m) {
   add('Piso', Wi, D, 1, 1, 0, mc, 'horiz');
 
   // --- Divisiones verticales y repisas ---
-  const contar = (lista, medida) => {
+  const contar = lista => {
     const grupos = new Map();
-    lista.forEach(x => grupos.set(x.nom, { medida: medida(x), q: (grupos.has(x.nom) ? grupos.get(x.nom).q : 0) + 1 }));
-    return [...grupos];
+    lista.forEach(x => grupos.set(x.nom, { x, q: (grupos.has(x.nom) ? grupos.get(x.nom).q : 0) + 1 }));
+    return [...grupos.values()];
   };
   const interior = interiorMueble(m, e);
-  contar(interior.divisiones, v => v.alto).forEach(([nom, g]) => add(nom, g.medida, D, g.q, 1, 0, mc, 'div'));
-  contar(interior.repisas, r => r.ancho).forEach(([nom, g]) => add(nom, g.medida, D - (+m.retr || 0), g.q, 1, 0, mc, 'rep'));
+  contar(interior.divisiones).forEach(({ x, q }) => add(x.nom, x.alto, D, q, 1, 0, mc, 'div'));
+  contar(interior.repisas).forEach(({ x, q }) => add(x.nom, x.ancho, x.prof, q, 1, 0, mc, 'rep'));
 
   // --- Zócalo ---
   if (Z > 0) {
@@ -57,26 +57,15 @@ function piezas(m) {
 
   // --- Puertas ---
   gruposPuertas(m).forEach(g => {
-    const np = g.n;
-    let pa, ph;
-    const altoFrentes = (+m.cajones || 0) * (+m.altoCaj || 0);
-    if (m.tipoP === 'superpuesta') {
-      pa = (W - 3 * (np - 1)) / np;
-      ph = H - Z - altoFrentes - 2 - (m.encimera ? ef : 0);
-    } else {
-      pa = (Wi - 3 * (np - 1) - 4) / np;
-      ph = H - 2 * e - Z - altoFrentes - 4;
-    }
-    const arribaP = m.tipoP === 'superpuesta' ? H - 1 - (m.encimera ? ef : 0) : H - e - 2;
-    ph = tramoPuertas(m, e, arribaP - ph, arribaP, g).alto;
-    add(g.nom, ph, pa, np, 2, 2, mf, 'puerta');
+    const f = montajeFrente(m, e, ef);
+    add(g.nom, tramoPuertas(m, e, f.abajo, f.arriba, g).alto, (f.ancho - 3 * (g.n - 1)) / g.n, g.n, 2, 2, mf, 'puerta');
   });
 
   // --- Cajones ---
   const nc = +m.cajones || 0;
   if (nc > 0) {
     const hc = +m.altoCaj || 170;
-    const fa = m.tipoP === 'superpuesta' ? W - 3 : Wi - 4;
+    const fa = montajeFrente(m, e, ef).anchoCajon;
     add('Frente de cajón', hc - 3, fa, nc, 2, 2, mf, 'frente');
     const guia = 13;                      // holgura por lado para corredera
     const anchoCaja = Wi - 2 * guia;
@@ -110,8 +99,18 @@ function gruposDivisiones(m) {
 /* Posición de divisiones y repisas. Una repisa solo se parte si una división la atraviesa; si no, va de lado a lado.
    Es la única fuente de estas medidas: el despiece, el 3D y el 2D leen de aquí. */
 function interiorMueble(m, e) {
-  const H = +m.alto, Z = +m.zocalo || 0, Wi = +m.ancho - 2 * e, nr = +m.repisas || 0;
+  const H = +m.alto, Z = +m.zocalo || 0, Wi = +m.ancho - 2 * e, nr = +m.repisas || 0, D = +m.prof, retr = +m.retr || 0;
   const y = n => yRepisa(m, e, nr - n + 1), grupos = gruposDivisiones(m);
+
+  // La repisa donde termina una puerta llega hasta el frente y cierra ese espacio.
+  // Las que quedan detrás de una puerta metida en el mueble se acortan para que esta pueda cerrar.
+  const puertas = gruposPuertas(m), mf = S.mats.find(x => x.id === m.matF) || S.mats.find(x => x.id === m.matC) || S.mats[0];
+  const limites = new Set(puertas.flatMap(g => { const l = limitesNivel(m, g); return [l.d, l.h]; }).filter(Boolean));
+  const zFrente = montajeFrente(m, e, mf.esp).z;
+  const tapada = n => puertas.some(g => { const [a, b] = nivelesGrupo(m, g); return a <= n - 1 && n <= b; });
+  const prof = n => (limites.has(n) ? D : tapada(n) && zFrente < D ? Math.min(D - retr, zFrente - 2) : D - retr);
+  const nombre = (n, base) => base + (limites.has(n) ? ' de cierre' : prof(n) < D - retr ? ' corta' : '');
+
   const anchoVano = g => (Wi - g.n * e) / (g.n + 1);
   const divisiones = [], repisas = [];
   grupos.forEach(g => {
@@ -120,9 +119,10 @@ function interiorMueble(m, e) {
   });
   for (let n = 1; n <= nr; n++) {
     const g = grupos.find(x => { const [a, b] = nivelesGrupo(m, x); return a <= n - 1 && n <= b; });
-    if (!g) { repisas.push({ nom: grupos.length ? 'Repisa entera' : 'Repisa', x: e, y: y(n), ancho: Wi }); continue; }
+    const comun = { y: y(n), prof: prof(n), cierre: limites.has(n) };
+    if (!g) { repisas.push({ ...comun, nom: nombre(n, grupos.length ? 'Repisa entera' : 'Repisa'), x: e, ancho: Wi }); continue; }
     const av = anchoVano(g);
-    for (let v = 0; v <= g.n; v++) repisas.push({ nom: g.nomR, x: e + v * (av + e), y: y(n), ancho: av });
+    for (let v = 0; v <= g.n; v++) repisas.push({ ...comun, nom: nombre(n, g.nomR), x: e + v * (av + e), ancho: av });
   }
   return { divisiones, repisas };
 }
@@ -169,18 +169,39 @@ function nivelLibre(m, grupos) {
   return libre === undefined ? null : libre;
 }
 
-/* Tramo vertical de un grupo de puertas. abajo y arriba son los límites si cubre todo el alto */
+/* Posición de los frentes según el montaje:
+   superpuesta (Exterior) tapa todo el canto · media tapa la mitad · embutida (A nivel) queda dentro y al ras del frente ·
+   interior queda dentro y metida el valor de rebaje. */
+function montajeFrente(m, e, ef) {
+  const W = +m.ancho, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0;
+  const alt = (+m.cajones || 0) * (+m.altoCaj || 0);
+  if (m.tipoP === 'superpuesta') return { x: 0, ancho: W, z: D, arriba: H - 1 - (m.encimera ? ef : 0), abajo: Z + alt + 1, anchoCajon: W - 3 };
+  if (m.tipoP === 'media') return { x: e / 2, ancho: W - e, z: D, arriba: H - e / 2, abajo: alt ? Z + alt + 1 : Z + e / 2, anchoCajon: W - e - 3 };
+  const rebaje = m.tipoP === 'interior' ? Math.max(0, m.rebaje == null ? 20 : +m.rebaje || 0) : 0;
+  return { x: e + 2, ancho: W - 2 * e - 4, z: D - ef - rebaje, arriba: H - e - 2, abajo: Z + e + alt + 2, anchoCajon: W - 2 * e - 4 };
+}
+
+/* Tramo vertical de un grupo de puertas. abajo y arriba son los límites si cubre todo el alto.
+   Si otra puerta llega a la misma repisa, cada una cubre la mitad del canto con 3 mm de luz entre ambas. */
 function tramoPuertas(m, e, abajo, arriba, g) {
-  const nr = +m.repisas || 0, supe = m.tipoP === 'superpuesta';
+  const nr = +m.repisas || 0;
   const { d, h } = limitesNivel(m, g);
   const y = n => yRepisa(m, e, nr - n + 1);
   const otros = gruposPuertas(m).filter(o => o.id !== g.id).map(o => limitesNivel(m, o));
-  // Superpuesta: tapa el canto de la repisa límite o, si otra puerta llega a la misma repisa, solo la mitad con 3 mm de luz entre ambas.
-  // Embutida: queda entre repisas con 2 mm de holgura.
-  const techoSupe = n => (otros.some(o => o.h === n) ? y(n) + e / 2 - 1.5 : y(n) + e);
-  const baseSupe = n => (otros.some(o => o.d === n) ? y(n) + e / 2 + 1.5 : y(n));
-  const techo = d ? (supe ? techoSupe(d) : y(d) - 2) : arriba;
-  const base = h ? Math.max(abajo, supe ? baseSupe(h) : y(h) + e + 2) : abajo;
+  const techoDe = n => {
+    const compartida = otros.some(o => o.h === n);
+    if (m.tipoP === 'superpuesta') return compartida ? y(n) + e / 2 - 1.5 : y(n) + e;
+    if (m.tipoP === 'media') return y(n) + e / 2 - (compartida ? 1.5 : 0);
+    return y(n) - 2;
+  };
+  const baseDe = n => {
+    const compartida = otros.some(o => o.d === n);
+    if (m.tipoP === 'superpuesta') return compartida ? y(n) + e / 2 + 1.5 : y(n);
+    if (m.tipoP === 'media') return y(n) + e / 2 + (compartida ? 1.5 : 0);
+    return y(n) + e + 2;
+  };
+  const techo = d ? techoDe(d) : arriba;
+  const base = h ? Math.max(abajo, baseDe(h)) : abajo;
   return { y: base, alto: techo - base };
 }
 

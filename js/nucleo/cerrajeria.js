@@ -68,7 +68,7 @@ function lineasElemento(el) {
     agregar('tornillo', UNIONES_CAJA_CAJON);
     tornillosHerraje += FIJACION_FRENTE;
   } else if (el.tipo === 'repisa') {
-    agregar('soporte', 4);
+    agregar(el.fija ? 'tornillo' : 'soporte', 4);
   } else {
     const uniones = el.piezas.reduce((s, p) => s + (UNIONES[p.kind] || 0) * Math.round(p.q / el.cant), 0);
     agregar('tornillo', uniones);

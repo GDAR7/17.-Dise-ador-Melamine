@@ -15,6 +15,8 @@ function modeloBisagra(m, nomPieza, porDefecto) {
   return h && h.por.startsWith('bisagra') ? h.nom.replace(/^Bisagra\s+/i, '') : porDefecto;
 }
 
+const bisagraMontaje = m => ({ embutida: 'Embutida', interior: 'Embutida', media: 'Semicodo' }[m.tipoP] || 'Recta');
+
 function alturasBisagra(alto) {
   const { aExtremo } = CAZOLETA;
   return alto > 1600 ? [aExtremo, Math.round(alto / 2), alto - aExtremo] : [aExtremo, alto - aExtremo];
@@ -70,10 +72,13 @@ function perforaciones(m) {
   }
 
   const planos = [];
-  todas.filter(p => p.kind === 'puerta').forEach(puerta => planos.push(planoPuerta(puerta, modeloBisagra(m, puerta.nom, m.tipoP === 'embutida' ? 'Embutida' : 'Recta'), 'de las bisagras')));
+  todas.filter(p => p.kind === 'puerta').forEach(puerta => planos.push(planoPuerta(puerta, modeloBisagra(m, puerta.nom, bisagraMontaje(m)), 'de las bisagras')));
   const nr = +m.repisas || 0, nc = +m.cajones || 0, hc = +m.altoCaj || 170;
-  const alturas = Array.from({ length: nr }, (_, i) => yRepisa(m, e, i + 1));
+  // Las repisas de cierre van atornilladas: no llevan soportes
+  const moviles = interiorMueble(m, e).repisas.filter(r => !r.cierre);
+  const alturas = [...new Set(moviles.map(r => r.y))].sort((a, b) => a - b);
+  const retrSoportes = moviles.length ? D - Math.min(...moviles.map(r => r.prof)) : retr;
   const correderas = Array.from({ length: nc }, (_, i) => Z + i * hc + 15 + altoCaja(hc) / 2);
-  if (nr || nc) planos.push(planoLateral('Laterales', H, D, 2, alturas, correderas, retr, profCaja, false));
+  if (alturas.length || nc) planos.push(planoLateral('Laterales', H, D, 2, alturas, correderas, retrSoportes, profCaja, false));
   return planos;
 }

@@ -22,7 +22,7 @@ function geo(m, opts = {}) {
   const Wi = W - 2 * e;
   const interior = interiorMueble(m, e);
   interior.divisiones.forEach(v => box(v.x, v.y, 0, e, v.alto, D, cC, 'División', v.nom));
-  interior.repisas.forEach(r => box(r.x, r.y, 0, r.ancho, e, D - (+m.retr || 0), cC, 'Repisa', r.nom));
+  interior.repisas.forEach(r => box(r.x, r.y, 0, r.ancho, e, r.prof, cC, 'Repisa', r.nom));
 
   if (Z > 0) {
     box(e, 0, D - e, W - 2 * e, Z, e, cC, 'Zócalo', 'Zócalo frontal');
@@ -37,29 +37,22 @@ function geo(m, opts = {}) {
   if (m.encimera) box(0, H, -0, W, ef, D + 25, cF, 'Encimera');
 
   const nc = +m.cajones || 0, hc = +m.altoCaj || 170;
-  const zf = m.tipoP === 'superpuesta' ? D : D - ef;
-  const supe = m.tipoP === 'superpuesta';
+  const f = montajeFrente(m, e, ef), zf = f.z;
 
   if (opts.puertas !== false) {
     // frentes de cajón abajo
     for (let i = 0; i < nc; i++) {
       const y = Z + i * hc;
-      const x = supe ? 0 : e + 2;
-      const w = supe ? W : Wi - 4;
-      box(x, y + 1, zf, w, hc - 3, ef, cF, 'Frente cajón', 'Frente de cajón');
+      box(f.x, y + 1, zf, f.ancho, hc - 3, ef, cF, 'Frente cajón', 'Frente de cajón');
       cajaCajon(box, e + 13, y + 15, zf, Wi - 26, Math.max(80, hc - 40), Math.max(200, D - 60), e, eb, cC, cB,
         { lateral: 'Lateral de cajón', frontal: 'Frontal/Trasera cajón', fondo: 'Fondo de cajón' });
     }
     // puertas arriba
     gruposPuertas(m).forEach(g => {
       const np = g.n;
-      const yBase = Z + nc * hc;
-      const hTot = (supe ? H - (m.encimera ? ef : 0) : H - e) - yBase - 2;
-      const wTot = supe ? W : Wi - 4;
-      const x0 = supe ? 0 : e + 2;
-      const pw = (wTot - 3 * (np - 1)) / np;
-      const t = tramoPuertas(m, e, yBase + 1, yBase + 1 + hTot, g);
-      if (t.alto > 0) for (let i = 0; i < np; i++) box(x0 + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta', g.nom);
+      const pw = (f.ancho - 3 * (np - 1)) / np;
+      const t = tramoPuertas(m, e, f.abajo, f.arriba, g);
+      if (t.alto > 0) for (let i = 0; i < np; i++) box(f.x + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta', g.nom);
     });
   }
   return { B, W, H, D: D + (m.encimera ? 25 : 0) };

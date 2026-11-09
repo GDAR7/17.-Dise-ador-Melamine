@@ -152,9 +152,10 @@ function renderParams() {
       <div class="row"><div class="f"><label>Alto de cada cajón</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
       <div class="f"><label>Montaje de frentes</label>
         <div class="seg">
-          <button data-seg="tipoP" data-v="superpuesta" class="${m.tipoP === 'superpuesta' ? 'on' : ''}">Superpuesta</button>
-          <button data-seg="tipoP" data-v="embutida" class="${m.tipoP === 'embutida' ? 'on' : ''}">Embutida</button>
+          ${[['superpuesta', 'Exterior', 'Delante del mueble: tapa todo el canto'], ['media', 'Media', 'Tapa la mitad del canto'], ['embutida', 'A nivel', 'Dentro del mueble, al ras del frente'], ['interior', 'Interior', 'Dentro del mueble y más metida que el frente']]
+            .map(([v, t, d]) => `<button data-seg="tipoP" data-v="${v}" title="${d}" class="${m.tipoP === v ? 'on' : ''}">${t}</button>`).join('')}
         </div>
+        ${m.tipoP === 'interior' ? `<div class="f" style="margin-top:8px"><label>Rebaje desde el frente (mm)</label><input type="number" min="0" data-k="rebaje" value="${m.rebaje == null ? 20 : m.rebaje}"></div>` : ''}
       </div>
     </div>`}
     </div>`;

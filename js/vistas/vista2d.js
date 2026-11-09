@@ -100,10 +100,10 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     if (m.encimera) rect(0, H, W, ef, shade(mf.color, 1));
     // frentes
     const nc = +m.cajones || 0, hc = +m.altoCaj || 170;
-    const supe = m.tipoP === 'superpuesta';
+    const f = montajeFrente(m, e, ef);
     ctx.globalAlpha = .93;
     for (let i = 0; i < nc; i++) {
-      const x = supe ? 0 : e + 2, bw = supe ? W : W - 2 * e - 4;
+      const x = f.x, bw = f.ancho;
       rect(x, Z + i * hc + 1, bw, hc - 3, shade(mf.color, .97), 'rgba(0,0,0,.6)');
       texFrente(x, Z + i * hc + 1, bw, hc - 3);
       // tirador
@@ -112,13 +112,10 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     }
     gruposPuertas(m).forEach(g => {
       const np = g.n;
-      const yB = Z + nc * hc;
-      const hT = (supe ? H - (m.encimera ? 0 : 0) : H - e) - yB - 2;
-      const wT = supe ? W : W - 2 * e - 4, xx = supe ? 0 : e + 2;
-      const pw = (wT - 3 * (np - 1)) / np;
-      const t = tramoPuertas(m, e, yB + 1, yB + 1 + hT, g);
+      const pw = (f.ancho - 3 * (np - 1)) / np;
+      const t = tramoPuertas(m, e, f.abajo, f.arriba, g);
       for (let i = 0; i < np && t.alto > 0; i++) {
-        const x = xx + i * (pw + 3);
+        const x = f.x + i * (pw + 3);
         rect(x, t.y, pw, t.alto, shade(mf.color, .97), 'rgba(0,0,0,.6)');
         texFrente(x, t.y, pw, t.alto);
         ctx.fillStyle = 'rgba(0,0,0,.4)';
@@ -134,11 +131,7 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
     ctx.fillRect(X(0), Y(H - e), D * sc, (H - 2 * e - Z) * sc);
     rect(0, Z, D, e, shade(mc.color, .9));
     rect(0, H - e, D, e, shade(mc.color, .9));
-    const nr = +m.repisas || 0, ya = Z + e, yb = H - e;
-    for (let i = 1; i <= nr; i++) {
-      const y = ya + (yb - ya) * i / (nr + 1) - e / 2;
-      rect(0, y, D - (+m.retr || 0), e, shade(mc.color, .86));
-    }
+    new Map(interiorMueble(m, e).repisas.map(r => [r.y, r.prof])).forEach((prof, y) => rect(0, y, prof, e, shade(mc.color, .86)));
     if (Z > 0) rect(0, 0, D, Z, shade(mc.color, .6));
     if (m.encimera) rect(0, H, D + 25, ef, shade(mf.color, 1));
   }

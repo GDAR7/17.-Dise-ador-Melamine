@@ -36,11 +36,11 @@ function elementosConstruccion(m) {
 
   const nc = +m.cajones || 0;
   crear('cuerpo', m.nom, 'Cuerpo', 'cuerpo', 1, ['Lateral', 'Techo', 'Piso', ...gruposDivisiones(m).map(g => g.nomD), 'Zócalo frontal', 'Zócalo posterior', 'Fondo', 'Fondo (ranurado)', 'Encimera']);
-  [['Repisa', 'Repisas'], ...gruposDivisiones(m).filter(g => g.num).map(g => [g.nomR, `Repisas ${g.num}`]), ['Repisa entera', 'Repisas enteras']].forEach(([nom, titulo]) => {
-    const p = porNom.get(nom);
-    if (p) crear(nom, m.nom, titulo, 'repisa', p.q / qty, [nom]);
+  todas.filter(p => p.kind === 'rep').sort((a, b) => a.nom.localeCompare(b.nom)).forEach(p => {
+    const titulo = p.nom.replace(/^Repisa entera/, 'Repisas enteras').replace(/^Repisa(?!s)/, 'Repisas');
+    crear(p.nom, m.nom, titulo, 'repisa', p.q / qty, [p.nom], { fija: p.nom.endsWith(' de cierre') });
   });
-  gruposPuertas(m).forEach(g => crear(g.id, m.nom, g.nom, 'puerta', g.n, [g.nom], { bisagra: m.tipoP === 'embutida' ? 'Embutida' : 'Recta', lado: 'de las bisagras' }));
+  gruposPuertas(m).forEach(g => crear(g.id, m.nom, g.nom, 'puerta', g.n, [g.nom], { bisagra: bisagraMontaje(m), lado: 'de las bisagras' }));
   crear('cajon', m.nom, 'Cajón', 'cajon', nc, ['Frente de cajón', 'Lateral de cajón', 'Frontal/Trasera cajón', 'Fondo de cajón']);
   return lista;
 }
@@ -85,6 +85,16 @@ function guiaConstruccion(el) {
         'Fija las bases de bisagra al lateral del mueble, a la misma altura.',
         'Monta la puerta y regula los tornillos de la bisagra hasta dejar una luz pareja.',
         'Coloca el tirador.'
+      ]
+    };
+  }
+  if (el.tipo === 'repisa' && el.fija) {
+    return {
+      herrajes,
+      pasos: [
+        'Es una repisa fija: llega hasta el frente y cierra el espacio de la puerta.',
+        'Márcala a la altura del plano y atorníllala entre los laterales, igual que un entrepaño.',
+        'Pon el tapacanto en el lado que quedará al frente antes de fijarla.'
       ]
     };
   }
