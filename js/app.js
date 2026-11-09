@@ -103,6 +103,30 @@ addEventListener('afterprint', () => {
   recalc();
 });
 
+/* Ocultar columnas laterales. Es una preferencia de pantalla: no forma parte del proyecto */
+const _paneles = (() => { try { return JSON.parse(localStorage.getItem('melamina.paneles')) || {}; } catch (e) { return {}; } })();
+function aplicarPaneles() {
+  const main = $('main');
+  main.classList.toggle('sin-izq', !!_paneles.izq);
+  main.classList.toggle('sin-der', !!_paneles.der);
+  [['#bIzq', _paneles.izq, 'módulos', '»', '«'], ['#bDer', _paneles.der, 'parámetros', '«', '»']].forEach(([id, oculto, nom, abrir, cerrar]) => {
+    const b = $(id);
+    b.textContent = oculto ? abrir : cerrar;
+    b.title = `${oculto ? 'Mostrar' : 'Ocultar'} ${nom}`;
+    b.setAttribute('aria-label', b.title);
+    b.setAttribute('aria-expanded', String(!oculto));
+  });
+}
+function alternarPanel(lado) {
+  _paneles[lado] = !_paneles[lado];
+  try { localStorage.setItem('melamina.paneles', JSON.stringify(_paneles)); } catch (e) { }
+  aplicarPaneles();
+  _gi = 0;
+  recalc();
+}
+$('#bIzq').onclick = () => alternarPanel('izq');
+$('#bDer').onclick = () => alternarPanel('der');
+
 /* mobile nav */
 function mview(which) {
   ['left', 'center', 'rightp'].forEach(k => {
@@ -127,6 +151,7 @@ addEventListener('keydown', e => {
 });
 
 /* ---------- INIT ---------- */
+aplicarPaneles();
 S = load() || defState();
 asegurarHerrajes(S);
 if (!S.mods.length) {
