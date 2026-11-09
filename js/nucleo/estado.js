@@ -19,7 +19,7 @@ function defState() {
   const m03 = { id: uid(), nom: 'Fondo HDF 3 mm', esp: 3, color: '#b8a98f', precio: 42, fw: 2440, fh: 1220 };
   return {
     proyecto: 'Mi proyecto de melamina',
-    cfg: { kerf: 4, rotar: true, moneda: 'S/', tcPrecio: 1.80, tcEsp: 0, merma: 5 },
+    cfg: { kerf: 4, rotar: true, moneda: 'S/', tcPrecio: 1.80, tcPrecioG: 1.80, tcEsp: 0, tcGrueso: 2, merma: 5 },
     mats: [m18, m15, m03],
     herrajes: [
       { id: uid(), nom: 'Bisagra cazoleta 35 mm', precio: 4.5, por: 'bisagra' },

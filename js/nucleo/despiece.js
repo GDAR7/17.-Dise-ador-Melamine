@@ -15,11 +15,12 @@ function piezas(m) {
   const add = (nom, L, A, q, cL, cA, mat, kind) => {
     if (q <= 0 || L <= 0 || A <= 0) return;
     // Lados con tapacanto, con el largo en horizontal: L1 abajo, L2 arriba, A1 derecha, A2 izquierda.
-    // m.cantos guarda lo que eligió el usuario; cL y cA son solo el valor por defecto.
-    const lados = (m.cantos && m.cantos[nom]) || { L1: cL >= 1, L2: cL >= 2, A1: cA >= 1, A2: cA >= 2 };
+    // Cada lado vale false (sin canto), true (delgado) o 'g' (grueso).
+    // m.cantos guarda lo que eligió el usuario; por defecto, puertas y frentes llevan canto grueso y el resto delgado.
+    const canto = kind === 'puerta' || kind === 'frente' ? 'g' : true;
+    const lados = (m.cantos && m.cantos[nom]) || { L1: cL >= 1 && canto, L2: cL >= 2 && canto, A1: cA >= 1 && canto, A2: cA >= 2 && canto };
     // Medida de corte: los cantos de los extremos acortan el largo y los de los lados largos, el ancho
-    const tc = +S.cfg.tcEsp || 0;
-    P.push({ nom, L: Math.round(L - tc * (lados.A1 + lados.A2)), A: Math.round(A - tc * (lados.L1 + lados.L2)), q: q * (+m.qty || 1), cL: lados.L1 + lados.L2, cA: lados.A1 + lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
+    P.push({ nom, L: Math.round(L - descuentoCanto(lados.A1) - descuentoCanto(lados.A2)), A: Math.round(A - descuentoCanto(lados.L1) - descuentoCanto(lados.L2)), q: q * (+m.qty || 1), cL: !!lados.L1 + !!lados.L2, cA: !!lados.A1 + !!lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
   };
 
   if (m.tipo === 'columnas') { piezasColumnas(m, add, mc, mf, mb); return P; }
@@ -156,6 +157,26 @@ function herrajesCalc() {
 }
 
 /* ---------- TAPACANTO ---------- */
+function descuentoCanto(lado) {
+  if (!lado) return 0;
+  if (lado !== 'g') return +S.cfg.tcEsp || 0;
+  return S.cfg.tcGrueso == null ? 2 : (+S.cfg.tcGrueso || 0);
+}
+
+/* Metros de tapacanto delgado y grueso de todo el proyecto */
+function tapacantoPorTipo() {
+  const mm = { fino: 0, grueso: 0 };
+  todasPiezas().forEach(p => {
+    [['L1', p.L], ['L2', p.L], ['A1', p.A], ['A2', p.A]].forEach(([k, largo]) => {
+      if (p.lados[k]) mm[p.lados[k] === 'g' ? 'grueso' : 'fino'] += p.q * largo;
+    });
+  });
+  return { fino: mm.fino / 1000, grueso: mm.grueso / 1000 };
+}
+
+/* Precio del tapacanto grueso; los proyectos anteriores a este tipo usan el del delgado */
+const precioCantoGrueso = () => (S.cfg.tcPrecioG == null ? (+S.cfg.tcPrecio || 0) : (+S.cfg.tcPrecioG || 0));
+
 function tapacantoML() {
   let mm = 0;
   todasPiezas().forEach(p => { mm += p.q * (p.cL * p.L + p.cA * p.A); });

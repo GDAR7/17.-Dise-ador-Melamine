@@ -100,11 +100,15 @@ function renderParams() {
       <div class="f"><label>Merma extra (%)</label><input type="number" data-c="merma" value="${S.cfg.merma}"></div>
     </div>
     <div class="row">
-      <div class="f"><label>Tapacanto ${S.cfg.moneda}/m</label><input type="number" step="0.01" data-c="tcPrecio" value="${S.cfg.tcPrecio}"></div>
-      <div class="f"><label>Moneda</label><input type="text" data-c="moneda" value="${esc(S.cfg.moneda)}"></div>
+      <div class="f"><label>Canto delgado ${S.cfg.moneda}/m</label><input type="number" step="0.01" data-c="tcPrecio" value="${S.cfg.tcPrecio}"></div>
+      <div class="f"><label>Canto grueso ${S.cfg.moneda}/m</label><input type="number" step="0.01" data-c="tcPrecioG" value="${precioCantoGrueso()}"></div>
     </div>
     <div class="row">
-      <div class="f"><label>Espesor del tapacanto (mm) · se descuenta de la medida de corte</label><input type="number" min="0" step="0.05" data-c="tcEsp" value="${S.cfg.tcEsp || 0}"></div>
+      <div class="f"><label>Delgado (0.4 mm): descontar del corte (mm)</label><input type="number" min="0" step="0.05" data-c="tcEsp" value="${S.cfg.tcEsp || 0}"></div>
+      <div class="f"><label>Grueso (2 mm): descontar del corte (mm)</label><input type="number" min="0" step="0.05" data-c="tcGrueso" value="${S.cfg.tcGrueso == null ? 2 : S.cfg.tcGrueso}"></div>
+    </div>
+    <div class="row">
+      <div class="f"><label>Moneda</label><input type="text" data-c="moneda" value="${esc(S.cfg.moneda)}"></div>
     </div>
     <label class="chk"><input type="checkbox" data-c="rotar" ${S.cfg.rotar ? 'checked' : ''}> Permitir girar piezas (ignorar veta)</label>
   </div>

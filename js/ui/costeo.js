@@ -18,8 +18,10 @@ function renderCosteo() {
   });
   const subPl = planchas.reduce((s, p) => s + p.tot, 0);
 
-  const tc = tapacantoML() * merma;
-  const subTc = tc * (+S.cfg.tcPrecio || 0);
+  const metrosCanto = tapacantoPorTipo();
+  const cantos = [{ nom: 'Tapacanto delgado (con merma)', csv: 'Tapacanto delgado', m: metrosCanto.fino * merma, pu: +S.cfg.tcPrecio || 0 }];
+  if (metrosCanto.grueso > 0) cantos.push({ nom: 'Tapacanto grueso (con merma)', csv: 'Tapacanto grueso', m: metrosCanto.grueso * merma, pu: precioCantoGrueso() });
+  const subTc = cantos.reduce((s, c) => s + c.m * c.pu, 0);
 
   const hw = herrajesCalc().filter(h => h.cant > 0);
   const subHw = hw.reduce((s, h) => s + h.cant * h.precio, 0);
@@ -48,8 +50,8 @@ function renderCosteo() {
   <div class="tcard"><div class="hd"><h3>Tapacanto</h3></div>
     <div class="tscroll"><table>
       <thead><tr><th>Concepto</th><th class="n">Metros</th><th class="n">P. unit.</th><th class="n">Parcial</th></tr></thead>
-      <tbody><tr><td class="nm">Tapacanto (con merma)</td><td class="n">${nf(tc, 1)} m</td>
-        <td class="n">${nf(S.cfg.tcPrecio, 2)}</td><td class="n">${M} ${nf(subTc, 2)}</td></tr>
+      <tbody>${cantos.map(c => `<tr><td class="nm">${c.nom}</td><td class="n">${nf(c.m, 1)} m</td>
+        <td class="n">${nf(c.pu, 2)}</td><td class="n">${M} ${nf(c.m * c.pu, 2)}</td></tr>`).join('')}
         <tr class="grp"><td colspan="3">Subtotal tapacanto</td><td class="n">${M} ${nf(subTc, 2)}</td></tr>
       </tbody></table></div></div>
 
@@ -91,7 +93,7 @@ function renderCosteo() {
   $('#bCotCsv').onclick = () => {
     const r = [['PRESUPUESTO', S.proyecto], [], ['Concepto', 'Cantidad', 'Unidad', 'P.Unit', 'Parcial']];
     planchas.forEach(p => r.push([p.nom, p.n, 'plancha', p.pu.toFixed(2), p.tot.toFixed(2)]));
-    r.push(['Tapacanto', tc.toFixed(1), 'm', (+S.cfg.tcPrecio).toFixed(2), subTc.toFixed(2)]);
+    cantos.forEach(c => r.push([c.csv, c.m.toFixed(1), 'm', c.pu.toFixed(2), (c.m * c.pu).toFixed(2)]));
     hw.forEach(x => r.push([x.nom, x.cant, 'u', x.precio.toFixed(2), (x.cant * x.precio).toFixed(2)]));
     r.push([], ['TOTAL', '', '', '', total.toFixed(2)]);
     copy(r.map(x => x.join(';')).join('\n'), 'Presupuesto copiado');

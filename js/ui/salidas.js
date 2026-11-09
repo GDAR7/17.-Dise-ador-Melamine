@@ -32,24 +32,25 @@ function terminarImpresionEspecial() {
 }
 
 /* ---------- EXCEL ---------- */
-const textoLados = p => Object.keys(NOMBRES_LADO).filter(k => p.lados[k]).map(k => NOMBRES_LADO[k]).join(', ') || 'Ninguno';
+const textoLados = p => Object.keys(NOMBRES_LADO).filter(k => p.lados[k]).map(k => `${NOMBRES_LADO[k]} (${p.lados[k] === 'g' ? 'grueso' : 'delgado'})`).join(', ') || 'Ninguno';
+const metrosTipo = (p, tipo) => +(['L1', 'L2', 'A1', 'A2'].reduce((s, k) => s + (p.lados[k] && (p.lados[k] === 'g') === (tipo === 'g') ? p.q * (k[0] === 'L' ? p.L : p.A) : 0), 0) / 1000).toFixed(2);
 const tieneVeta = p => { const mat = S.mats.find(x => x.id === p.mat); return mat && mat.veta ? 'Sí' : 'No'; };
 
 function hojasProyecto() {
   const todas = todasPiezas();
-  const despiece = [['Mueble', 'Pieza', 'Largo mm', 'Ancho mm', 'Cantidad', 'Cantos largo', 'Cantos ancho', 'Lados con tapacanto', 'Material', 'Espesor mm', 'Veta', 'Tapacanto m']];
-  todas.forEach(p => despiece.push([p.mod, p.nom, p.L, p.A, p.q, p.cL, p.cA, textoLados(p), p.matNom, p.esp, tieneVeta(p), +(p.q * (p.cL * p.L + p.cA * p.A) / 1000).toFixed(2)]));
+  const despiece = [['Mueble', 'Pieza', 'Largo mm', 'Ancho mm', 'Cantidad', 'Cantos largo', 'Cantos ancho', 'Lados con tapacanto', 'Material', 'Espesor mm', 'Veta', 'Canto delgado m', 'Canto grueso m']];
+  todas.forEach(p => despiece.push([p.mod, p.nom, p.L, p.A, p.q, p.cL, p.cA, textoLados(p), p.matNom, p.esp, tieneVeta(p), metrosTipo(p, 'f'), metrosTipo(p, 'g')]));
 
   // Para el servicio de corte: piezas iguales del mismo material en una sola línea
   const grupos = new Map();
   todas.forEach(p => {
-    const clave = [p.mat, p.L, p.A, p.cL, p.cA].join('|');
+    const clave = [p.mat, p.L, p.A, textoLados(p)].join('|');
     if (grupos.has(clave)) grupos.get(clave).q += p.q;
     else grupos.set(clave, { ...p });
   });
-  const corte = [['Material', 'Espesor mm', 'Largo mm', 'Ancho mm', 'Cantidad', 'Cantos largo', 'Cantos ancho', 'Veta']];
+  const corte = [['Material', 'Espesor mm', 'Largo mm', 'Ancho mm', 'Cantidad', 'Cantos largo', 'Cantos ancho', 'Veta', 'Lados con tapacanto']];
   [...grupos.values()].sort((a, b) => a.matNom.localeCompare(b.matNom) || b.L - a.L || b.A - a.A)
-    .forEach(p => corte.push([p.matNom, p.esp, p.L, p.A, p.q, p.cL, p.cA, tieneVeta(p)]));
+    .forEach(p => corte.push([p.matNom, p.esp, p.L, p.A, p.q, p.cL, p.cA, tieneVeta(p), textoLados(p)]));
 
   const herrajes = [['Herraje', 'Cantidad', 'Precio unitario', 'Parcial']];
   herrajesCalc().filter(h => h.cant > 0).forEach(h => herrajes.push([h.nom, h.cant, h.precio, +(h.cant * h.precio).toFixed(2)]));
@@ -66,7 +67,7 @@ function exportarExcel() {
 
 /* ---------- ETIQUETAS ---------- */
 function svgLados(p) {
-  const W = 44, H = 24, m = 2, cls = l => (p.lados[l] ? 'on' : '');
+  const W = 44, H = 24, m = 2, cls = l => (p.lados[l] === 'g' ? 'on g' : p.lados[l] ? 'on' : '');
   return `<svg class="etq-lados" viewBox="0 0 ${W} ${H}" width="${W * 1.6}" height="${H * 1.6}" role="img" aria-label="Tapacanto: ${esc(textoLados(p))}">
     <line class="${cls('L2')}" x1="${m}" y1="${m}" x2="${W - m}" y2="${m}"/><line class="${cls('L1')}" x1="${m}" y1="${H - m}" x2="${W - m}" y2="${H - m}"/>
     <line class="${cls('A2')}" x1="${m}" y1="${m}" x2="${m}" y2="${H - m}"/><line class="${cls('A1')}" x1="${W - m}" y1="${m}" x2="${W - m}" y2="${H - m}"/></svg>`;

@@ -27,7 +27,7 @@ function renderDespiece() {
     <div class="stat acc"><div class="k">Tapacanto</div><div class="v">${nf(tc, 1)} <small>m</small></div></div>
     <div class="stat gr"><div class="k">Tipos de pieza</div><div class="v">${filas.length}</div></div>
   </div>
-  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. <b>Haz clic en un lado del dibujo de la columna Lados</b> para poner o quitar el tapacanto: el dibujo tiene el largo en horizontal, y los metros, el costo y el plano de corte se actualizan solos.${(+S.cfg.tcEsp || 0) > 0 ? ` <b>Largo y Ancho son medidas de corte:</b> ya descuentan ${S.cfg.tcEsp} mm por cada lado con tapacanto.` : ''}</div>`;
+  <div class="note"><b>Cómo leer el despiece.</b> <i>Largo</i> es la dimensión que corre con la veta. <i>C.L</i> y <i>C.A</i> son cuántos cantos se enchapan en cada dirección. <b>Haz clic en un lado del dibujo de la columna Lados</b> para cambiar su tapacanto: sin canto → delgado (discontinuo) → grueso (continuo). El dibujo tiene el largo en horizontal, y los metros, el costo y el plano de corte se actualizan solos.${todas.some(p => Object.values(p.lados).some(l => descuentoCanto(l) > 0)) ? ' <b>Largo y Ancho son medidas de corte:</b> ya descuentan el espesor configurado para cada tapacanto.' : ''}</div>`;
 
   S.mods.forEach(m => {
     const fs = porMod[m.id]; if (!fs) return;
@@ -65,7 +65,9 @@ function renderDespiece() {
     const { i, lado } = b.dataset;
     const p = filas[i];
     const m = S.mods.find(x => x.id === p.modId);
-    (m.cantos = m.cantos || {})[p.nom] = { ...p.lados, [lado]: !p.lados[lado] };
+    // Cada clic avanza: sin canto → delgado → grueso → sin canto
+    const actual = p.lados[lado], siguiente = !actual ? true : actual === 'g' ? false : 'g';
+    (m.cantos = m.cantos || {})[p.nom] = { ...p.lados, [lado]: siguiente };
     recalc();
     const nuevo = box.querySelector(`.lado[data-i="${i}"][data-lado="${lado}"]`);
     if (nuevo) nuevo.focus();
@@ -115,8 +117,8 @@ const NOMBRES_LADO = { L2: 'Largo superior', L1: 'Largo inferior', A2: 'Ancho iz
 /* Dibujo de la pieza con sus cuatro lados clicables */
 function selectorLados(p, i) {
   return `<div class="cantos">${Object.keys(NOMBRES_LADO).map(k => {
-    const titulo = `${NOMBRES_LADO[k]}: ${p.lados[k] ? 'con' : 'sin'} tapacanto`;
-    return `<button class="lado ${k}${p.lados[k] ? ' on' : ''}" data-i="${i}" data-lado="${k}" title="${titulo}" aria-label="${esc(p.nom)}. ${titulo}" aria-pressed="${!!p.lados[k]}"></button>`;
+    const v = p.lados[k], titulo = `${NOMBRES_LADO[k]}: ${!v ? 'sin tapacanto' : v === 'g' ? 'tapacanto grueso' : 'tapacanto delgado'}`;
+    return `<button class="lado ${k}${v ? ' on' : ''}${v === 'g' ? ' g' : ''}" data-i="${i}" data-lado="${k}" title="${titulo}" aria-label="${esc(p.nom)}. ${titulo}" aria-pressed="${!!v}"></button>`;
   }).join('')}</div>`;
 }
 

@@ -27,7 +27,7 @@ function renderOpt() {
   ${modoBandas
     ? `<div class="note"><b>Corte por bandas (guillotina).</b> Las piezas se agrupan en franjas horizontales, igual que lo hace una sierra escuadradora: primero cortes de lado a lado y luego cortes dentro de cada franja. Se descuenta ${S.cfg.kerf} mm de sierra entre piezas.</div>`
     : `<div class="note"><b>Máximo aprovechamiento (guillotina libre).</b> Sin franjas fijas: cada corte atraviesa de lado a lado el trozo que se está cortando, y las piezas aprovechan los espacios sobrantes. ${S.cfg.rotar ? 'Las piezas marcadas con ↻ van giradas.' : 'Las piezas no se giran; activa «Permitir girar piezas» si el material no tiene veta.'} Se descuenta ${S.cfg.kerf} mm de sierra entre piezas.</div>`}
-  <div class="note"><b>Tapacanto:</b> la línea roja discontinua marca los lados de cada pieza que llevan tapacanto.</div>`;
+  <div class="note"><b>Tapacanto:</b> la línea roja discontinua marca el canto delgado y la línea roja continua, el canto grueso.</div>`;
 
   grupos.forEach(g => {
     if (g.grandes.length) {
@@ -150,19 +150,21 @@ function dibujarCantos(ctx, p, x, y, w, h) {
   const { L1, L2, A1, A2 } = p.lados;
   const [abajo, arriba, der, izq] = p.rot ? [A2, A1, L1, L2] : [L1, L2, A1, A2];
   const lados = [];
-  if (abajo) lados.push([x + m, y + h - m, x + w - m, y + h - m]);
-  if (arriba) lados.push([x + m, y + m, x + w - m, y + m]);
-  if (der) lados.push([x + w - m, y + m, x + w - m, y + h - m]);
-  if (izq) lados.push([x + m, y + m, x + m, y + h - m]);
+  if (abajo) lados.push({ g: abajo === 'g', p: [x + m, y + h - m, x + w - m, y + h - m] });
+  if (arriba) lados.push({ g: arriba === 'g', p: [x + m, y + m, x + w - m, y + m] });
+  if (der) lados.push({ g: der === 'g', p: [x + w - m, y + m, x + w - m, y + h - m] });
+  if (izq) lados.push({ g: izq === 'g', p: [x + m, y + m, x + m, y + h - m] });
 
-  const trazar = (color, grosor, guiones) => {
+  const trazar = (lista, color, grosor, guiones) => {
+    if (!lista.length) return;
     ctx.strokeStyle = color; ctx.lineWidth = grosor; ctx.setLineDash(guiones);
     ctx.beginPath();
-    lados.forEach(([x1, y1, x2, y2]) => { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); });
+    lista.forEach(({ p: [x1, y1, x2, y2] }) => { ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); });
     ctx.stroke();
   };
-  trazar('rgba(255,255,255,.8)', 3.5, []); // base clara: mantiene la línea visible sobre cualquier color
-  trazar('#d81e1e', 1.8, [7, 4]);
+  trazar(lados, 'rgba(255,255,255,.8)', 3.5, []); // base clara: mantiene la línea visible sobre cualquier color
+  trazar(lados.filter(l => !l.g), '#d81e1e', 1.8, [7, 4]);   // delgado: discontinua
+  trazar(lados.filter(l => l.g), '#d81e1e', 2.6, []);        // grueso: continua
   ctx.setLineDash([]);
 }
 
