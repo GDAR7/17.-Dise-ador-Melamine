@@ -12,9 +12,9 @@ function elementosConstruccion(m) {
     if (ps.length) lista.push({ id, grupo, titulo, tipo, cant: unidades * qty, piezas: ps, mod: m, ...extra });
   };
 
-  if (m.tipo === 'columnas') {
-    m.columnas.forEach((c, ci) => {
-      const pre = `${c.nom} · `, deZonas = new Set();
+  if (esPorColumnas(m)) {
+    columnasMueble(m).forEach(({ c, i, parte }, ci) => {
+      const pre = `${parte.pre}${c.nom} · `, deZonas = new Set(), grupo = parte.pre + c.nom;
       const propias = c.zonas.map((z, zi) => {
         const base = pre + z.nom, noms = {
           repisa: `${base} · Repisa`, puerta: `${base} · Puerta`,
@@ -23,14 +23,15 @@ function elementosConstruccion(m) {
         [noms.repisa, noms.puerta, ...noms.cajon].forEach(n => deZonas.add(n));
         return { z, zi, noms };
       });
-      crear(`c${ci}-cuerpo`, c.nom, 'Cuerpo', 'cuerpo', 1, todas.filter(p => p.nom.startsWith(pre) && !deZonas.has(p.nom)).map(p => p.nom), { col: ci });
-      const bisagra = bisagraColumna(m.columnas, ci);
+      crear(`c${ci}-cuerpo`, grupo, 'Cuerpo', 'cuerpo', 1, todas.filter(p => p.nom.startsWith(pre) && !deZonas.has(p.nom)).map(p => p.nom), { col: ci });
+      const bisagra = bisagraColumna(parte.vm.columnas, i);
       propias.forEach(({ z, zi, noms }) => {
-        crear(`c${ci}-z${zi}-p`, c.nom, `${z.nom} · Puerta`, 'puerta', 1, [noms.puerta], { bisagra: bisagra.nombre, lado: bisagra.lado, col: ci });
-        crear(`c${ci}-z${zi}-c`, c.nom, `${z.nom} · Cajón`, 'cajon', 1, noms.cajon, { col: ci });
-        if (porNom.has(noms.repisa)) crear(`c${ci}-z${zi}-r`, c.nom, `${z.nom} · Repisas`, 'repisa', +z.rep || 1, [noms.repisa], { col: ci });
+        crear(`c${ci}-z${zi}-p`, grupo, `${z.nom} · Puerta`, 'puerta', 1, [noms.puerta], { bisagra: bisagra.nombre, lado: bisagra.lado, col: ci });
+        crear(`c${ci}-z${zi}-c`, grupo, `${z.nom} · Cajón`, 'cajon', 1, noms.cajon, { col: ci });
+        if (porNom.has(noms.repisa)) crear(`c${ci}-z${zi}-r`, grupo, `${z.nom} · Repisas`, 'repisa', +z.rep || 1, [noms.repisa], { col: ci });
       });
     });
+    crear('tablero', 'Tablero', 'Tablero del escritorio', 'cuerpo', 1, ['Tablero']);
     return lista;
   }
 

@@ -34,7 +34,7 @@ function renderDespiece() {
     const sub = fs.reduce((s, p) => s + p.q, 0);
     h += `<div class="tcard">
       <div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3>
-        <span class="sub">${m.ancho}×${m.alto}×${m.prof} mm${(+m.qty || 1) > 1 ? ` · ×${m.qty} unidades` : ''}</span>
+        <span class="sub">${m.ancho}×${altoTotal(m)}×${m.prof} mm${(+m.qty || 1) > 1 ? ` · ×${m.qty} unidades` : ''}</span>
         <div class="sp"></div><span class="pill">${sub} piezas</span></div>
       <div class="tscroll"><table>
         <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Cant.</th>
@@ -79,7 +79,7 @@ function renderDespiece() {
     let t = `DESPIECE — ${S.proyecto}\n${'='.repeat(46)}\n`;
     S.mods.forEach(m => {
       const fs = porMod[m.id]; if (!fs) return;
-      t += `\n${m.nom}  (${m.ancho}x${m.alto}x${m.prof} mm)${(+m.qty || 1) > 1 ? ` x${m.qty}` : ''}\n`;
+      t += `\n${m.nom}  (${m.ancho}x${altoTotal(m)}x${m.prof} mm)${(+m.qty || 1) > 1 ? ` x${m.qty}` : ''}\n`;
       fs.forEach(p => t += `  ${String(p.q).padStart(3)} u  ${String(p.L).padStart(5)} x ${String(p.A).padStart(5)} mm  ${p.nom}  [${p.matNom}]\n`);
     });
     t += `\nTapacanto total: ${tc.toFixed(1)} m\nÁrea: ${m2.toFixed(2)} m²\n`;

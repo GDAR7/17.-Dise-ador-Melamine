@@ -54,18 +54,20 @@ function perforaciones(m) {
   const todas = piezas(m), profCaja = Math.max(200, D - 60);
   const altoCaja = h => Math.max(80, h - 40);
 
-  if (m.tipo === 'columnas') {
-    return m.columnas.flatMap((c, ci) => {
-      const bisagra = bisagraColumna(m.columnas, ci), zonas = zonasColumna(m, c, e), planos = [];
+  if (esPorColumnas(m)) {
+    return columnasMueble(m).flatMap(({ c, i: ci, parte }) => {
+      // Cada parte tiene su alto y su profundidad: las medidas se toman desde la base de sus laterales
+      const vm = parte.vm, H = +vm.alto, D = +vm.prof, profCaja = Math.max(200, D - 60), pre = parte.pre + c.nom;
+      const bisagra = bisagraColumna(vm.columnas, ci), zonas = zonasColumna(vm, c, e), planos = [];
       const alturas = [], correderas = [];
       zonas.forEach(({ z, a, b, ib, it }) => {
-        const p = z.tipo === 'puerta' && todas.find(x => x.nom === `${c.nom} · ${z.nom} · Puerta`);
+        const p = z.tipo === 'puerta' && todas.find(x => x.nom === `${pre} · ${z.nom} · Puerta`);
         if (p) planos.push(planoPuerta(p, modeloBisagra(m, p.nom, bisagra.nombre), bisagra.lado));
         if (admiteRepisas(z)) for (let i = 1, n = +z.rep || 0; i <= n; i++) alturas.push(ib + (it - ib) * i / (n + 1) - e / 2);
         if (z.tipo === 'cajon') correderas.push(a + 15 + altoCaja(b - a) / 2);
       });
       if (alturas.length || correderas.length) {
-        planos.push(planoLateral(`${c.nom} · Laterales`, H, D, 2, alturas, correderas, retr, profCaja, compartida(m.columnas, ci) || compartida(m.columnas, ci - 1)));
+        planos.push(planoLateral(`${pre} · Laterales`, H, D, 2, alturas, correderas, retr, profCaja, compartida(vm.columnas, ci) || compartida(vm.columnas, ci - 1)));
       }
       return planos;
     });

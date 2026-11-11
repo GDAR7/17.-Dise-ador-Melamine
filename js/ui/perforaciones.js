@@ -16,7 +16,7 @@ function renderPerforaciones() {
   box.innerHTML = `<div class="note"><b>Medidas orientativas.</b> Son las habituales del oficio; confirma siempre con la ficha de tus herrajes. En cada plano el largo de la pieza va en horizontal, con el extremo inferior a la izquierda. En los laterales, el canto trasero queda arriba.</div>`
     + modsVisibles().map(m => {
       const planos = perforaciones(m);
-      return `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
+      return `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${altoTotal(m)}×${m.prof} mm</span></div>
         <div style="padding:12px">${planos.length ? planos.map(p => `<div class="perf">
           <div class="bh"><b>${esc(p.titulo)}</b><span class="sub">${nf(p.L)} × ${nf(p.A)} mm</span><div class="sp"></div><span class="pill">× ${p.cant}</span></div>
           ${svgPlano(p)}

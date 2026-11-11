@@ -36,7 +36,7 @@ function htmlRetiro(m) {
       <button data-seg="retiroRepisa" data-v="ras" title="Misma profundidad que laterales y divisiones" class="${ras ? 'on' : ''}">Al ras de las verticales</button>
     </div>
     ${ras ? '' : `<label style="margin-top:7px">Retiro (mm)</label><input type="number" min="0" data-k="retr" value="${m.retr}">`}
-    ${ras || m.tipo === 'columnas' ? '' : `<label style="margin-top:7px">Frente de la división principal</label>
+    ${ras || esPorColumnas(m) ? '' : `<label style="margin-top:7px">Frente de la división principal</label>
     <div class="seg">${botonesRetiro(m.retiroDiv, 'data-seg="retiroDiv" data-v')}</div>`}
   </div>`;
 }
@@ -119,13 +119,18 @@ function renderParams() {
     <div class="fgroup">
       <h4>Medidas exteriores (mm)</h4>
       <div class="row">
-        <div class="f"><label>Ancho</label><input type="number" data-k="ancho" value="${m.ancho}" ${m.tipo === 'columnas' ? 'disabled title="Es la suma de las columnas"' : ''}></div>
-        <div class="f"><label>Alto</label><input type="number" data-k="alto" value="${m.alto}"></div>
+        <div class="f"><label>Ancho</label><input type="number" data-k="ancho" value="${m.ancho}" ${esPorColumnas(m) ? 'disabled title="Es la suma de las columnas"' : ''}></div>
+        <div class="f"><label>${m.tipo === 'escalzada' ? 'Alto escritorio' : 'Alto'}</label><input type="number" data-k="alto" value="${m.alto}" ${m.tipo === 'escalzada' ? 'title="Del suelo a la cara de arriba del tablero"' : ''}></div>
         <div class="f"><label>Profundidad</label><input type="number" data-k="prof" value="${m.prof}"></div>
       </div>
       <div class="row">
         <div class="f"><label>Alto de zócalo</label><input type="number" data-k="zocalo" value="${m.zocalo}"></div>
+        ${m.tipo === 'escalzada' ? `<div class="f"><label>Voladizo del tablero</label><input type="number" min="0" data-k="voladizo" value="${m.voladizo || 0}" title="Cuánto sobresale el tablero por delante"></div>` : ''}
       </div>
+      ${m.tipo === 'escalzada' ? `<div class="row">
+        <div class="f"><label>Alto de la alzada</label><input type="number" min="0" data-k="altoAlz" value="${m.altoAlz}"></div>
+        <div class="f"><label>Fondo de la alzada</label><input type="number" min="0" data-k="profAlz" value="${m.profAlz}"></div>
+      </div>` : ''}
     </div>
 
     <div class="fgroup">
@@ -140,7 +145,7 @@ function renderParams() {
 
     </div>
     <div class="ptab" data-ptab="interior">
-    ${m.tipo === 'columnas' ? htmlColumnas(m) : `
+    ${esPorColumnas(m) ? htmlPartes(m) + htmlColumnas(vistaParte(m)) : `
     <div class="fgroup">
       <h4>Interior</h4>
       <div class="row">
@@ -254,7 +259,7 @@ function renderParams() {
       else mm[k] = inp.value;
       if (k === 'tipo') { Object.assign(mm, { divDesde: 0, divHasta: 0, divisionesExtra: [], puertaDesde: 0, puertaHasta: 0, puertasExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
-      if (mm.tipo === 'columnas' && (k === 'alto' || k === 'zocalo')) actualizarSumas(mm);
+      if (esPorColumnas(mm) && ['alto', 'zocalo', 'altoAlz'].includes(k)) actualizarSumas(vistaParte(mm));
       actualizarAvisosNivel(mm);
       recalc();
     });
@@ -263,8 +268,8 @@ function renderParams() {
     const mm = S.mods.find(x => x.id === S.sel); if (!mm) return;
     mm[b.dataset.seg] = b.dataset.v; renderParams(); recalc();
   });
-  if (m && m.tipo === 'columnas') bindColumnas(m);
-  if (m && m.tipo !== 'columnas') bindGruposNivel(m);
+  if (m && esPorColumnas(m)) bindColumnas(vistaParte(m));
+  if (m && !esPorColumnas(m)) bindGruposNivel(m);
   /* bind config */
   $$('#params [data-c]').forEach(inp => {
     const k = inp.dataset.c;

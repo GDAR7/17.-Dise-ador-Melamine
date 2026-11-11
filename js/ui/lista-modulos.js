@@ -16,7 +16,7 @@ function renderList() {
     el.innerHTML = S.mods.map(m => `
       <div class="mod ${m.id === S.sel ? 'sel' : ''}${m.oculto ? ' oculto' : ''}" data-id="${m.id}">
         <div class="ic">${TIPOS[m.tipo].ic}</div>
-        <div class="nm"><b>${esc(m.nom)}</b><span>${m.ancho}×${m.alto}×${m.prof}</span></div>
+        <div class="nm"><b>${esc(m.nom)}</b><span>${m.ancho}×${altoTotal(m)}×${m.prof}</span></div>
         ${(+m.qty || 1) > 1 ? `<div class="qt">×${m.qty}</div>` : ''}
         <button class="del" data-vis="${m.id}" title="${m.oculto ? 'Mostrar' : 'Ocultar'}" aria-label="${m.oculto ? 'Mostrar' : 'Ocultar'} ${esc(m.nom)}" aria-pressed="${!!m.oculto}">${m.oculto ? OJO.cerrado : OJO.abierto}</button>
         <button class="del" data-dup="${m.id}" title="Duplicar" aria-label="Duplicar">⧉</button>

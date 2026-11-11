@@ -72,7 +72,7 @@ function renderCosteo() {
         const t = ps.reduce((s, p) => s + p.q * (p.cL * p.L + p.cA * p.A), 0) / 1000;
         const aTot = todasPiezas().reduce((s, p) => s + p.q * p.L * p.A, 0) / 1e6;
         return `<tr><td class="nm">${TIPOS[m.tipo].ic} ${esc(m.nom)}</td><td class="n">${m.qty}</td>
-          <td class="n" style="font-size:11px">${m.ancho}×${m.alto}×${m.prof}</td>
+          <td class="n" style="font-size:11px">${m.ancho}×${altoTotal(m)}×${m.prof}</td>
           <td class="n">${nf(a, 2)} m²</td><td class="n">${nf(t, 1)} m</td>
           <td class="n">${nf(aTot ? a / aTot * 100 : 0, 1)}%</td></tr>`;
       }).join('')}</tbody></table></div></div>

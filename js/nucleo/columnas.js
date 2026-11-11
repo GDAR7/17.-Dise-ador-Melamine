@@ -15,6 +15,69 @@ function columnasEjemplo() {
   ];
 }
 
+/* Escritorio con alzada: abajo el escritorio (las zonas van bajo el tablero), arriba la alzada, apoyada sobre el tablero */
+function columnasEscritorio() {
+  const zona = (nom, alto, tipo, rep = 0) => ({ nom, alto, tipo, rep });
+  return [
+    // Bajo la repisa queda libre hasta el suelo: sin piso, sin zócalo y sin fondo, con el lateral exterior entero
+    { nom: 'Piernas', ancho: 800, compartir: true, sinBase: true, latIzqCompleto: true, zonas: [zona('Espacio de piernas', 552, 'abierta'), zona('Bajo la repisa', 180, 'sinlados')] },
+    { nom: 'Cajonera', ancho: 400, zonas: [zona('Cajón 1', 160, 'cajon'), zona('Cajón 2', 160, 'cajon'), zona('Puerta', 352, 'puerta', 1)] }
+  ];
+}
+function columnasAlzada() {
+  const zona = (nom, alto, tipo, rep = 0) => ({ nom, alto, tipo, rep });
+  return [
+    { nom: 'Puerta', ancho: 400, compartir: true, latIzqCompleto: true, zonas: [zona('Puerta', 380, 'puerta', 1), zona('Zona de trabajo', 370, 'semivacio')] },
+    { nom: 'Nichos', ancho: 400, compartir: true, zonas: [zona('Nichos', 380, 'abierta', 1), zona('Zona de trabajo', 370, 'semivacio')] },
+    { nom: 'Librero', ancho: 400, zonas: [zona('Repisas', 750, 'abierta', 3)] }
+  ];
+}
+
+const esPorColumnas = m => m.tipo === 'columnas' || m.tipo === 'escalzada';
+
+/* Partes de un mueble por columnas, cada una como un mueble de columnas propio.
+   pre: prefijo de sus piezas · dy: altura donde empieza · col0: número de su primera columna */
+function partesColumnas(m) {
+  if (m.tipo !== 'escalzada') return [{ vm: m, pre: '', dy: 0, col0: 0, nom: '' }];
+  const e = (S.mats.find(x => x.id === m.matC) || S.mats[0]).esp;
+  // El tablero hace de techo del escritorio, y la alzada no lleva piso porque se apoya en él
+  const base = { ...m, alto: +m.alto - e, sinTecho: true };
+  const alzada = { ...m, columnas: m.colsAlz || [], alto: +m.altoAlz || 0, prof: +m.profAlz || 0, zocalo: 0, sinPiso: true };
+  return [
+    { vm: base, pre: '', dy: 0, col0: 0, nom: 'Escritorio' },
+    { vm: alzada, pre: 'Alzada · ', dy: +m.alto, col0: base.columnas.length, nom: 'Alzada' }
+  ];
+}
+
+/* Todas las columnas en el orden de su número (b.col), con su borde izquierdo dentro de su parte */
+function columnasMueble(m) {
+  return partesColumnas(m).flatMap(parte => {
+    let x0 = 0;
+    return parte.vm.columnas.map((c, i) => { const r = { c, i, x0, parte }; x0 += +c.ancho || 0; return r; });
+  });
+}
+
+function piezasPorColumnas(m, add, mc, mf, mb) {
+  partesColumnas(m).forEach(p => piezasColumnas(p.vm, (nom, ...resto) => add(p.pre + nom, ...resto), mc, mf, mb));
+  if (m.tipo === 'escalzada') add('Tablero', +m.ancho, +m.prof + (+m.voladizo || 0), 1, 1, 2, mc, 'enc');
+}
+
+function geoPorColumnas(m, opts = {}) {
+  const B = [];
+  let W = 0, D = 0, H = 0;
+  partesColumnas(m).forEach(p => {
+    const g = geoColumnas(p.vm, opts);
+    g.B.forEach(b => B.push({ ...b, y: b.y + p.dy, col: b.col + p.col0, pieza: p.pre + b.pieza }));
+    W = Math.max(W, g.W); D = Math.max(D, g.D); H = Math.max(H, p.dy + g.H);
+  });
+  if (m.tipo === 'escalzada') {
+    const mc = S.mats.find(x => x.id === m.matC) || S.mats[0], e = mc.esp, prof = +m.prof + (+m.voladizo || 0);
+    B.push({ x: 0, y: +m.alto - e, z: 0, w: +m.ancho, h: e, d: prof, c: mc.color, tag: 'Encimera', pieza: 'Tablero' });
+    W = Math.max(W, +m.ancho); D = Math.max(D, prof);
+  }
+  return { B, W, H, D };
+}
+
 /* Tipos de zona sin frente. 'abierta' es el nicho de 4 lados: conserva esa clave para que los archivos guardados sigan valiendo.
    'seminicho' solo tiene los 2 laterales, 'semivacio' (Semi abierta) solo el fondo y 'sinlados' (Abierta) nada. */
 const esZonaAbierta = z => ['seminicho', 'semivacio', 'sinlados'].includes(z.tipo);
@@ -34,10 +97,15 @@ function tramosPanel(m, c, e, desde, hasta, cortan) {
   return tramos;
 }
 
+/* Una columna "sin piso ni zócalo" deja libre el suelo, como el espacio de las piernas de un escritorio */
+const zocaloCol = (m, c) => (c.sinBase ? 0 : +m.zocalo || 0);
+const sinPisoCol = (m, c) => !!(m.sinPiso || c.sinBase);
+
 /* Rango vertical del fondo según cómo se monta */
-function rangoFondo(m, e) {
-  const Z = +m.zocalo || 0, H = +m.alto;
-  return m.fondo === 'clavado' ? [Z, H] : [Z + e - 6, H - e + 6];
+function rangoFondo(m, e, c) {
+  const Z = zocaloCol(m, c), H = +m.alto;
+  if (m.fondo === 'clavado') return [Z, H];
+  return [Z + (sinPisoCol(m, c) ? 0 : e - 6), H - (m.sinTecho ? 0 : e - 6)];
 }
 
 /* La columna i comparte su lateral derecho con la siguiente */
@@ -65,9 +133,16 @@ function lateralesColumna(m, i, e) {
   const cols = m.columnas, c = cols[i], W = +c.ancho || 0, H = +m.alto;
   const propios = tramosPanel(m, c, e, 0, H, CORTAN_LATERAL);
   const conIzq = !compartida(cols, i - 1);
-  if (!compartida(cols, i)) return [{ base: 'Lateral', xs: conIzq ? [0, W - e] : [W - e], tramos: propios }];
+  // Un lateral exterior puede ir de alto completo aunque una zona abierta lo corte, para que sostenga la columna
+  const izq = c.latIzqCompleto ? [[0, H]] : propios;
+  if (!compartida(cols, i)) {
+    const der = c.latDerCompleto ? [[0, H]] : propios;
+    if (!conIzq) return [{ base: 'Lateral', xs: [W - e], tramos: der }];
+    if (JSON.stringify(izq) === JSON.stringify(der)) return [{ base: 'Lateral', xs: [0, W - e], tramos: izq }];
+    return [{ base: 'Lateral izquierdo', xs: [0], tramos: izq }, { base: 'Lateral derecho', xs: [W - e], tramos: der }];
+  }
   const lados = [{ base: 'Lateral compartido', xs: [W - e / 2], tramos: unirTramos(propios, tramosPanel(m, cols[i + 1], e, 0, H, CORTAN_LATERAL)) }];
-  if (conIzq) lados.unshift({ base: 'Lateral', xs: [0], tramos: propios });
+  if (conIzq) lados.unshift({ base: 'Lateral', xs: [0], tramos: izq });
   return lados;
 }
 
@@ -82,7 +157,7 @@ const nombreTramo = (base, tramos, i) => (tramos.length > 1 ? `${base} tramo ${i
 
 /* Zonas de abajo hacia arriba con su tramo [a, b], su interior libre [ib, it] y si llevan entrepaño encima */
 function zonasColumna(m, c, e) {
-  const H = +m.alto, Z = +m.zocalo || 0;
+  const H = +m.alto, Z = zocaloCol(m, c);
   const zs = [...c.zonas].reverse().filter(z => (+z.alto || 0) > 0);
   let y = Z;
   return zs.map((z, i) => {
@@ -95,27 +170,27 @@ function zonasColumna(m, c, e) {
     const entra = o => (!o || !separa(o) || esZonaAbierta(z) ? 0 : esZonaAbierta(o) ? e : e / 2);
     return {
       z, a, b, panel: !!sig && separa(sig), yPanel: b - entra(sig),
-      ib: ant ? a + entra(ant) : Z + e,
-      it: sig ? b - entra(sig) : H - e
+      ib: ant ? a + entra(ant) : Z + (sinPisoCol(m, c) ? 0 : e),
+      it: sig ? b - entra(sig) : H - (m.sinTecho ? 0 : e)
     };
   });
 }
 
 function piezasColumnas(m, add, mc, mf, mb) {
-  const e = mc.esp, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = retiroRepisa(m);
+  const e = mc.esp, H = +m.alto, D = +m.prof, retr = retiroRepisa(m);
   (m.columnas || []).forEach((c, ci) => {
-    const W = +c.ancho || 0, { Wi } = anchoInterior(m.columnas, ci, e), pre = `${c.nom} · `;
+    const W = +c.ancho || 0, { Wi } = anchoInterior(m.columnas, ci, e), pre = `${c.nom} · `, Z = zocaloCol(m, c);
     lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
       tramos.forEach(([y0, y1], i) => add(pre + nombreTramo(base, tramos, i), y1 - y0, D, xs.length, 1, 0, mc, 'lat'));
     });
-    add(pre + 'Techo', Wi, D, 1, 1, 0, mc, 'horiz');
-    add(pre + 'Piso', Wi, D, 1, 1, 0, mc, 'horiz');
+    if (!m.sinTecho) add(pre + 'Techo', Wi, D, 1, 1, 0, mc, 'horiz');
+    if (!sinPisoCol(m, c)) add(pre + 'Piso', Wi, D, 1, 1, 0, mc, 'horiz');
     if (Z > 0) {
       add(pre + 'Zócalo frontal', Wi, Z, 1, 1, 0, mc, 'zoc');
       add(pre + 'Zócalo posterior', Wi, Z, 1, 0, 0, mc, 'zoc');
     }
     if (m.fondo !== 'ninguno') {
-      const clavado = m.fondo === 'clavado', fondos = tramosPanel(m, c, e, ...rangoFondo(m, e), CORTAN_FONDO);
+      const clavado = m.fondo === 'clavado', fondos = tramosPanel(m, c, e, ...rangoFondo(m, e, c), CORTAN_FONDO);
       fondos.forEach(([y0, y1], i) => add(`${pre}${clavado ? 'Fondo' : 'Fondo (ranurado)'}${fondos.length > 1 ? ` tramo ${i + 1}` : ''}`, clavado ? W : Wi + 12, y1 - y0, 1, 0, 0, mb, 'fondo'));
     }
 
@@ -141,7 +216,7 @@ function geoColumnas(m, opts = {}) {
   const mf = S.mats.find(x => x.id === m.matF) || mc;
   const mb = S.mats.find(x => x.id === m.matB) || mc;
   const e = mc.esp, ef = mf.esp, eb = mb.esp, cC = mc.color, cF = mf.color, cB = mb.color;
-  const H = +m.alto, D = +m.prof, Z = +m.zocalo || 0, retr = retiroRepisa(m);
+  const H = +m.alto, D = +m.prof, retr = retiroRepisa(m);
   const B = [];
   // pieza: el mismo nombre que le da piezasColumnas, para poder resaltarla desde el despiece
   let col = 0;
@@ -150,18 +225,18 @@ function geoColumnas(m, opts = {}) {
   let x0 = 0;
   (m.columnas || []).forEach((c, ci) => {
     col = ci;
-    const W = +c.ancho || 0, { izq, Wi } = anchoInterior(m.columnas, ci, e), xi = x0 + izq, pre = `${c.nom} · `;
+    const W = +c.ancho || 0, { izq, Wi } = anchoInterior(m.columnas, ci, e), xi = x0 + izq, pre = `${c.nom} · `, Z = zocaloCol(m, c);
     lateralesColumna(m, ci, e).forEach(({ base, xs, tramos }) => {
       tramos.forEach(([y0, y1], i) => xs.forEach(px => box(x0 + px, y0, 0, e, y1 - y0, D, cC, 'Lateral', pre + nombreTramo(base, tramos, i))));
     });
-    box(xi, Z, 0, Wi, e, D, cC, 'Piso', pre + 'Piso');
-    box(xi, H - e, 0, Wi, e, D, cC, 'Techo', pre + 'Techo');
+    if (!sinPisoCol(m, c)) box(xi, Z, 0, Wi, e, D, cC, 'Piso', pre + 'Piso');
+    if (!m.sinTecho) box(xi, H - e, 0, Wi, e, D, cC, 'Techo', pre + 'Techo');
     if (Z > 0) {
       box(xi, 0, D - e, Wi, Z, e, cC, 'Zócalo', pre + 'Zócalo frontal');
       box(xi, 0, 0, Wi, Z, e, cC, 'Zócalo', pre + 'Zócalo posterior');
     }
     if (opts.fondo !== false && m.fondo !== 'ninguno') {
-      const clavado = m.fondo === 'clavado', fondos = tramosPanel(m, c, e, ...rangoFondo(m, e), CORTAN_FONDO);
+      const clavado = m.fondo === 'clavado', fondos = tramosPanel(m, c, e, ...rangoFondo(m, e, c), CORTAN_FONDO);
       fondos.forEach(([y0, y1], i) => {
         const nom = `${pre}${clavado ? 'Fondo' : 'Fondo (ranurado)'}${fondos.length > 1 ? ` tramo ${i + 1}` : ''}`;
         if (clavado) box(x0, y0, -eb, W, y1 - y0, eb, cB, 'Fondo', nom);

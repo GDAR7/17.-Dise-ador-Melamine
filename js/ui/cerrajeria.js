@@ -43,7 +43,7 @@ function comboHerraje(m, p, el, i) {
 
 function htmlTablasPiezas() {
   let i = -1;
-  return modsVisibles().map(m => `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${m.alto}×${m.prof} mm</span></div>
+  return modsVisibles().map(m => `<div class="tcard"><div class="hd"><h3>${TIPOS[m.tipo].ic} ${esc(m.nom)}</h3><span class="sub">${m.ancho}×${altoTotal(m)}×${m.prof} mm</span></div>
     <div class="tscroll"><table>
       <thead><tr><th>Pieza</th><th class="n">Largo</th><th class="n">Ancho</th><th class="n">Lados</th><th>Herraje</th></tr></thead>
       <tbody>${piezas(m).map(p => {

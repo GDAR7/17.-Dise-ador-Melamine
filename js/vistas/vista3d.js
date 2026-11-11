@@ -3,7 +3,7 @@
    GEOMETRÍA 3D  (lista de cajas)
    ============================================================ */
 function geo(m, opts = {}) {
-  if (m.tipo === 'columnas') return geoColumnas(m, opts);
+  if (esPorColumnas(m)) return geoPorColumnas(m, opts);
   const mc = S.mats.find(x => x.id === m.matC) || S.mats[0];
   const mf = S.mats.find(x => x.id === m.matF) || mc;
   const mb = S.mats.find(x => x.id === m.matB) || mc;
@@ -295,7 +295,7 @@ function draw3(cv = $('#cv3')) {
   const mm = mods[0];
   const txt = V3.all
     ? `Proyecto · ${modsVisibles().length} módulo(s) · ${modsVisibles().reduce((s, m) => s + (+m.qty || 1), 0)} unidad(es)`
-    : `${mm.nom} · ${mm.ancho} × ${mm.alto} × ${mm.prof} mm`;
+    : `${mm.nom} · ${mm.ancho} × ${altoTotal(mm)} × ${mm.prof} mm`;
   if (!det) ctx.fillText(txt, 12, h - 44);
 
   // Leyenda materiales

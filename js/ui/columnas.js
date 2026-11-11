@@ -5,7 +5,7 @@
 const TIPOS_ZONA = { puerta: 'Puerta', cajon: 'Cajón', abierta: 'Nicho', seminicho: 'Semi nicho', semivacio: 'Semi abierta', sinlados: 'Abierta' };
 
 function sumaColumna(m, c) {
-  const disp = +m.alto - (+m.zocalo || 0);
+  const disp = +m.alto - zocaloCol(m, c);
   const suma = c.zonas.reduce((s, z) => s + (+z.alto || 0), 0);
   const dif = disp - suma;
   return dif === 0
@@ -14,6 +14,30 @@ function sumaColumna(m, c) {
 }
 
 let _colActiva = 0;   // columna que se está editando: solo se muestra una para evitar scroll
+let _parteActiva = 0; // en el escritorio con alzada: 0 = escritorio, 1 = alzada
+
+/* El editor trabaja sobre una parte como si fuera un mueble de columnas: lee su alto y sus columnas,
+   y todo lo demás se guarda en el mueble real. Solo el escritorio fija el ancho del mueble. */
+function vistaParte(m) {
+  if (m.tipo !== 'escalzada') return m;
+  const i = Math.min(_parteActiva, 1), p = partesColumnas(m)[i];
+  const propios = ['columnas', 'alto', 'zocalo', 'prof', 'sinPiso', 'sinTecho'];
+  return new Proxy(m, {
+    get: (t, k) => (propios.includes(k) ? p.vm[k] : t[k]),
+    set: (t, k, v) => { if (!(k === 'ancho' && i === 1)) t[k] = v; return true; }
+  });
+}
+
+function htmlPartes(m) {
+  if (m.tipo !== 'escalzada') return '';
+  const anchoAlz = (m.colsAlz || []).reduce((s, c) => s + (+c.ancho || 0), 0);
+  return `<div class="fgroup"><h4>Parte que editas</h4>
+    <div class="seg">${['Escritorio', 'Alzada'].map((t, i) => `<button data-parte="${i}" class="${i === _parteActiva ? 'on' : ''}">${t}</button>`).join('')}</div>
+    <div class="col-suma" style="margin-top:6px">${anchoAlz === +m.ancho ? `<span class="ok">Alzada y escritorio miden ${nf(anchoAlz)} mm de ancho ✓</span>`
+      : `<span class="mal">La alzada mide ${nf(anchoAlz)} mm y el escritorio ${nf(+m.ancho)} mm</span>`}</div></div>`;
+}
+
+const ZONAS_QUE_CORTAN = c => c.zonas.some(z => CORTAN_LATERAL.includes(z.tipo));
 
 function htmlColumnas(m) {
   _colActiva = Math.min(_colActiva, m.columnas.length - 1);
@@ -55,6 +79,9 @@ function htmlColumnas(m) {
           </div>
           <div class="col-suma">${sumaColumna(m, c)}</div>
           ${ci < m.columnas.length - 1 ? `<label class="chk"><input type="checkbox" data-cf="compartir" ${c.compartir ? 'checked' : ''}> Compartir lateral con la columna siguiente</label>` : ''}
+          ${ZONAS_QUE_CORTAN(c) && !compartida(m.columnas, ci - 1) ? `<label class="chk"><input type="checkbox" data-cf="latIzqCompleto" ${c.latIzqCompleto ? 'checked' : ''}> Lateral izquierdo de alto completo</label>` : ''}
+          ${ZONAS_QUE_CORTAN(c) && !compartida(m.columnas, ci) ? `<label class="chk"><input type="checkbox" data-cf="latDerCompleto" ${c.latDerCompleto ? 'checked' : ''}> Lateral derecho de alto completo</label>` : ''}
+          ${m.sinPiso ? '' : `<label class="chk" title="Para dejar libre el suelo, como el espacio de las piernas"><input type="checkbox" data-cf="sinBase" ${c.sinBase ? 'checked' : ''}> Sin piso ni zócalo</label>`}
           ${c.zonas.map((z, zi) => zonaHtml(z, zi, c.zonas.length)).join('')}
           <button class="btn" data-acc="agregarZona" style="width:100%;justify-content:center">＋ Agregar zona</button>
         </div>`).join('')}
@@ -76,6 +103,10 @@ function bindColumnas(m) {
     renderList();
   };
   const estructura = () => { sincronizarAncho(); renderParams(); recalc(); };
+  $$('#params [data-parte]').forEach(b => b.onclick = () => {
+    _parteActiva = +b.dataset.parte; _colActiva = 0;
+    renderParams(); draw2();
+  });
   const valor = inp => (inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? (inp.value === '' ? 0 : +inp.value) : inp.value);
 
   $$('#params [data-colsel]').forEach(b => b.onclick = () => {
@@ -90,6 +121,7 @@ function bindColumnas(m) {
     d.querySelectorAll('[data-cf]').forEach(inp => inp.addEventListener('input', () => {
       c[inp.dataset.cf] = valor(inp);
       if (inp.dataset.cf === 'nom') $(`#params [data-colsel="${d.dataset.col}"]`).textContent = c.nom;
+      if (inp.type === 'checkbox') { estructura(); return; }   // puede cambiar qué casillas se muestran
       sincronizarAncho();
       recalc();
     }));
@@ -116,7 +148,7 @@ function bindColumnas(m) {
     };
   });
   $('#params [data-acc=agregarCol]').onclick = () => {
-    m.columnas.push({ nom: `Columna ${m.columnas.length + 1}`, ancho: 600, zonas: [{ nom: 'Zona 1', alto: +m.alto - (+m.zocalo || 0), tipo: 'puerta', rep: 0 }] });
+    m.columnas.push({ nom: `Columna ${m.columnas.length + 1}`, ancho: 600, zonas: [{ nom: 'Zona 1', alto: +m.alto - (+m.zocalo || 0), tipo: m.sinPiso ? 'abierta' : 'puerta', rep: 0 }] });
     _colActiva = m.columnas.length - 1;
     estructura();
   };

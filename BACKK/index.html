@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diseñador de Melamina — Despiece, Optimización y Costeo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">
+      <div class="mk">M</div>
+      <div>Diseñador de Melamina<small>Despiece · Optimización · Costeo</small></div>
+    </div>
+    <div class="sp"></div>
+    <div class="hbtns">
+      <button class="btn" id="bNew">＋ <span class="lbl">Módulo</span></button>
+      <button class="btn" id="bSave">⤓ <span class="lbl">Guardar</span></button>
+      <button class="btn" id="bLoad" title="Abre un archivo y reemplaza el proyecto actual">⤒ <span class="lbl">Abrir</span></button>
+      <button class="btn" id="bAdd" title="Suma los muebles de un archivo al proyecto actual">⊕ <span class="lbl">Agregar archivo</span></button>
+      <button class="btn pri" id="bPrint">🖨 <span class="lbl">Imprimir</span></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT -->
+    <aside id="left">
+      <div class="ptitle">Módulos del proyecto<div class="sp"></div><span id="modcount" class="pill">0</span></div>
+      <div id="modlist"></div>
+      <div id="presets">
+        <div class="lbl">Plantillas rápidas</div>
+        <div class="pgrid" id="pgrid"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER -->
+    <div id="center" class="mshow">
+      <div id="tabs">
+        <button class="pan-btn" id="bIzq"></button>
+        <button class="tab on" data-p="p3d"><span>◳</span> Vista 3D</button>
+        <button class="tab" data-p="p2d"><span>▦</span> Plano 2D</button>
+        <button class="tab" data-p="pdes"><span>☰</span> Despiece <b id="bdes">0</b></button>
+        <button class="tab" data-p="popt"><span>▭</span> Planchas <b id="bopt">0</b></button>
+        <button class="tab" data-p="pcos"><span>◎</span> Costeo</button>
+        <button class="tab" data-p="pper"><span>⊙</span> Perforaciones</button>
+        <button class="tab" data-p="pdet"><span>⚒</span> Construcción</button>
+        <button class="tab" data-p="pcer"><span>🔩</span> Cerrajería</button>
+        <button class="pan-btn" id="bDer"></button>
+      </div>
+      <div id="view">
+        <div class="pane" id="p2d">
+          <div class="cvwrap">
+            <canvas id="cv2"></canvas>
+            <canvas id="cv2b" class="solo-imp"></canvas>
+            <div class="cvbar">
+              <button class="btn on" id="b2f">Frontal</button>
+              <button class="btn" id="b2l">Lateral</button>
+              <button class="btn on" id="b2dim">Cotas</button>
+              <select id="s2col" aria-label="Columna de la vista lateral" hidden></select>
+            </div>
+            <div class="cvhint">Vista a escala con cotas en mm</div>
+          </div>
+        </div>
+        <div class="pane on" id="p3d">
+          <div class="cvwrap">
+            <canvas id="cv3"></canvas>
+            <div class="cvbar">
+              <button class="btn" id="b3fit">⤢ Encuadrar</button>
+              <button class="btn on" id="b3door">Puertas</button>
+              <button class="btn on" id="b3back">Fondo</button>
+              <button class="btn" id="b3all">Todo el proyecto</button>
+              <button class="btn pri" id="bRender">✨ Renderizar</button>
+              <button class="btn on" id="b3sel" hidden></button>
+            </div>
+            <label class="cvexp">Separar piezas <input type="range" id="r3exp" min="0" max="100" value="0"></label>
+            <div class="render-box" id="renderBox" hidden>
+              <canvas id="cvRender"></canvas>
+              <div class="cvbar">
+                <button class="btn" id="bRenderCerrar">✕ Volver al 3D</button>
+                <select id="sRender" aria-label="Calidad del render">
+                  <option value="borrador">Borrador</option>
+                  <option value="normal" selected>Normal</option>
+                  <option value="alta">Alta</option>
+                </select>
+                <button class="btn pri" id="bRenderPng">⤓ Guardar imagen</button>
+              </div>
+              <div class="cvhint" id="renderEstado" role="status"></div>
+            </div>
+            <div class="cvhint">Arrastra para girar · Rueda o pinza para zoom</div>
+            <div class="leg" id="leg3"></div>
+          </div>
+        </div>
+        <div class="pane" id="pdes">
+          <div class="des-lay">
+            <div class="scroll" id="desbox"></div>
+            <div class="des-iso">
+              <div class="des-iso-tit" id="isoTit"></div>
+              <canvas id="cvIso"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="pane" id="popt"><div class="scroll" id="optbox"></div></div>
+        <div class="pane" id="pcos"><div class="scroll" id="cosbox"></div></div>
+        <div class="pane" id="pper"><div class="scroll" id="perbox"></div></div>
+        <div class="pane" id="pcer">
+          <div class="des-lay">
+            <div class="scroll" id="cerbox"></div>
+            <div class="des-iso">
+              <div class="des-iso-tit" id="cerTit"></div>
+              <canvas id="cvCer"></canvas>
+              <button class="btn pri cer-sim" id="bSim" disabled>▶ Simular apertura</button>
+            </div>
+          </div>
+        </div>
+        <div class="pane" id="pdet">
+          <div class="det-lay">
+            <div class="det-lista" id="detLista"></div>
+            <div class="det-cuerpo">
+              <div class="det-vis">
+                <div class="cvwrap det-3d">
+                  <canvas id="cvDet"></canvas>
+                  <div class="cvbar"><button class="btn pri" id="bManual">🖨 Imprimir manual</button></div>
+                  <label class="cvexp">Separar piezas <input type="range" id="rDet" min="0" max="100" value="45"></label>
+                </div>
+                <div class="det-2d"><canvas id="cvDet2"></canvas></div>
+              </div>
+              <button class="det-bar" id="bDetMin"></button>
+              <div class="scroll" id="detbox"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div id="rightp">
+      <div class="ptitle">Parámetros</div>
+      <div id="params"></div>
+      <div id="ptabs">
+        <button data-ptab="mueble"><span>◫</span>Mueble</button>
+        <button data-ptab="interior"><span>▤</span>Interior</button>
+        <button data-ptab="materiales"><span>▦</span>Planchas</button>
+        <button data-ptab="cantos"><span>▭</span>Cantos</button>
+        <button data-ptab="herrajes"><span>⚙</span>Herrajes</button>
+        <button data-ptab="proyecto"><span>◎</span>Proyecto</button>
+      </div>
+    </div>
+  </main>
+
+  <div id="mtabs">
+    <button data-m="left"><span>☰</span>Módulos</button>
+    <button class="on" data-m="center"><span>◳</span>Vista</button>
+    <button data-m="rightp"><span>⚙</span>Ajustes</button>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="impresion"></div>
+<input type="file" id="fileIn" accept=".json" style="display:none">
+<input type="file" id="texIn" accept="image/*" style="display:none">
+
+<script src="js/utilidades.js"></script>
+<script src="js/nucleo/estado.js"></script>
+<script src="js/nucleo/despiece.js"></script>
+<script src="js/nucleo/columnas.js"></script>
+<script src="js/nucleo/perforaciones.js"></script>
+<script src="js/nucleo/construccion.js"></script>
+<script src="js/nucleo/cerrajeria.js"></script>
+<script src="js/nucleo/excel.js"></script>
+<script src="js/nucleo/corte.js"></script>
+<script src="js/vistas/textura.js"></script>
+<script src="js/vistas/vista3d.js"></script>
+<script src="js/vistas/vista2d.js"></script>
+<script src="js/vistas/detalle2d.js"></script>
+<script src="js/vistas/render.js"></script>
+<script src="js/ui/lista-modulos.js"></script>
+<script src="js/ui/parametros.js"></script>
+<script src="js/ui/columnas.js"></script>
+<script src="js/ui/tabla-despiece.js"></script>
+<script src="js/ui/planchas.js"></script>
+<script src="js/ui/costeo.js"></script>
+<script src="js/ui/perforaciones.js"></script>
+<script src="js/ui/cerrajeria.js"></script>
+<script src="js/ui/salidas.js"></script>
+<script src="js/ui/construccion.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

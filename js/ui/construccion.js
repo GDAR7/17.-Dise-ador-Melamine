@@ -97,7 +97,7 @@ function htmlManual(m) {
   });
   imprimiendo = false;
   renderConstruccion();
-  return `<div class="manual"><h1>${esc(m.nom)}</h1><p>${m.ancho} × ${m.alto} × ${m.prof} mm · Guía orientativa: confirma medidas y montaje con la ficha de tus herrajes.</p>${secciones.join('')}</div>`;
+  return `<div class="manual"><h1>${esc(m.nom)}</h1><p>${m.ancho} × ${altoTotal(m)} × ${m.prof} mm · Guía orientativa: confirma medidas y montaje con la ficha de tus herrajes.</p>${secciones.join('')}</div>`;
 }
 
 $('#bDetMin').onclick = () => {

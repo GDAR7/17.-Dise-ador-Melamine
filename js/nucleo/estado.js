@@ -8,7 +8,8 @@ const TIPOS = {
   comoda:    { ic: '▥', nom: 'Cómoda / cajonera' },
   escritorio:{ ic: '⌐', nom: 'Escritorio' },
   generico:  { ic: '□', nom: 'Módulo genérico' },
-  columnas:  { ic: '▥', nom: 'Repostero por columnas' }
+  columnas:  { ic: '▥', nom: 'Repostero por columnas' },
+  escalzada: { ic: '⊓', nom: 'Escritorio con alzada' }
 };
 
 let S = null;
@@ -61,8 +62,14 @@ const PRESETS = {
   escritorio: { nom: 'Escritorio', ancho: 1200, alto: 750, prof: 600, repisas: 0, fondo: 'ninguno', zocalo: 0, puertas: 0, cajones: 2, altoCaj: 160, encimera: true },
   generico:   { nom: 'Módulo', ancho: 600, alto: 700, prof: 400, repisas: 2, fondo: 'clavado', zocalo: 0, puertas: 0, cajones: 0 },
   // El getter entrega una copia nueva, para que cada mueble tenga sus propias columnas
-  columnas:   { nom: 'Repostero por columnas', ancho: 1800, alto: 2400, prof: 580, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 100, puertas: 0, cajones: 0, encimera: false, get columnas() { return columnasEjemplo(); } }
+  columnas:   { nom: 'Repostero por columnas', ancho: 1800, alto: 2400, prof: 580, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 100, puertas: 0, cajones: 0, encimera: false, get columnas() { return columnasEjemplo(); } },
+  // alto y prof son los del escritorio, con el tablero incluido; la alzada tiene los suyos
+  escalzada:  { nom: 'Escritorio con alzada', ancho: 1200, alto: 750, prof: 600, repisas: 0, divs: 0, fondo: 'clavado', zocalo: 60, puertas: 0, cajones: 0, encimera: false,
+                altoAlz: 750, profAlz: 280, voladizo: 20, get columnas() { return columnasEscritorio(); }, get colsAlz() { return columnasAlzada(); } }
 };
+
+/* Alto que se muestra del mueble: el escritorio con alzada suma las dos partes */
+const altoTotal = m => (m.tipo === 'escalzada' ? +m.alto + (+m.altoAlz || 0) : m.alto);
 
 /* Muebles que cuentan en dibujos, despiece, cortes y costos */
 const modsVisibles = () => S.mods.filter(m => !m.oculto);

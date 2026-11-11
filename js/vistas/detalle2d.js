@@ -33,7 +33,8 @@ function extensionDetalle(m, el, cajas) {
     const x0 = Math.min(...cajas.map(b => b.x));
     return { x0, ancho: Math.max(...cajas.map(b => b.x + b.w)) - x0 };
   }
-  return { x0: m.columnas.slice(0, el.col).reduce((s, c) => s + (+c.ancho || 0), 0), ancho: +m.columnas[el.col].ancho || 0 };
+  const { c, x0 } = columnasMueble(m)[el.col];
+  return { x0, ancho: +c.ancho || 0 };
 }
 
 /* piezaSel: nombre de la pieza marcada en la tabla, que se pinta encima de todo */

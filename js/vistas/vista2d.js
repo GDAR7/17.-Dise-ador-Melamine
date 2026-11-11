@@ -7,12 +7,12 @@ const V2 = { vista: 'frontal', cotas: true, col: 0 };   // col: columna que se c
 /* Escribe sobre cada zona su nombre y su alto */
 function rotularZonas(ctx, m, e, X, Y) {
   const conTextura = !!texturaDe(S.mats.find(x => x.id === m.matF));
-  let x0 = 0;
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.font = `600 ${imprimiendo ? 8.5 : 10}px Inter, sans-serif`;
-  m.columnas.forEach(c => {
+  columnasMueble(m).forEach(({ c, x0, parte }) => {
     const W = +c.ancho || 0;
-    zonasColumna(m, c, e).forEach(({ z, a, b }) => {
+    zonasColumna(parte.vm, c, e).forEach(({ z, a: a0, b: b0 }) => {
+      const a = a0 + parte.dy, b = b0 + parte.dy;
       if (Y(a) - Y(b) < 11) return;
       // Una zona abierta sin fondo deja ver el lienzo oscuro de la pantalla
       const hueco = z.tipo !== 'puerta' && z.tipo !== 'cajon';
@@ -21,7 +21,6 @@ function rotularZonas(ctx, m, e, X, Y) {
       if (conTextura) { ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.strokeText(txt, X(x0 + W / 2), (Y(a) + Y(b)) / 2); }
       ctx.fillText(txt, X(x0 + W / 2), (Y(a) + Y(b)) / 2);
     });
-    x0 += W;
   });
   ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
 }
@@ -41,15 +40,19 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
   const mc = S.mats.find(x => x.id === m.matC) || S.mats[0];
   const mf = S.mats.find(x => x.id === m.matF) || mc;
   const e = mc.esp, ef = mf.esp;
-  const W = +m.ancho, H = +m.alto, D = +m.prof, Z = +m.zocalo || 0;
+  const Z = +m.zocalo || 0;
+  // Un mueble por columnas toma sus medidas totales de la geometría: el escritorio con alzada suma las dos partes
+  const gCol = esPorColumnas(m) ? geo(m) : null;
+  const W = gCol ? gCol.W : +m.ancho, H = gCol ? gCol.H : +m.alto, D = gCol ? gCol.D : +m.prof;
 
   const front = vista === 'frontal';
-  const iCol = m.tipo === 'columnas' ? Math.min(V2.col, m.columnas.length - 1) : 0;
-  const colLateral = m.tipo === 'columnas' && !front ? m.columnas[iCol] : null;
+  const cols = gCol ? columnasMueble(m) : [];
+  const iCol = gCol ? Math.max(0, Math.min(V2.col, cols.length - 1)) : 0;
+  const colLateral = gCol && !front && cols[iCol] ? cols[iCol].c : null;
   if (cv.id === 'cv2') {
     const selCol = $('#s2col');
     selCol.hidden = !colLateral;
-    if (colLateral) selCol.innerHTML = m.columnas.map((c, i) => `<option value="${i}" ${i === iCol ? 'selected' : ''}>${esc(c.nom)}</option>`).join('');
+    if (colLateral) selCol.innerHTML = cols.map(({ c, parte }, i) => `<option value="${i}" ${i === iCol ? 'selected' : ''}>${esc(parte.pre + c.nom)}</option>`).join('');
   }
   const ow = front ? W : D, oh = H;
   const pad = imprimiendo ? 50 : 78;
@@ -78,11 +81,11 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
   ctx.fillStyle = imprimiendo ? '#fff' : '#0d0f13';
   ctx.fillRect(X(0), Y(oh), ow * sc, oh * sc);
 
-  if (m.tipo === 'columnas') {
+  if (gCol) {
     // De atrás hacia adelante, para que los frentes queden encima. La vista lateral es un corte por una sola columna:
-    // se omiten los laterales del mueble y los de las cajas de cajón, que taparían el interior.
-    const enCorte = b => b.col === iCol && b.tag !== 'Lateral' && !(b.tag === 'Cajón' && b.w <= e);
-    geo(m).B.filter(b => front || enCorte(b)).sort((a, b) => a.z - b.z).forEach(b => {
+    // se omiten los laterales del mueble y los de las cajas de cajón, que taparían el interior. El tablero no es de ninguna columna.
+    const enCorte = b => b.col == null || (b.col === iCol && b.tag !== 'Lateral' && !(b.tag === 'Cajón' && b.w <= e));
+    gCol.B.filter(b => front || enCorte(b)).sort((a, b) => a.z - b.z).forEach(b => {
       const frente = b.tag === 'Puerta' || b.tag === 'Frente cajón';
       rect(front ? b.x : b.z, b.y, front ? b.w : b.d, b.h, shade(b.c, frente ? .97 : .8));
       if (frente && front) texFrente(b.x, b.y, b.w, b.h);

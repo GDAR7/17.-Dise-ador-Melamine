@@ -23,7 +23,7 @@ function piezas(m) {
     P.push({ nom, L: Math.round(L - descuentoCanto(lados.A1) - descuentoCanto(lados.A2)), A: Math.round(A - descuentoCanto(lados.L1) - descuentoCanto(lados.L2)), q: q * (+m.qty || 1), cL: !!lados.L1 + !!lados.L2, cA: !!lados.A1 + !!lados.A2, lados, mat: mat.id, matNom: mat.nom, esp: mat.esp, mod: m.nom, modId: m.id, kind });
   };
 
-  if (m.tipo === 'columnas') { piezasColumnas(m, add, mc, mf, mb); return P; }
+  if (esPorColumnas(m)) { piezasPorColumnas(m, add, mc, mf, mb); return P; }
 
   const Wi = W - 2 * e;              // ancho interior
 
