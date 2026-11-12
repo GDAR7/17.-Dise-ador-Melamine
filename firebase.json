@@ -1,0 +1,8 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": ["firebase.json", "firestore.rules", ".git", ".git/**", "**/.git/**", ".vscode/**", ".firebase/**", ".firebaserc", "**/.*", "**/node_modules/**", "BACKK/**", "README.md", "Diseñador de Melamina.html"],
+    "headers": [{ "source": "**/*.@(js|css|html)", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }]
+  },
+  "firestore": { "rules": "firestore.rules" }
+}

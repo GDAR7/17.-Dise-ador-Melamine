@@ -162,6 +162,7 @@ function save() {
     if (!_avisoGuardado) toast('El navegador no tiene espacio: usa Guardar para no perder cambios');
     _avisoGuardado = true;
   }
+  if (typeof nubeCambio === 'function') nubeCambio();   // con usuario, también se guarda en su cuenta
 }
 let _avisoGuardado = false;
 function load() {

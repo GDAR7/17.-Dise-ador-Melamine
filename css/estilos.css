@@ -522,3 +522,34 @@ tbody tr.grp:hover td{background:var(--panel2)}
   .cantos{--g:5px;width:38px;height:20px}
   tr,.board,.stats{break-inside:avoid}
 }
+
+/* ---------- Nube: ingreso, usuario y "Mis proyectos" ---------- */
+#nubeBar{display:flex;gap:7px;align-items:center}
+#nubeBar[hidden],#login[hidden],.nube-dlg[hidden],.login-form[hidden],.login-cargando[hidden]{display:none}
+.nube-user{display:flex;flex-direction:column;justify-content:center;line-height:1.2;max-width:190px;padding:0 4px}
+.nube-user b{font-size:11.5px;font-weight:600;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nube-user small{font-size:10px;color:var(--txt3)}
+#login{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:22px}
+.login-box .logo{margin-bottom:18px}
+.login-form{display:flex;flex-direction:column;gap:12px}
+.login-form .btn{justify-content:center;padding:10px}
+.login-cargando{color:var(--txt2);font-size:13px;text-align:center;padding:14px 0}
+.login-error{min-height:16px;font-size:12px;color:#f09090}
+.login-link{background:none;border:0;color:var(--txt2);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;align-self:center}
+.login-link:hover{color:var(--acc)}
+.nube-dlg{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.nube-box{width:100%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;gap:12px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:16px}
+.nube-hd{display:flex;align-items:center}
+.nube-hd h3{font-size:15px}
+.nube-hd .sp{flex:1}
+#nubeLista{overflow-y:auto;display:flex;flex-direction:column;gap:6px;min-height:60px}
+.nube-fila{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--panel);border:1px solid var(--line);border-radius:7px}
+.nube-fila.on{border-color:var(--acc)}
+.nube-fila .nm{flex:1;min-width:0}
+.nube-fila .nm b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nube-fila .nm span{font-size:11px;color:var(--txt3)}
+.nube-vacio{color:var(--txt3);font-size:12.5px;text-align:center;padding:18px 0}
+#nubeNuevo{justify-content:center}
+@media (max-width:900px){.nube-user{display:none}}
+@media print{#login,.nube-dlg,#nubeBar{display:none!important}}

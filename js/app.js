@@ -76,6 +76,7 @@ $('#fileIn').onchange = e => {
         refresh(); toast(`${nuevos.length} mueble(s) agregado(s)`);
       } else {
         S = Object.assign(defState(), p);
+        nubeArchivoAbierto();
         asegurarHerrajes(S);
         S.sel = S.mods[0] ? S.mods[0].id : null;
         refresh(); toast('Proyecto cargado');
