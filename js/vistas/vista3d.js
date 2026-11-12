@@ -54,6 +54,11 @@ function geo(m, opts = {}) {
       const t = tramoPuertas(m, e, f.abajo, f.arriba, g);
       if (t.alto > 0) for (let i = 0; i < np; i++) box(f.x + i * (pw + 3), t.y, zf, pw, t.alto, ef, cF, 'Puerta', g.nom);
     });
+    // cajones en otros niveles
+    cajonesNivel(m, e, ef).forEach(c => c.frentes.forEach(fy => {
+      box(c.x, fy, zf, c.ancho, c.alto, ef, cF, 'Frente cajón', c.nombres.frente);
+      cajaCajon(box, e + 13, fy + (c.alto - c.altoCaja) / 2, zf, Wi - 26, c.altoCaja, c.profCaja, e, eb, cC, cB, c.nombres);
+    }));
   }
   return { B, W, H, D: D + (m.encimera ? 25 : 0) };
 }

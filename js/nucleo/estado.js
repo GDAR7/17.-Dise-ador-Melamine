@@ -47,7 +47,7 @@ function nuevoMod(tipo = 'librero', over = {}) {
     repisas: 4, divs: 0, divDesde: 0, divHasta: 0, divisionesExtra: [],
     fondo: 'ranurado', zocalo: 0,
     puertas: 0, tipoP: 'superpuesta', rebaje: 20, puertaDesde: 0, puertaHasta: 0, puertasExtra: [],
-    cajones: 0, altoCaj: 180,
+    cajones: 0, altoCaj: 180, cajonesExtra: [],
     encimera: false, retr: 20
   };
   return Object.assign(base, PRESETS[tipo] || {}, over, { id: uid(), tipo });

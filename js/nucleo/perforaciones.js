@@ -81,6 +81,9 @@ function perforaciones(m) {
   const alturas = [...new Set(moviles.map(r => r.y))].sort((a, b) => a - b);
   const retrSoportes = moviles.length ? D - Math.min(...moviles.map(r => r.prof)) : retr;
   const correderas = Array.from({ length: nc }, (_, i) => Z + i * hc + 15 + altoCaja(hc) / 2);
-  if (alturas.length || nc) planos.push(planoLateral('Laterales', H, D, 2, alturas, correderas, retrSoportes, profCaja, false));
+  // En los cajones por nivel la caja va centrada en su frente: la corredera queda a media altura del frente
+  cajonesNivel(m, e, (S.mats.find(x => x.id === m.matF) || S.mats[0]).esp).forEach(c => c.frentes.forEach(fy => correderas.push(fy + c.alto / 2)));
+  correderas.sort((a, b) => a - b);
+  if (alturas.length || correderas.length) planos.push(planoLateral('Laterales', H, D, 2, alturas, correderas, retrSoportes, profCaja, false));
   return planos;
 }

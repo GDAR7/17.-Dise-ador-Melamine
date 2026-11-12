@@ -126,6 +126,12 @@ function draw2(cv = $('#cv2'), vista = V2.vista) {
         ctx.fillRect(X(hx), Y(t.y + t.alto / 2 + 45), 9 * sc, 90 * sc);
       }
     });
+    cajonesNivel(m, e, ef).forEach(c => c.frentes.forEach(fy => {
+      rect(c.x, fy, c.ancho, c.alto, shade(mf.color, .97), 'rgba(0,0,0,.6)');
+      texFrente(c.x, fy, c.ancho, c.alto);
+      ctx.fillStyle = 'rgba(0,0,0,.4)';
+      ctx.fillRect(X(c.x + c.ancho / 2 - 40), Y(fy + c.alto / 2 + 4), 80 * sc, 8 * sc);
+    }));
     ctx.globalAlpha = 1;
   } else {
     // lateral

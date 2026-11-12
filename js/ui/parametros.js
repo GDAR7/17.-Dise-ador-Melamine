@@ -43,7 +43,9 @@ function htmlRetiro(m) {
 
 /* Puertas y divisiones se agregan por niveles de la misma forma */
 const GRUPOS_NIVEL = [
-  { clave: 'puertasExtra', fila: 'pg', aviso: '#avPuertas', boton: '#bAddPuerta', grupos: gruposPuertas, lleno: 'Todos los niveles ya tienen puertas: limita antes con Desde y Hasta' },
+  { clave: 'puertasExtra', fila: 'pg', aviso: '#avPuertas', boton: '#bAddPuerta', grupos: gruposPuertas, ocupados: gruposFrentes, lleno: 'Todos los niveles ya tienen puertas o cajones: limita antes con Desde y Hasta' },
+  { clave: 'cajonesExtra', fila: 'cg', aviso: '#avCajones', boton: '#bAddCajon', grupos: gruposCajones, ocupados: gruposFrentes, nuevo: () => ({ n: 2 }),
+    cruza: m => gruposSeCruzan(m, gruposFrentes(m)) || cajonesConDivision(m), lleno: 'Todos los niveles ya tienen puertas o cajones: limita antes con Desde y Hasta' },
   { clave: 'divisionesExtra', fila: 'dg', aviso: '#avDiv', boton: '#bAddDiv', grupos: gruposDivisiones, nuevo: m => ({ retiro: m.retiroDiv === 'igual' ? 'igual' : 'frente' }), lleno: 'Todos los niveles ya tienen divisiones: limita antes con Desde y Hasta' }
 ];
 
@@ -62,7 +64,7 @@ function filasGrupo(lista, attr, nombre, extra = () => '') {
 function actualizarAvisosNivel(m) {
   GRUPOS_NIVEL.forEach(c => {
     const aviso = $(c.aviso);
-    if (aviso) aviso.hidden = !gruposSeCruzan(m, c.grupos(m));
+    if (aviso) aviso.hidden = !(c.cruza ? c.cruza(m) : gruposSeCruzan(m, c.grupos(m)));
   });
 }
 
@@ -85,7 +87,7 @@ function bindGruposNivel(m) {
       };
     });
     $(c.boton).onclick = () => {
-      const nivel = nivelLibre(m, c.grupos(m)), nr = +m.repisas || 0;
+      const nivel = nivelLibre(m, (c.ocupados || c.grupos)(m)), nr = +m.repisas || 0;
       if (nivel === null) { toast(c.lleno); return; }
       m[c.clave] = m[c.clave] || [];
       const num = m[c.clave].reduce((max, g) => Math.max(max, g.num), 1) + 1;
@@ -181,7 +183,10 @@ function renderParams() {
       ${filasGrupo(m.puertasExtra, 'pg', 'Puerta')}
       <div class="pg-aviso" id="avPuertas" ${gruposSeCruzan(m, gruposPuertas(m)) ? '' : 'hidden'}>Dos grupos de puertas ocupan el mismo nivel: revisa sus repisas.</div>
       <button class="btn" id="bAddPuerta" style="width:100%;justify-content:center;margin-bottom:8px">＋ Agregar puertas en otro nivel</button>
-      <div class="row"><div class="f"><label>Alto de cada cajón</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
+      <div class="row"><div class="f"><label>Alto de cada cajón (los de abajo)</label><input type="number" data-k="altoCaj" value="${m.altoCaj}"></div></div>
+      ${filasGrupo(m.cajonesExtra, 'cg', 'Cajón')}
+      <div class="pg-aviso" id="avCajones" ${gruposSeCruzan(m, gruposFrentes(m)) || cajonesConDivision(m) ? '' : 'hidden'}>Los cajones no pueden compartir nivel con puertas ni con divisiones verticales: revisa sus repisas.</div>
+      <button class="btn" id="bAddCajon" style="width:100%;justify-content:center;margin-bottom:8px" title="Los cajones llenan el alto entre dos repisas y se lo reparten">＋ Agregar cajones en otro nivel</button>
       <div class="f"><label>Montaje de frentes</label>
         <div class="seg">
           ${[['superpuesta', 'Exterior', 'Delante del mueble: tapa todo el canto'], ['media', 'Media', 'Tapa la mitad del canto'], ['embutida', 'A nivel', 'Dentro del mueble, al ras del frente'], ['interior', 'Interior', 'Dentro del mueble y más metida que el frente']]
@@ -257,7 +262,7 @@ function renderParams() {
       if (inp.type === 'checkbox') mm[k] = inp.checked;
       else if (inp.type === 'number') mm[k] = inp.value === '' ? 0 : +inp.value;
       else mm[k] = inp.value;
-      if (k === 'tipo') { Object.assign(mm, { divDesde: 0, divHasta: 0, divisionesExtra: [], puertaDesde: 0, puertaHasta: 0, puertasExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
+      if (k === 'tipo') { Object.assign(mm, { divDesde: 0, divHasta: 0, divisionesExtra: [], puertaDesde: 0, puertaHasta: 0, puertasExtra: [], cajonesExtra: [] }, PRESETS[inp.value] || {}); renderParams(); }
       if (k === 'nom' || k === 'qty' || k === 'ancho' || k === 'alto' || k === 'prof' || k === 'tipo') renderList();
       if (esPorColumnas(mm) && ['alto', 'zocalo', 'altoAlz'].includes(k)) actualizarSumas(vistaParte(mm));
       actualizarAvisosNivel(mm);

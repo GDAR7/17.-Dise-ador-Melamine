@@ -43,6 +43,7 @@ function elementosConstruccion(m) {
   });
   gruposPuertas(m).forEach(g => crear(g.id, m.nom, g.nom, 'puerta', g.n, [g.nom], { bisagra: bisagraMontaje(m), lado: 'de las bisagras' }));
   crear('cajon', m.nom, 'Cajón', 'cajon', nc, ['Frente de cajón', 'Lateral de cajón', 'Frontal/Trasera cajón', 'Fondo de cajón']);
+  gruposCajones(m).forEach(g => crear(g.id, m.nom, g.nom, 'cajon', g.n, Object.values(nombresCajon(g))));
   return lista;
 }
 

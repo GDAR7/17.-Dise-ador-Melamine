@@ -75,6 +75,14 @@ function piezas(m) {
     add('Frontal/Trasera cajón', anchoCaja - 2 * e, altoCaja, nc * 2, 1, 0, mc, 'caj');
     add('Fondo de cajón', anchoCaja - 2 * e, profCaja - 2 * e, nc, 0, 0, mb, 'caj');
   }
+  // --- Cajones en otros niveles ---
+  cajonesNivel(m, e, ef).forEach(c => {
+    const anchoCaja = Wi - 26;
+    add(c.nombres.frente, c.alto, c.ancho, c.g.n, 2, 2, mf, 'frente');
+    add(c.nombres.lateral, c.profCaja, c.altoCaja, c.g.n * 2, 1, 0, mc, 'caj');
+    add(c.nombres.frontal, anchoCaja - 2 * e, c.altoCaja, c.g.n * 2, 1, 0, mc, 'caj');
+    add(c.nombres.fondo, anchoCaja - 2 * e, c.profCaja - 2 * e, c.g.n, 0, 0, mb, 'caj');
+  });
   return P;
 }
 
@@ -107,8 +115,10 @@ function interiorMueble(m, e) {
 
   // La repisa donde termina una puerta llega hasta el frente y cierra ese espacio.
   // Las que quedan detrás de una puerta metida en el mueble se acortan para que esta pueda cerrar.
+  // Los cajones por nivel también cierran con repisas fijas, y no admiten repisas en medio
   const puertas = gruposPuertas(m), mf = S.mats.find(x => x.id === m.matF) || S.mats.find(x => x.id === m.matC) || S.mats[0];
-  const limites = new Set(puertas.flatMap(g => { const l = limitesNivel(m, g); return [l.d, l.h]; }).filter(Boolean));
+  const limites = new Set(gruposFrentes(m).flatMap(g => { const l = limitesNivel(m, g); return [l.d, l.h]; }).filter(Boolean));
+  const entreCajones = n => gruposCajones(m).some(g => { const [a, b] = nivelesGrupo(m, g); return a <= n - 1 && n <= b; });
   const zFrente = montajeFrente(m, e, mf.esp).z;
   const tapada = n => puertas.some(g => { const [a, b] = nivelesGrupo(m, g); return a <= n - 1 && n <= b; });
   const prof = n => (limites.has(n) ? D : tapada(n) && zFrente < D ? Math.min(D - retr, zFrente - 2) : D - retr);
@@ -128,6 +138,7 @@ function interiorMueble(m, e) {
     for (let i = 1; i <= g.n; i++) divisiones.push({ nom: g.nomD, x: e + i * av + (i - 1) * e, y: inf, alto: sup - inf, prof: profDivision(g) });
   });
   for (let n = 1; n <= nr; n++) {
+    if (entreCajones(n)) continue;
     const g = grupos.find(x => { const [a, b] = nivelesGrupo(m, x); return a <= n - 1 && n <= b; });
     const comun = { y: y(n), prof: prof(n), cierre: limites.has(n) };
     if (!g) { repisas.push({ ...comun, nom: nombre(n, grupos.length ? 'Repisa entera' : 'Repisa'), x: e, ancho: Wi }); continue; }
@@ -141,6 +152,37 @@ function interiorMueble(m, e) {
 function gruposPuertas(m) {
   const extra = (m.puertasExtra || []).map(g => ({ id: `puerta${g.num}`, nom: `Puerta ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta }));
   return [{ id: 'puerta', nom: 'Puerta', n: +m.puertas || 0, desde: m.puertaDesde, hasta: m.puertaHasta }, ...extra].filter(g => g.n > 0);
+}
+
+/* Grupos de cajones en otros niveles. Los cajones de siempre (m.cajones) siguen apilados abajo */
+function gruposCajones(m) {
+  return (m.cajonesExtra || []).map(g => ({ id: `cajon${g.num}`, num: g.num, nom: `Cajón ${g.num}`, n: +g.n || 0, desde: g.desde, hasta: g.hasta })).filter(g => g.n > 0);
+}
+const gruposFrentes = m => [...gruposPuertas(m), ...gruposCajones(m)];
+const nombresCajon = g => ({ frente: `Frente de cajón ${g.num}`, lateral: `Lateral de cajón ${g.num}`, frontal: `Frontal/Trasera cajón ${g.num}`, fondo: `Fondo de cajón ${g.num}` });
+
+/* Medidas de cada grupo de cajones por nivel: llenan el tramo de su nivel (como una puerta) y se lo reparten con 3 mm de luz.
+   frentes: altura de la base de cada frente, de abajo hacia arriba. La caja va centrada detrás de su frente. */
+function cajonesNivel(m, e, ef) {
+  const f = montajeFrente(m, e, ef);
+  return gruposCajones(m).map(g => {
+    const t = tramoPuertas(m, e, f.abajo, f.arriba, g);
+    const alto = (t.alto - 3 * (g.n - 1)) / g.n;
+    return {
+      g, nombres: nombresCajon(g), alto,
+      x: f.x + (f.ancho - f.anchoCajon) / 2, ancho: f.anchoCajon,
+      frentes: Array.from({ length: g.n }, (_, i) => t.y + i * (alto + 3)),
+      altoCaja: Math.max(60, Math.round(alto - 40)), profCaja: Math.max(200, +m.prof - 60)
+    };
+  }).filter(c => c.alto > 0);
+}
+
+/* Algún grupo de cajones comparte nivel con divisiones verticales: chocarían */
+function cajonesConDivision(m) {
+  return gruposCajones(m).some(c => {
+    const [a, b] = nivelesGrupo(m, c);
+    return gruposDivisiones(m).some(dv => { const [x, y] = nivelesGrupo(m, dv); return x <= b && a <= y; });
+  });
 }
 
 /* Repisas límite ya validadas: d arriba y h abajo, con 0 = techo o piso */
@@ -197,7 +239,7 @@ function tramoPuertas(m, e, abajo, arriba, g) {
   const nr = +m.repisas || 0;
   const { d, h } = limitesNivel(m, g);
   const y = n => yRepisa(m, e, nr - n + 1);
-  const otros = gruposPuertas(m).filter(o => o.id !== g.id).map(o => limitesNivel(m, o));
+  const otros = gruposFrentes(m).filter(o => o.id !== g.id).map(o => limitesNivel(m, o));
   const techoDe = n => {
     const compartida = otros.some(o => o.h === n);
     if (m.tipoP === 'superpuesta') return compartida ? y(n) + e / 2 - 1.5 : y(n) + e;
