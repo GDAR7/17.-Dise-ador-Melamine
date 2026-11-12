@@ -123,7 +123,7 @@ function selectorLados(p, i) {
   return `<div class="cantos">${Object.keys(NOMBRES_LADO).map(k => {
     const v = p.lados[k], titulo = `${NOMBRES_LADO[k]}: ${!v ? 'sin tapacanto' : v === 'g' ? 'tapacanto grueso' : 'tapacanto delgado'}`;
     return `<button class="lado ${k}${v ? ' on' : ''}${v === 'g' ? ' g' : ''}" data-i="${i}" data-lado="${k}" title="${titulo}" aria-label="${esc(p.nom)}. ${titulo}" aria-pressed="${!!v}"></button>`;
-  }).join('')}</div>`;
+  }).join('')}<span class="eje eL" aria-hidden="true">L</span><span class="eje eA" aria-hidden="true">A</span></div>`;
 }
 
 function copy(txt, msg) {

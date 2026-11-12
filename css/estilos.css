@@ -342,6 +342,10 @@ tbody tr.grp:hover td{background:var(--panel2)}
 .lado.g.L1{border-bottom-width:3px}
 .lado.g.A2{border-left-width:3px}
 .lado.g.A1{border-right-width:3px}
+/* Letras que indican qué lado del dibujo es el largo y cuál el ancho */
+.cantos .eje{position:absolute;font:700 8px/1 Inter,sans-serif;color:var(--txt2);pointer-events:none;display:flex;align-items:center;justify-content:center}
+.cantos .eL{left:var(--g);right:var(--g);bottom:0;height:var(--g)}
+.cantos .eA{right:0;top:0;bottom:0;width:var(--g)}
 
 /* ---------- STATS ---------- */
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-bottom:16px}

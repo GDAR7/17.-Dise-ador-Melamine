@@ -294,6 +294,40 @@ function draw3(cv = $('#cv3')) {
     ctx.strokeStyle = fantasma ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.30)'; ctx.lineWidth = 0.6; ctx.stroke();
   });
 
+  /* Rotula el largo (L) y el ancho (A) de la pieza seleccionada junto al borde que mide cada uno */
+  function rotularLargoAncho(b) {
+    const { fijo, ejeL, ejeA } = ejesTextura(b);
+    const dims = [b.w, b.h, b.d], org = [b.x, b.y, b.z];
+    const punto = (lado, u, v) => {
+      const p = [...org];
+      p[fijo] += lado * dims[fijo]; p[ejeL] += u * dims[ejeL]; p[ejeA] += v * dims[ejeA];
+      return prCaja(b, p);
+    };
+    // Se usa la cara grande que mira al observador (menor profundidad en pantalla)
+    const prof = lado => punto(lado, 0, 0)[2] + punto(lado, 1, 1)[2];
+    const lado = prof(0) <= prof(1) ? 0 : 1, c = punto(lado, 0.5, 0.5);
+    const rotulo = (texto, m1, m2) => {
+      const m = m1[2] <= m2[2] ? m1 : m2;   // de los dos bordes paralelos, el más cercano
+      const n = Math.hypot(m[0] - c[0], m[1] - c[1]) || 1, ux = (m[0] - c[0]) / n, uy = (m[1] - c[1]) / n;
+      // Se aleja lo justo para que el texto entero quede fuera de la pieza
+      const d = 5 + Math.abs(ux) * ctx.measureText(texto).width / 2 + Math.abs(uy) * 7;
+      const x = m[0] + ux * d, y = m[1] + uy * d;
+      ctx.strokeText(texto, x, y); ctx.fillText(texto, x, y);
+    };
+    rotulo(`L ${nf(b.pz.L)}`, punto(lado, 0.5, 0), punto(lado, 0.5, 1));
+    rotulo(`A ${nf(b.pz.A)}`, punto(lado, 0, 0.5), punto(lado, 1, 0.5));
+  }
+  const rotulables = boxes.filter(b => esSel(b) && b.pz);
+  if (rotulables.length) {
+    ctx.save();
+    ctx.font = '700 12px Inter, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; ctx.lineWidth = 3;
+    ctx.fillStyle = imprimiendo ? '#c81e1e' : '#ff5a5f';
+    ctx.strokeStyle = imprimiendo ? '#fff' : 'rgba(12,14,18,.9)';
+    rotulables.forEach(rotularLargoAncho);
+    ctx.restore();
+  }
+
   // Cotas generales
   ctx.font = '600 11px Inter, sans-serif';
   ctx.fillStyle = imprimiendo ? '#333' : '#9aa3b8';
